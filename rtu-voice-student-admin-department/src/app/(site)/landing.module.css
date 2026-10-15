@@ -24,8 +24,9 @@
   line-height: 0.98;
   letter-spacing: -0.5px;
 }
+/* Lighter than --blue so it reads on the dark hero photo (about 5:1). */
 .blue {
-  color: var(--blue);
+  color: var(--blue-on-dark);
 }
 .yellow {
   color: var(--yellow);
@@ -285,7 +286,9 @@
 }
 .privacyText + .privacyLink,
 .privacyLink {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
   margin-top: 18px;
   font-family: var(--font-instrument);
   font-weight: 700;
@@ -610,9 +613,6 @@
   }
 }
 
-.blue {
-  color: var(--blue);
-}
 .sectionTitle,
 .sectionTitleLeft,
 .privacyTitle {

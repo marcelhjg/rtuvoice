@@ -108,8 +108,8 @@ export default function ReportPage() {
         <div>
           <strong>Personal matters are not handled here.</strong>
           <br />
-          Harassment, bullying, discrimination and illegal activities are not encouraged to be submitted through this system.
-          Please go in person to campus security, the Guidance Office or HR
+          This system does not handle harassment, bullying, discrimination or illegal activity. Report these in person to
+          Campus Security, the Guidance Office or HR.
         </div>
       </div>
 
@@ -122,7 +122,7 @@ export default function ReportPage() {
           <input
             id="report-title"
             className="input"
-            placeholder={'Short summary, e.g.  "Leaking roof in Room 305"'}
+            placeholder={'e.g. "Leaking roof in Room 305"'}
             value={title}
             maxLength={TITLE_MAX + 20}
             aria-invalid={!!errors.title || undefined}

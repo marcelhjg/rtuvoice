@@ -22,7 +22,7 @@ export function Logo({ href = "/", variant = "light", badge = false }: LogoProps
         <span className={styles.wordmark}>
           <span className={styles.rtu}>RTU</span> <span className={styles.voice}>Voice</span>
         </span>
-        <span className={styles.campus}>
+        <span className={styles.campus} aria-hidden={variant === "footer" ? undefined : true}>
           {variant === "footer" ? (
             <>
               RIZAL TECHNOLOGICAL UNIVERSITY -
@@ -40,7 +40,7 @@ export function Logo({ href = "/", variant = "light", badge = false }: LogoProps
   );
 
   return (
-    <Link href={href} className={`${styles.logo} ${styles[variant]}`} aria-label="RTU Voice home">
+    <Link href={href} className={`${styles.logo} ${styles[variant]}`}>
       {content}
     </Link>
   );

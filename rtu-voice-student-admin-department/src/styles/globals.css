@@ -64,6 +64,9 @@
   --yellow: #efb41f;
   --gold: #d7a121;
   --gold-muted: #b99236;
+  /* Text-safe variants: --yellow and --blue fail contrast in these spots. */
+  --gold-text: #a37200; /* 4.2:1 on white, for large text */
+  --blue-on-dark: #8fb4ff; /* 7.5:1 on --navy */
 
   /* Neutrals */
   --white: #ffffff;

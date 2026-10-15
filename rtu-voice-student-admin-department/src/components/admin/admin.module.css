@@ -34,8 +34,9 @@
 .back {
   display: inline-flex;
   align-items: center;
+  min-height: 40px;
   gap: 8px;
-  margin-bottom: 14px;
+  margin-bottom: 4px;
   font-family: var(--font-inter);
   font-weight: 600;
   font-size: 14px;
@@ -112,7 +113,7 @@
   color: #17213b;
 }
 .searchInput::placeholder {
-  color: #7a8399;
+  color: #5b6478;
 }
 .searchInput:focus,
 .filter:focus {
@@ -306,7 +307,7 @@
   color: #c62828;
 }
 .dMedium {
-  color: #b7791f;
+  color: #8a5a00;
 }
 .dLow {
   color: #17784a;
@@ -329,14 +330,14 @@
   padding: 0 18px;
   border: 0;
   border-radius: 6px;
-  background: #dc3a3a;
+  background: #c62828;
   color: var(--white);
   font-family: var(--font-inter);
   font-weight: 600;
   font-size: 13px;
 }
 .reject:hover {
-  background: #c22e2e;
+  background: #a91f1f;
 }
 .ghostBtn {
   height: 40px;
@@ -497,7 +498,7 @@
     font-weight: 600;
     letter-spacing: 0.6px;
     text-transform: uppercase;
-    color: #7a8399;
+    color: #5b6478;
   }
   .table td[data-label=""]::before {
     display: none;
@@ -520,6 +521,11 @@
   }
 }
 @media (max-width: 640px) {
+  /* Stack the label above the assign menu so "Assign department…" isn't cut off */
+  .table td:has(> .rowSelect) {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
   .head {
     padding-top: 24px;
     padding-bottom: 18px;

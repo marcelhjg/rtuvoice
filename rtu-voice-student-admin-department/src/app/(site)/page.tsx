@@ -64,7 +64,7 @@ export default function LandingPage() {
 
       {/* How it works */}
       <section id="how-it-works" className={styles.how} aria-labelledby="how-title">
-        <p className={styles.eyebrow}>HOW IT WORKS?</p>
+        <p className={styles.eyebrow}>HOW IT WORKS</p>
         <h2 id="how-title" className={styles.sectionTitle}>
           From concern to resolution.
         </h2>
