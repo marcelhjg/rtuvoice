@@ -213,8 +213,7 @@ export default function ReportPage() {
             id="report-files"
             tabIndex={0}
             role="button"
-            aria-labelledby="evidence-label"
-            aria-describedby="evidence-rules"
+            aria-describedby="evidence-label"
             className={`${styles.drop} ${dragging ? styles.dropActive : ""} ${errors.files ? styles.dropError : ""}`}
             onClick={() => fileInput.current?.click()}
             onKeyDown={(e) => {

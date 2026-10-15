@@ -23,9 +23,10 @@ export function StatCards({ counts, base = "/admin", totalLabel = "Total complai
     <ul className={styles.grid}>
       {cards.map((c) => (
         <li key={c.href}>
-          <Link href={c.href} className={`${styles.card} ${c.tone}`} aria-label={`${c.label}: ${c.value}. Open list`}>
+          <Link href={c.href} className={`${styles.card} ${c.tone}`}>
             <span className={styles.label}>{c.label}</span>
             <span className={styles.value}>{c.value}</span>
+            <span className="visually-hidden">, open list</span>
             <span className={styles.arrow} aria-hidden="true">
               <Icon name="arrow-right" size={14} strokeWidth={2.6} />
             </span>
