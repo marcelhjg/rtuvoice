@@ -1,0 +1,197 @@
+/* History — Figma frame "HOME" (284:2756) */
+.tableWrap {
+  margin: 0 -8px 72px;
+  border-radius: 10px 10px 0 0;
+  overflow: hidden;
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-inter);
+  font-size: 16px;
+}
+.table thead th {
+  height: 65px;
+  padding: 0 18px;
+  background: var(--navy-deep);
+  color: var(--white);
+  text-align: left;
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 1.1px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.table td {
+  height: 89px;
+  padding: 0 18px;
+  color: #1f1f1f;
+}
+.table tbody tr:nth-child(odd) td {
+  background: var(--surface-page);
+}
+.table tbody tr:nth-child(even) td {
+  background: var(--white);
+}
+.date {
+  color: #5b5b5b;
+  white-space: nowrap;
+}
+.idLink {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: 600;
+  color: var(--navy);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.idLink:hover {
+  color: var(--blue);
+}
+.title {
+  font-weight: 600;
+  color: var(--navy);
+}
+.badge {
+  height: 38px;
+  padding: 0 14px;
+  border-radius: 10px;
+  font-size: 13px;
+}
+.empty {
+  margin-bottom: 72px;
+  padding: 56px 24px;
+  border: 1px dashed var(--border);
+  border-radius: 22px;
+  background: var(--white);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  text-align: center;
+}
+.emptyTitle {
+  font-size: 17px;
+  color: #444;
+}
+
+/* Small screens: rows become stacked cards */
+@media (max-width: 860px) {
+  .tableWrap {
+    margin: 0 0 48px;
+    overflow: visible;
+  }
+  .table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+  .table,
+  .table tbody,
+  .table tr,
+  .table td {
+    display: block;
+    width: 100%;
+  }
+  .table tr {
+    margin-bottom: 12px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    background: var(--white);
+  }
+  .table tbody tr:nth-child(odd) td,
+  .table tbody tr:nth-child(even) td {
+    background: var(--white);
+  }
+  .table td {
+    height: auto;
+    padding: 8px 16px;
+    display: block;
+  }
+  .table td:first-child {
+    padding-top: 14px;
+  }
+  .table td:last-child {
+    padding-bottom: 14px;
+  }
+  .table td::before {
+    display: block;
+    margin-bottom: 4px;
+    content: attr(data-label);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .table td > * {
+    max-width: 100%;
+  }
+  .badge {
+    height: 30px;
+    width: fit-content;
+  }
+}
+
+@media (max-width: 767px) {
+  .table tr {
+    padding: 1rem;
+    border-radius: 0.75rem;
+  }
+  .table td,
+  .table td:first-child,
+  .table td:last-child {
+    display: grid;
+    grid-template-columns: 6rem minmax(0, 1fr);
+    align-items: baseline;
+    column-gap: 0.75rem;
+    padding: 0;
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    line-height: 1.45;
+  }
+  .table td:first-child {
+    margin-top: 0;
+    padding-top: 0;
+  }
+  .table td:last-child {
+    padding-bottom: 0;
+  }
+  .table td::before {
+    display: block;
+    margin: 0;
+    content: attr(data-label) ":";
+    font-size: 0.875rem;
+    font-weight: 400;
+    letter-spacing: normal;
+    text-transform: none;
+    color: #475569;
+  }
+  .table td > * {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    font-size: 0.875rem;
+  }
+  .idLink {
+    justify-self: start;
+    white-space: normal;
+    color: var(--blue);
+  }
+  .title {
+    color: #0f172a;
+  }
+  .badge {
+    height: auto;
+    width: fit-content;
+    min-height: 1.5rem;
+    padding: 0.125rem 0.5rem;
+  }
+}

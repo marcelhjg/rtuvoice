@@ -1,0 +1,34 @@
+.info {
+  margin-bottom: 18px;
+  align-items: center;
+}
+.person {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+.initial {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--navy);
+  border: 2px solid var(--gold);
+  color: var(--white);
+  font-family: var(--font-bricolage);
+  font-size: 18px;
+}
+.you {
+  font-weight: 400;
+  color: #7a8399;
+}
+.super {
+  background: #fde7b0;
+  color: #6b4400;
+}
+.admin {
+  background: var(--surface-soft);
+  color: #14367e;
+}

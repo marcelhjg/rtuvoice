@@ -1,0 +1,164 @@
+/* Manage Profile — Figma frame "MANAGE PROFILE" (261:405) */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 30px;
+  margin: 0 -8px 72px;
+  align-items: stretch;
+}
+.card {
+  display: flex;
+  flex-direction: column;
+  min-height: 527px;
+  padding: 52px 38px 38px;
+  background: var(--white);
+  border: 3px solid #d8d4c6;
+  border-radius: 30px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+}
+.cardTitle {
+  font-family: var(--font-instrument);
+  font-weight: 700;
+  font-size: 36px;
+  line-height: 1.2;
+}
+.cardHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.editButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--blue);
+  border-radius: 8px;
+  background: var(--white);
+  color: var(--blue);
+  font-family: var(--font-inter);
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.editButton:hover {
+  background: var(--surface-soft);
+}
+.editButton:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+.fields {
+  margin-top: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+.row2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.input {
+  min-height: 52px;
+  background: var(--input-bg);
+  border-color: #c6c6c6;
+  font-size: 16px;
+}
+.input:disabled {
+  cursor: not-allowed;
+  opacity: 0.75;
+}
+.locked {
+  background: var(--surface-soft);
+  border-color: #7c84a3;
+  color: #555;
+  font-size: 16px;
+  min-height: 52px;
+  cursor: not-allowed;
+}
+.locked:focus {
+  box-shadow: none;
+  border-color: #7c84a3;
+}
+.actions {
+  margin-top: auto;
+  padding-top: 36px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+.save {
+  min-width: 212px;
+  min-height: 52px;
+  border-radius: 8px;
+  font-family: var(--font-inter);
+  font-weight: 700;
+  font-size: 18px;
+}
+.cancel {
+  min-width: 120px;
+  min-height: 52px;
+  border-radius: 8px;
+  font-family: var(--font-inter);
+  font-weight: 600;
+  font-size: 16px;
+}
+.reqs {
+  list-style: none;
+  margin: -10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  font-size: 12px;
+  color: #6b6b6b;
+}
+.reqs li {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.reqOk {
+  color: var(--resolved-fg);
+}
+
+@media (max-width: 1000px) {
+  .grid {
+    grid-template-columns: 1fr;
+    margin: 0 0 56px;
+  }
+  .card {
+    min-height: 0;
+  }
+}
+@media (max-width: 560px) {
+  .card {
+    padding: 30px 18px 24px;
+    border-radius: 22px;
+  }
+  .cardTitle {
+    font-size: 30px;
+  }
+  .cardHeading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .fields {
+    margin-top: 26px;
+  }
+  .row2 {
+    grid-template-columns: 1fr;
+  }
+  .actions > button {
+    flex: 1;
+    min-width: 0;
+  }
+  .save {
+    width: auto;
+  }
+}

@@ -1,0 +1,170 @@
+/* Department Portal — Figma "Department Portal / Dashboard": 4 stat boxes, search + status filter, table with Update status + Add Update */
+.updateSelect {
+  width: 124px;
+  min-width: 0;
+  height: 38px;
+  min-height: 38px;
+  padding-left: 12px;
+  border: 1px solid #c9cfdc;
+  border-radius: 8px;
+  background-color: var(--white);
+  font-size: 13px;
+  font-weight: 500;
+  color: #17213b;
+}
+.addBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 8px;
+  background: #14367e;
+  color: var(--white);
+  font-family: var(--font-inter);
+  font-weight: 600;
+  font-size: 13px;
+  white-space: nowrap;
+}
+.addBtn:hover {
+  background: #0f2b66;
+}
+.viewUpdatesBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 38px;
+  padding: 0 14px;
+  border: 1px solid #14367e;
+  border-radius: 8px;
+  background: var(--white);
+  color: #14367e;
+  font-family: var(--font-inter);
+  font-weight: 600;
+  font-size: 13px;
+  white-space: nowrap;
+}
+.viewUpdatesBtn:hover {
+  background: var(--surface-soft);
+}
+.resolvedNote {
+  align-self: center;
+  font-family: var(--font-inter);
+  font-size: 12px;
+  line-height: 1.35;
+  color: #4a5470;
+}
+.rowActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.titleCell {
+  min-width: 200px;
+}
+.slaCell {
+  font-size: 13px;
+  white-space: nowrap;
+}
+.slaCell.slaOverdue {
+  color: #b42323;
+  font-weight: 700;
+}
+.footnote {
+  margin: 18px 4px 4px;
+  font-size: 13.5px;
+  color: #4a5470;
+}
+.reason {
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.reasonLate {
+  color: #b42323;
+  font-weight: 700;
+}
+.reason.reasonLate {
+  color: #b42323;
+}
+.reasonWait {
+  color: #8a5a00;
+}
+.prevTitle {
+  margin: 4px 0 0;
+  font-family: var(--font-inter);
+  font-weight: 600;
+  font-size: 14px;
+  color: #17213b;
+}
+.prevList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 180px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-y: auto;
+}
+.prevItem {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #f3f5fa;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: #17213b;
+}
+.prevTime {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 12px;
+  color: #4a5470;
+}
+.counter {
+  align-self: flex-end;
+  font-size: 12.5px;
+  color: #4a5470;
+}
+@media (max-width: 960px) {
+  .rowActions {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+}
+@media (max-width: 640px) {
+  .rowActions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    gap: 8px;
+  }
+  .updateSelect {
+    grid-column: 1 / -1;
+    width: 100%;
+    height: 44px;
+  }
+  .addBtn,
+  .viewUpdatesBtn {
+    grid-column: 1 / -1;
+    width: 100%;
+    min-height: 44px;
+    height: auto;
+    padding: 8px 12px;
+    white-space: normal;
+  }
+  .resolvedNote {
+    grid-column: 1 / -1;
+    font-size: 13px;
+  }
+  .reason,
+  .slaCell {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .titleCell {
+    min-width: 0;
+  }
+}

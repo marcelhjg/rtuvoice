@@ -1,0 +1,194 @@
+/* Public Dashboard — Figma frame "HOME" (253:1601) */
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: -6px;
+}
+.filters {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.filterLabel {
+  font-family: var(--font-inter);
+  font-size: 16px;
+  color: var(--text-muted);
+}
+.filter {
+  width: auto;
+  min-width: 133px;
+  min-height: 42px;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 16px;
+  color: #1f1f1f;
+  padding-left: 6px;
+  padding-right: 34px;
+  background-position: right 10px center;
+}
+.clear {
+  border: 0;
+  background: none;
+  padding: 6px 8px;
+  font-family: var(--font-inter);
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--blue);
+}
+.clear:disabled {
+  color: #8a9bbf;
+  cursor: default;
+}
+.clear:not(:disabled):hover {
+  text-decoration: underline;
+}
+.count {
+  font-family: var(--font-inter);
+  font-size: 15px;
+  color: var(--text-muted);
+}
+
+.grid {
+  list-style: none;
+  margin: 60px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 26px 35px;
+}
+.item {
+  min-height: 156px;
+  padding: 18px 16px 18px 30px;
+  border-radius: 10px;
+  border-left: 6px solid;
+  background: var(--white);
+  display: flex;
+  flex-direction: column;
+}
+.accentProgress {
+  border-left-color: var(--yellow);
+}
+.accentAssigned {
+  border-left-color: var(--blue);
+}
+.accentResolved {
+  border-left-color: var(--resolved-fg);
+}
+.itemTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.category {
+  font-family: var(--font-inter);
+  font-weight: 500;
+  font-size: 13px;
+  text-transform: uppercase;
+  color: #5b5b5b;
+}
+.itemTitle {
+  margin-top: 14px;
+  font-family: var(--font-inter);
+  font-weight: 600;
+  font-size: 21px;
+  line-height: 1.2;
+  color: #111;
+}
+.summary {
+  margin-top: 12px;
+  font-size: 13px;
+  color: #5b5b5b;
+}
+.date {
+  margin-top: auto;
+  padding-top: 14px;
+  font-size: 10px;
+  color: #9a9a9a;
+}
+.empty {
+  margin-top: 40px;
+  padding: 48px 24px;
+  border: 1px dashed var(--border);
+  border-radius: 22px;
+  background: var(--white);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.pager {
+  margin-top: 46px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+.pageNum,
+.pageArrow {
+  min-width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  font-family: var(--font-inter);
+  font-size: 16px;
+  color: #5b5b5b;
+  display: inline-grid;
+  place-items: center;
+}
+.pageNum:hover,
+.pageArrow:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.7);
+}
+.pageArrow:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.pageActive,
+.pageActive:hover {
+  background: var(--white);
+  color: var(--blue);
+  font-weight: 700;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+}
+.demo {
+  margin: 28px 0 64px;
+  text-align: center;
+}
+
+@media (max-width: 960px) {
+  .grid {
+    grid-template-columns: 1fr;
+    margin-top: 32px;
+  }
+}
+@media (max-width: 640px) {
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .filters {
+    gap: 8px;
+  }
+  .filterLabel {
+    width: 100%;
+  }
+  .filter {
+    flex: 1;
+    min-width: 0;
+  }
+  .item {
+    padding: 16px 14px 16px 18px;
+  }
+  .itemTitle {
+    font-size: 18px;
+  }
+}

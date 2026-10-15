@@ -1,0 +1,27 @@
+{
+  "name": "rtu-voice-student-portal",
+  "version": "1.0.0",
+  "private": true,
+  "description": "RTU Voice Student Portal, Central Admin Console and Department Portal frontend (Next.js + TypeScript). Frontend only, demonstration data, no backend.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit"
+  },
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "dependencies": {
+    "lucide-react": "^1.56.0",
+    "next": "^16.4.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "typescript": "~5.9"
+  }
+}
