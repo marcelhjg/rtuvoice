@@ -69,11 +69,14 @@ export default function DepartmentsPage() {
                     <td data-label="Department" className={s.strong}>
                       {d.name}
                     </td>
-                    <td data-label="Department head">
+                    <td data-label="Department head" className={x.headCell}>
                       {h.length ? (
                         h.map((a) => (
-                          <span key={a.email} className={x.sub}>
-                            {a.firstName} {a.lastName} · {a.email}
+                          <span key={a.email}>
+                            <span className={x.headName}>
+                              {a.firstName} {a.lastName}
+                            </span>
+                            <span className={x.sub}>{a.email}</span>
                           </span>
                         ))
                       ) : (

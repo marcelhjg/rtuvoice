@@ -449,7 +449,9 @@
 
 @media (max-width: 640px) {
   .searchCard {
-    grid-template-columns: 1fr;
+    /* minmax(0, 1fr): a plain 1fr column won't shrink below the search input's
+       default width, which pushed the box 15px off a 320px screen */
+    grid-template-columns: minmax(0, 1fr);
     padding: 18px;
   }
   .resultCard {

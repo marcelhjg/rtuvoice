@@ -135,6 +135,12 @@ html {
   font-size: 100%;
   -webkit-text-size-adjust: 100%;
 }
+/* Minimum supported width: 320 CSS px (WCAG 2.1 SC 1.4.10 Reflow; the smallest phones in use).
+   Every page must fit at 320px without sideways scrolling. Below that the layout stops
+   shrinking and the page scrolls sideways instead of breaking. */
+body {
+  min-width: 320px;
+}
 body {
   margin: 0;
   font-family: var(--font-inter);
