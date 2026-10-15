@@ -5,14 +5,15 @@ import { BarList, ChartCard, GroupedColumns, SERIES } from "@/components/admin/c
 import { BackToDashboard, adminStyles as s } from "@/components/admin/bits";
 import { useDemoStore } from "@/lib/demo-store";
 import { daysBetween, slaInfo } from "@/lib/sla";
-import { CATEGORIES, DEPARTMENTS, PRIORITIES, type Complaint } from "@/lib/types";
+import { CATEGORIES, PRIORITIES, type Complaint } from "@/lib/types";
 import styles from "./statistics.module.css";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const approved = (c: Complaint) => c.status === "Assigned" || c.status === "In Progress" || c.status === "Resolved";
 
 export default function StatisticsPage() {
-  const { complaints } = useDemoStore();
+  const { complaints, departments } = useDemoStore();
+  const departmentNames = useMemo(() => departments.map((d) => d.name), [departments]);
   const [dept, setDept] = useState("");
 
   const stats = useMemo(() => {
@@ -24,7 +25,7 @@ export default function StatisticsPage() {
     const avgDays = resolved.length ? resolved.reduce((sum, c) => sum + daysBetween(c.assignedAt!, c.resolvedAt!), 0) / resolved.length : 0;
 
     const byCategory = CATEGORIES.map((cat) => ({ label: cat, value: scope.filter((c) => c.category === cat).length })).sort((a, b) => b.value - a.value);
-    const byDepartment = DEPARTMENTS.map((d) => ({ label: d, value: complaints.filter((c) => c.department === d).length })).sort((a, b) => b.value - a.value);
+    const byDepartment = departmentNames.map((d) => ({ label: d, value: complaints.filter((c) => c.department === d).length })).sort((a, b) => b.value - a.value);
     const byPriority = PRIORITIES.map((p) => ({ label: p, value: routed.filter((c) => c.priority === p).length }));
 
     // Last 6 calendar months (Philippine time), submitted vs resolved.
@@ -56,7 +57,7 @@ export default function StatisticsPage() {
       topCategory: byCategory[0],
       topDepartment: byDepartment[0],
     };
-  }, [complaints, dept]);
+  }, [complaints, dept, departmentNames]);
 
   return (
     <div className="container">
@@ -74,7 +75,7 @@ export default function StatisticsPage() {
         </label>
         <select id="stats-dept" className={`select ${s.filter}`} value={dept} onChange={(e) => setDept(e.target.value)}>
           <option value="">All departments</option>
-          {DEPARTMENTS.map((d) => (
+          {departmentNames.map((d) => (
             <option key={d} value={d}>
               {d}
             </option>

@@ -24,9 +24,9 @@
   font-weight: 400;
   color: #5b6478;
 }
-.super {
-  background: #fde7b0;
-  color: #6b4400;
+.deactivated {
+  background: #e7e9f0;
+  color: #374151;
 }
 .admin {
   background: var(--surface-soft);

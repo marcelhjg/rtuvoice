@@ -9,7 +9,7 @@ import { useComplaintModals } from "@/components/admin/useComplaintModals";
 import { useDemoStore } from "@/lib/demo-store";
 import { formatShortDate } from "@/lib/format";
 import { slaInfo } from "@/lib/sla";
-import { DEPARTMENTS, type Department } from "@/lib/types";
+import type { Department } from "@/lib/types";
 import { normalizeTrackingId } from "@/lib/validation";
 import styles from "./dashboard.module.css";
 
@@ -95,7 +95,8 @@ export function AdminDashboard() {
 type Modals = ReturnType<typeof useComplaintModals>;
 
 function PendingQueue({ modals }: { modals: Modals }) {
-  const { complaints } = useDemoStore();
+  // Only active departments can receive new assignments (Super Admin › Departments).
+  const { complaints, activeDepartments } = useDemoStore();
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<"newest" | "oldest">("newest");
 
@@ -155,7 +156,7 @@ function PendingQueue({ modals }: { modals: Modals }) {
                     <option value="" disabled>
                       Assign department...
                     </option>
-                    {DEPARTMENTS.map((d) => (
+                    {activeDepartments.map((d) => (
                       <option key={d} value={d}>
                         {d}
                       </option>
@@ -182,7 +183,8 @@ function PendingQueue({ modals }: { modals: Modals }) {
 }
 
 function MasterQueue({ modals }: { modals: Modals }) {
-  const { complaints } = useDemoStore();
+  // The filter lists every department, including deactivated ones that still have history.
+  const { complaints, departments } = useDemoStore();
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("");
   const [dept, setDept] = useState("");
@@ -234,7 +236,7 @@ function MasterQueue({ modals }: { modals: Modals }) {
           }}
         >
           <option value="">All departments</option>
-          {DEPARTMENTS.map((d) => (
+          {departments.map(({ name: d }) => (
             <option key={d} value={d}>
               {d}
             </option>

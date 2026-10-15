@@ -7,6 +7,7 @@
  * content shown in the Figma design.
  */
 import {
+  DEPARTMENTS,
   SLA,
   type ActivityEntry,
   type AdminAccount,
@@ -15,6 +16,7 @@ import {
   type Complaint,
   type Department,
   type DepartmentAccount,
+  type DepartmentRecord,
   type EvidenceFile,
   type Priority,
   type PublicConcern,
@@ -48,13 +50,27 @@ export const LANDING_PREVIEW: PublicConcern[] = [
 export function buildAdminAccounts(now: number): AdminAccount[] {
   const iso = (daysAgo: number) => new Date(now - daysAgo * DAY).toISOString();
   return [
-    { firstName: "Central", lastName: "Admin", email: "admin@rtu.edu.ph", title: "Super-Admin", addedAt: iso(240), lastActiveAt: iso(0) },
+    { firstName: "Central", lastName: "Admin", email: "admin@rtu.edu.ph", title: "Administrator", addedAt: iso(240), lastActiveAt: iso(0) },
     { firstName: "ICS", lastName: "Admin", email: "ics.admin@rtu.edu.ph", title: "Administrator", addedAt: iso(180), lastActiveAt: iso(1) },
     { firstName: "OSA", lastName: "Admin", email: "osa.admin@rtu.edu.ph", title: "Administrator", addedAt: iso(120), lastActiveAt: iso(6) },
   ];
 }
 
-/** Department-head logins for the demo: one per office (SRS: created manually, restricted to their own department). */
+/** SRS §3: a single superadmin account. It isn't listed with the admins and can't be deactivated. */
+export const SUPERADMIN_ACCOUNT: Account = {
+  firstName: "System",
+  lastName: "Superadmin",
+  email: "superadmin@rtu.edu.ph",
+  role: "superadmin",
+};
+
+/** The departments the demo starts with, all active. */
+export function buildDepartments(now: number): DepartmentRecord[] {
+  const added = new Date(now - 240 * DAY).toISOString();
+  return DEPARTMENTS.map((name) => ({ name, active: true, addedAt: added }));
+}
+
+/** Department-head logins for the demo: one per office (SRS: created by the superadmin, restricted to their own department). */
 export const DEPARTMENT_ACCOUNTS: DepartmentAccount[] = [
   { firstName: "Facilities", lastName: "Head", email: "facilities@rtu.edu.ph", title: "Head of Facilities", department: "Facilities Office" },
   { firstName: "Registrar", lastName: "Head", email: "registrar@rtu.edu.ph", title: "Registrar", department: "Registrar's Office" },

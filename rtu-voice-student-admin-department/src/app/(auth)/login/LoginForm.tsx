@@ -13,7 +13,7 @@ import { validateEmail } from "@/lib/validation";
 import styles from "../auth.module.css";
 
 export function LoginForm() {
-  const { login, session, ready } = useDemoStore();
+  const { login, session, ready, loginBlockedReason } = useDemoStore();
   const router = useRouter();
   const params = useSearchParams();
   const toast = useToast();
@@ -39,6 +39,8 @@ export function LoginForm() {
           ? "Incorrect password. Please try again."
           : null,
     };
+    // SIMULATED: deactivated accounts (Super Admin › Accounts / Departments) can't sign in.
+    if (!nextErrors.email && !nextErrors.password) nextErrors.email = loginBlockedReason(email);
     setErrors(nextErrors);
     if (nextErrors.email || nextErrors.password) return;
     setBusy(true);
@@ -112,5 +114,6 @@ function destination(role: Role, next: string | null): string {
   if (!next || !next.startsWith("/") || next.startsWith("//")) return home;
   const belongsTo = (prefix: string) => next === prefix || next.startsWith(`${prefix}/`);
   const target: Role = belongsTo("/admin") ? "admin" : belongsTo("/department") ? "department" : "student";
-  return target === role ? next : home;
+  const sameConsole = target === "admin" && role === "superadmin";
+  return target === role || sameConsole ? next : home;
 }

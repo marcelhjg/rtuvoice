@@ -3,7 +3,7 @@
 import { useState, type FormEvent, type ReactNode } from "react";
 import { ComplaintDetailsDialog, ComplaintUpdatesDialog } from "@/components/ComplaintDetailsDialog";
 import { useDemoStore } from "@/lib/demo-store";
-import { DEPARTMENTS, type Complaint, type Department } from "@/lib/types";
+import type { Complaint, Department } from "@/lib/types";
 import { Icon } from "../Icon";
 import { Modal } from "../Modal";
 import { useToast } from "../Toast";
@@ -101,6 +101,7 @@ export function useComplaintModals() {
 /* ---------------------------------------------------------------------------------- */
 
 function AssignModal({ c, initial, onClose, onConfirm }: { c: Complaint; initial: Department | ""; onClose: () => void; onConfirm: (d: Department) => void }) {
+  const { activeDepartments } = useDemoStore();
   const [dept, setDept] = useState<Department | "">(initial);
   const [error, setError] = useState<string | null>(null);
   const submit = (e: FormEvent) => {
@@ -130,7 +131,7 @@ function AssignModal({ c, initial, onClose, onConfirm }: { c: Complaint; initial
             <option value="" disabled>
               Select department
             </option>
-            {DEPARTMENTS.map((d) => (
+            {activeDepartments.map((d) => (
               <option key={d} value={d}>
                 {d}
               </option>
@@ -201,6 +202,7 @@ function RejectModal({ c, onClose, onConfirm }: { c: Complaint; onClose: () => v
 }
 
 function ReassignModal({ c, onClose, onConfirm }: { c: Complaint; onClose: () => void; onConfirm: (d: Department, reason: string) => void }) {
+  const { activeDepartments } = useDemoStore();
   const [dept, setDept] = useState<Department | "">("");
   const [reason, setReason] = useState("");
   const [errors, setErrors] = useState<{ dept?: string; reason?: string }>({});
@@ -233,7 +235,7 @@ function ReassignModal({ c, onClose, onConfirm }: { c: Complaint; onClose: () =>
             <option value="" disabled>
               Select department
             </option>
-            {DEPARTMENTS.filter((d) => d !== c.department).map((d) => (
+            {activeDepartments.filter((d) => d !== c.department).map((d) => (
               <option key={d} value={d}>
                 {d}
               </option>

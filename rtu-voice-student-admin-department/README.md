@@ -51,7 +51,8 @@ land.
 | What | Value |
 | --- | --- |
 | **Student** | Any `@rtu.edu.ph` email with the demo password **`rtuvoice123`**. `juan.cruz@rtu.edu.ph` is the Figma sample student "Juan Dela Cruz" and owns the sample complaints below. |
-| **Admin** | `admin@rtu.edu.ph` (Super-Admin), `ics.admin@rtu.edu.ph`, `osa.admin@rtu.edu.ph` — use demo password **`rtuvoice123`**. Admin accounts cannot register. |
+| **Admin** | `admin@rtu.edu.ph`, `ics.admin@rtu.edu.ph`, `osa.admin@rtu.edu.ph` — use demo password **`rtuvoice123`**. Admin accounts cannot register; the Super Admin creates them. |
+| **Super Admin** | `superadmin@rtu.edu.ph` — demo password **`rtuvoice123`**. Same console as the admin, plus **Accounts** (create, deactivate, reset admin and department-head accounts), **Departments** (add, rename, deactivate) and the **Activity Log**, which only the Super Admin can open. |
 | **Department head** | `facilities@rtu.edu.ph` (Facilities Office), `registrar@rtu.edu.ph`, `academic@rtu.edu.ph`, `osa@rtu.edu.ph` (Student Affairs), `cashier@rtu.edu.ph`, `ict@rtu.edu.ph` — use demo password **`rtuvoice123`**. Each account only sees its own department's complaints. Cannot register. |
 | One-time code (register, forgot password) | **`123456`** — no email is sent |
 | Student's sample tracking IDs | `STU-A3F1B` (In Progress, has a department update), `STU-K92QD` (Resolved), `STU-77MZP` (Assigned, overdue), `STU-B04XR` (Rejected), `STU-M5T8C` (Resolved) |

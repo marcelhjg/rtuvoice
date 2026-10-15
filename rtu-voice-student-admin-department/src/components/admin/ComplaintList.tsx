@@ -4,7 +4,7 @@ import { useState, type ReactNode } from "react";
 import { useDemoStore } from "@/lib/demo-store";
 import { formatShortDate } from "@/lib/format";
 import { daysBetween, slaInfo } from "@/lib/sla";
-import { DEPARTMENTS, type Complaint } from "@/lib/types";
+import type { Complaint } from "@/lib/types";
 import { normalizeTrackingId } from "@/lib/validation";
 import { BackToDashboard, Pager, PriorityPill, SearchBox, StatusPill, adminStyles as s, colType } from "./bits";
 import { useComplaintModals } from "./useComplaintModals";
@@ -28,7 +28,7 @@ const CONFIG: Record<ListKind, { title: string; subtitle: string; pill: string; 
 
 /** Total complaints / Assigned / In progress / Resolved list pages (Figma admin list frames). */
 export function ComplaintList({ kind }: { kind: ListKind }) {
-  const { complaints } = useDemoStore();
+  const { complaints, departments } = useDemoStore();
   const modals = useComplaintModals();
   const cfg = CONFIG[kind];
   const [query, setQuery] = useState("");
@@ -140,7 +140,7 @@ export function ComplaintList({ kind }: { kind: ListKind }) {
           >
             <option value="">All departments</option>
             {kind === "total" ? <option value="__none">Not assigned</option> : null}
-            {DEPARTMENTS.map((d) => (
+            {departments.map(({ name: d }) => (
               <option key={d} value={d}>
                 {d}
               </option>

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { BackToDashboard, Pager, SearchBox, adminStyles as s } from "@/components/admin/bits";
+import { SuperadminOnly } from "@/components/admin/superadmin";
 import { useComplaintModals } from "@/components/admin/useComplaintModals";
 import { useDemoStore } from "@/lib/demo-store";
 import { formatLongDate, formatTime } from "@/lib/format";
@@ -18,8 +19,16 @@ const ACTION_CLASS: Record<ActivityAction, string> = {
   "Update posted": styles.aUpdate,
 };
 
-/** Activity Log (roadmap Sprint 4): changes made by admins and departments. Admin-only. */
+/** Activity Log (SRS §3, §4, §6): changes made by admins and departments. Superadmin-only. */
 export default function ActivityLogPage() {
+  return (
+    <SuperadminOnly>
+      <ActivityLog />
+    </SuperadminOnly>
+  );
+}
+
+function ActivityLog() {
   const { activity } = useDemoStore();
   const modals = useComplaintModals();
   const [query, setQuery] = useState("");
@@ -83,6 +92,7 @@ export default function ActivityLogPage() {
           >
             <option value="">Admins and departments</option>
             <option value="Admin">Admins only</option>
+            <option value="Super Admin">Super Admin only</option>
             <option value="Department">Departments only</option>
           </select>
         </div>

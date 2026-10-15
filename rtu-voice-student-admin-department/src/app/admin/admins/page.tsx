@@ -23,7 +23,7 @@ export default function ViewAdminPage() {
       <section className={s.panel} aria-label="Administrator accounts">
         <p className={`alert alert-info ${styles.info}`}>
           <Icon name="info" size={18} />
-          <span>Administrator accounts are created manually by the system administrator. They cannot be created through public sign-up.</span>
+          <span>Administrator accounts are created by the Super Admin. They cannot be created through public sign-up.</span>
         </p>
         <div className={s.tableWrap}>
           <table className={s.table}>
@@ -55,7 +55,7 @@ export default function ViewAdminPage() {
                     </td>
                     <td data-label="Email">{a.email}</td>
                     <td data-label="Role">
-                      <span className={`${s.pill} ${a.title === "Super-Admin" ? styles.super : styles.admin}`}>{a.title}</span>
+                      <span className={`${s.pill} ${a.active === false ? styles.deactivated : styles.admin}`}>{a.active === false ? "Deactivated" : a.title}</span>
                     </td>
                     <td data-label="Added" className={s.date}>
                       {formatLongDate(a.addedAt)}
