@@ -8,7 +8,7 @@ type Cell = "yes" | "no" | { text: string };
 const ROWS: { info: string; cells: [Cell, Cell, Cell, Cell] }[] = [
   { info: "Your name and email", cells: ["yes", "no", "no", { text: "Authorized only" }] },
   { info: "Concern title, description and files", cells: ["yes", "no", "yes", "yes"] },
-  { info: "AI title and public summary", cells: ["yes", { text: "If not opted out" }, "yes", "yes"] },
+  { info: "AI title and public summary", cells: ["yes", { text: "Only if you share" }, "yes", "yes"] },
   // Figma shows a check for "You" here, but the note under the table and the SRS say priority is never shown to students.
   { info: "Priority level (set by AI)", cells: ["no", "no", "yes", "yes"] },
   { info: "Department update messages", cells: ["yes", "no", "yes", "yes"] },

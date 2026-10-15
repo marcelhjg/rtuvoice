@@ -16,7 +16,7 @@ const ITEMS = [
   },
   {
     q: "Who sees my concern?",
-    a: "Administrators review it and assign it to the right department. The department sees your concern and evidence, not your name. Unless you opt out, other logged-in students see only an AI-written, depersonalized title and summary with its status.",
+    a: "Administrators review it and assign it to the right department. The department sees your concern and evidence, not your name. If you choose to share it, other logged-in students see only an AI-written, depersonalized title and summary with its status.",
   },
   {
     q: "What if my concern is personal or urgent?",

@@ -21,14 +21,15 @@ export default function ReportPage() {
   const [category, setCategory] = useState<Category | "">("");
   const [description, setDescription] = useState("");
   const [files, setFiles] = useState<File[]>([]);
-  const [optOut, setOptOut] = useState(false);
+  // Sharing is opt-in: nothing reaches the public dashboard unless the student ticks the box.
+  const [share, setShare] = useState(false);
   const [errors, setErrors] = useState<Errors>({});
   const [dragging, setDragging] = useState(false);
   const [busy, setBusy] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
 
   const usedBytes = files.reduce((sum, f) => sum + f.size, 0);
-  const dirty = Boolean(title || category || description || files.length || optOut);
+  const dirty = Boolean(title || category || description || files.length || share);
 
   const addFiles = (list: FileList | File[]) => {
     const incoming = Array.from(list);
@@ -88,7 +89,7 @@ export default function ReportPage() {
         category: category as Category,
         description,
         files: files.map((f) => ({ name: f.name, size: f.size, type: f.type })),
-        optOutOfPublic: optOut,
+        optOutOfPublic: !share,
       });
       router.push(`/report/submitted?id=${encodeURIComponent(created.trackingId)}`);
     }, 700);
@@ -290,13 +291,14 @@ export default function ReportPage() {
           )}
         </div>
 
-        {/* Public dashboard opt-out */}
+        {/* Public dashboard opt-in */}
         <label className={styles.optOut}>
-          <input type="checkbox" className="checkbox" checked={optOut} onChange={(e) => setOptOut(e.target.checked)} />
+          <input type="checkbox" className="checkbox" checked={share} onChange={(e) => setShare(e.target.checked)} />
           <span>
-            <span className={styles.optOutTitle}>Do not release this concern to the public dashboard.</span>
+            <span className={styles.optOutTitle}>Share a summary on the public dashboard</span>
             <span className={styles.optOutText}>
-              Leave unchecked to share an AI-written, depersonalized title and summary with other logged-in students.
+              Other logged-in students will see an AI-written, depersonalized title and summary with its status. Your name is
+              never shown. Leave this unticked to keep your concern off the dashboard.
             </span>
           </span>
         </label>

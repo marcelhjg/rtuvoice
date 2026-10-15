@@ -529,7 +529,7 @@ p {
   width: 18px;
   height: 18px;
   border: 1.6px solid #555;
-  border-radius: 50%;
+  border-radius: 4px; /* square, so it reads as a checkbox and not a radio button */
   background: var(--white);
   flex: none;
   margin: 2px 0 0;
