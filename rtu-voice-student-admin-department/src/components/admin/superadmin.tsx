@@ -1,38 +1,9 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useEffect, useState, type ReactNode } from "react";
-import { useDemoStore } from "@/lib/demo-store";
+import { useState, type ReactNode } from "react";
 import { Modal } from "../Modal";
-import { useToast } from "../Toast";
 import m from "./modals.module.css";
 import x from "./superadmin.module.css";
-
-/**
- * Wraps a superadmin-only page (Accounts, Departments, Activity Log). An admin who opens the
- * URL directly is sent back to the dashboard. SIMULATED: the real system enforces this with
- * row-level security, not in the browser.
- */
-export function SuperadminOnly({ children }: { children: ReactNode }) {
-  const { ready, session } = useDemoStore();
-  const router = useRouter();
-  const toast = useToast();
-  const allowed = session?.role === "superadmin";
-  useEffect(() => {
-    if (ready && session && !allowed) {
-      toast("Only the Super Admin can open that page.", "error");
-      router.replace("/admin");
-    }
-  }, [ready, session, allowed, router, toast]);
-  if (!allowed) {
-    return (
-      <div className="container" aria-busy="true">
-        <span className="spinner" /> Loading…
-      </div>
-    );
-  }
-  return <>{children}</>;
-}
 
 /**
  * Yes/no confirmation for superadmin actions. onConfirm returns an error message to show

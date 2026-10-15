@@ -16,7 +16,7 @@ export type PublicStatus = (typeof PUBLIC_STATUSES)[number];
 
 /**
  * The departments the demo starts with (names as used in the Figma admin screens). The live list
- * is state in the demo store: the Super Admin can add, rename and deactivate departments.
+ * is state in the demo store: the superadmin can add, rename and deactivate departments.
  */
 export const DEPARTMENTS = [
   "Facilities Office",
@@ -26,7 +26,7 @@ export const DEPARTMENTS = [
   "Cashier's Office",
   "ICT Office",
 ] as const;
-/** A department name. Departments are managed by the Super Admin, so this is any string. */
+/** A department name. Departments are managed by the superadmin, so this is any string. */
 export type Department = string;
 
 export interface DepartmentRecord {
@@ -47,13 +47,8 @@ export const SLA: Record<Priority, { acknowledge: number; resolve: number }> = {
   Low: { acknowledge: 5, resolve: 21 },
 };
 
-/** SRS §6: four roles. The single superadmin has everything an admin has, plus account and department management and the Activity Log. */
+/** SRS §6: four roles. The single superadmin has its own small portal (accounts, departments, Activity Log). */
 export type Role = "student" | "admin" | "department" | "superadmin";
-
-/** Roles that open the Central Admin Console. */
-export function isAdminRole(role: Role | undefined): boolean {
-  return role === "admin" || role === "superadmin";
-}
 
 export interface EvidenceFile {
   name: string;
@@ -124,7 +119,7 @@ export interface DepartmentAccount {
   email: string;
   title: string;
   department: Department;
-  /** Deactivated accounts can't log in (Super Admin › Accounts). Missing means active. */
+  /** Deactivated accounts can't log in (Superadmin › Accounts). Missing means active. */
   active?: boolean;
   addedAt?: string;
 }
@@ -150,7 +145,7 @@ export interface AdminAccount {
   title: string;
   addedAt: string;
   lastActiveAt: string;
-  /** Deactivated accounts can't log in (Super Admin › Accounts). Missing means active. */
+  /** Deactivated accounts can't log in (Superadmin › Accounts). Missing means active. */
   active?: boolean;
 }
 
@@ -161,7 +156,7 @@ export interface ActivityEntry {
   id: string;
   at: string;
   actor: string;
-  actorRole: "Admin" | "Super Admin" | "Department";
+  actorRole: "Admin" | "Department";
   action: ActivityAction;
   trackingId: string;
   department?: string;

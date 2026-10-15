@@ -39,7 +39,7 @@ export function LoginForm() {
           ? "Incorrect password. Please try again."
           : null,
     };
-    // SIMULATED: deactivated accounts (Super Admin › Accounts / Departments) can't sign in.
+    // SIMULATED: deactivated accounts (Superadmin › Accounts / Departments) can't sign in.
     if (!nextErrors.email && !nextErrors.password) nextErrors.email = loginBlockedReason(email);
     setErrors(nextErrors);
     if (nextErrors.email || nextErrors.password) return;
@@ -113,7 +113,6 @@ function destination(role: Role, next: string | null): string {
   const home = homeFor(role);
   if (!next || !next.startsWith("/") || next.startsWith("//")) return home;
   const belongsTo = (prefix: string) => next === prefix || next.startsWith(`${prefix}/`);
-  const target: Role = belongsTo("/admin") ? "admin" : belongsTo("/department") ? "department" : "student";
-  const sameConsole = target === "admin" && role === "superadmin";
-  return target === role || sameConsole ? next : home;
+  const target: Role = belongsTo("/admin") ? "admin" : belongsTo("/superadmin") ? "superadmin" : belongsTo("/department") ? "department" : "student";
+  return target === role ? next : home;
 }

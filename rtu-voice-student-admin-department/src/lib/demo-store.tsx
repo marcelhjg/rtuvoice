@@ -24,9 +24,9 @@ interface PersistedState {
   session: Account | null;
   student: Account; // the registered demo student
   admins: AdminAccount[];
-  /** Department-head accounts (Super Admin › Accounts). */
+  /** Department-head accounts (Superadmin › Accounts). */
   deptAccounts: DepartmentAccount[];
-  /** Departments (Super Admin › Departments). */
+  /** Departments (Superadmin › Departments). */
   departments: DepartmentRecord[];
   complaints: Complaint[];
   activity: ActivityEntry[];
@@ -295,7 +295,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
     trackingId: string,
     fn: (c: Complaint) => Complaint,
     entry: Omit<ActivityEntry, "id" | "at" | "actor" | "actorRole">,
-    by: { actor: string; actorRole: ActivityEntry["actorRole"] } = { actor: actorName, actorRole: state.session?.role === "superadmin" ? "Super Admin" : "Admin" },
+    by: { actor: string; actorRole: ActivityEntry["actorRole"] } = { actor: actorName, actorRole: "Admin" },
   ) => {
     const at = new Date().toISOString();
     setState((s) => ({

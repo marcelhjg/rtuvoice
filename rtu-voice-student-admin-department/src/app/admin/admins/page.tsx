@@ -23,7 +23,7 @@ export default function ViewAdminPage() {
       <section className={s.panel} aria-label="Administrator accounts">
         <p className={`alert alert-info ${styles.info}`}>
           <Icon name="info" size={18} />
-          <span>Administrator accounts are created by the Super Admin. They cannot be created through public sign-up.</span>
+          <span>Administrator accounts are created through the Superadmin portal. They cannot be created through public sign-up.</span>
         </p>
         <div className={s.tableWrap}>
           <table className={s.table}>

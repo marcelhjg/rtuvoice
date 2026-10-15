@@ -1,9 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { BackToDashboard, Pager, SearchBox, adminStyles as s } from "@/components/admin/bits";
-import { SuperadminOnly } from "@/components/admin/superadmin";
-import { useComplaintModals } from "@/components/admin/useComplaintModals";
+import { Pager, SearchBox, adminStyles as s } from "@/components/admin/bits";
 import { useDemoStore } from "@/lib/demo-store";
 import { formatLongDate, formatTime } from "@/lib/format";
 import { ACTIVITY_ACTIONS, type ActivityAction } from "@/lib/types";
@@ -19,18 +17,9 @@ const ACTION_CLASS: Record<ActivityAction, string> = {
   "Update posted": styles.aUpdate,
 };
 
-/** Activity Log (SRS §3, §4, §6): changes made by admins and departments. Superadmin-only. */
+/** Superadmin Portal › Activity Log (SRS §3, §4, §6): changes made by admins and departments. Superadmin-only. */
 export default function ActivityLogPage() {
-  return (
-    <SuperadminOnly>
-      <ActivityLog />
-    </SuperadminOnly>
-  );
-}
-
-function ActivityLog() {
   const { activity } = useDemoStore();
-  const modals = useComplaintModals();
   const [query, setQuery] = useState("");
   const [action, setAction] = useState("");
   const [role, setRole] = useState("");
@@ -48,7 +37,6 @@ function ActivityLog() {
   return (
     <div className="container">
       <div className={s.head}>
-        <BackToDashboard />
         <div className={s.listTitleRow}>
           <h1 className={s.listTitle}>Activity Log</h1>
           <span className={`${s.countPill} ${s.pillTotal}`}>{activity.length}</span>
@@ -92,7 +80,6 @@ function ActivityLog() {
           >
             <option value="">Admins and departments</option>
             <option value="Admin">Admins only</option>
-            <option value="Super Admin">Super Admin only</option>
             <option value="Department">Departments only</option>
           </select>
         </div>
@@ -117,10 +104,8 @@ function ActivityLog() {
                     {formatLongDate(a.at)}
                     <span className={styles.time}>{formatTime(a.at)}</span>
                   </td>
-                  <td data-label="Tracking ID">
-                    <button type="button" className={s.idLink} onClick={() => modals.openDetails(a.trackingId)}>
-                      {a.trackingId}
-                    </button>
+                  <td data-label="Tracking ID" className={s.strong}>
+                    {a.trackingId}
                   </td>
                   <td data-label="Actor">
                     <span className={s.strong}>{a.actor}</span>
@@ -141,7 +126,6 @@ function ActivityLog() {
         </div>
         <Pager page={current} pageSize={PAGE_SIZE} total={rows.length} onPage={setPage} />
       </section>
-      {modals.modals}
     </div>
   );
 }

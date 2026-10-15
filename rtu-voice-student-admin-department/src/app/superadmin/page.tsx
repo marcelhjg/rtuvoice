@@ -1,9 +1,9 @@
 "use client";
 
 import { useMemo, useState, type FormEvent, type ReactNode } from "react";
-import { BackToDashboard, SearchBox, adminStyles as s } from "@/components/admin/bits";
+import { SearchBox, adminStyles as s } from "@/components/admin/bits";
 import m from "@/components/admin/modals.module.css";
-import { ConfirmDialog, SuperadminOnly } from "@/components/admin/superadmin";
+import { ConfirmDialog } from "@/components/admin/superadmin";
 import x from "@/components/admin/superadmin.module.css";
 import { Icon } from "@/components/Icon";
 import { Modal } from "@/components/Modal";
@@ -25,16 +25,8 @@ interface Row {
 
 type Pending = { type: "deactivate" | "reactivate" | "reset"; row: Row } | null;
 
-/** Super Admin › Accounts (SRS §3, §7): lists every admin and department-head account; create, deactivate and reset them. */
+/** Superadmin Portal › Accounts (SRS §3, §7), the portal's home: lists every admin and department-head account; create, deactivate and reset them. */
 export default function AccountsPage() {
-  return (
-    <SuperadminOnly>
-      <Accounts />
-    </SuperadminOnly>
-  );
-}
-
-function Accounts() {
   const { admins, deptAccounts, setStaffAccountActive } = useDemoStore();
   const toast = useToast();
   const [query, setQuery] = useState("");
@@ -62,14 +54,13 @@ function Accounts() {
   return (
     <div className="container">
       <div className={s.head}>
-        <BackToDashboard />
         <div className={s.listTitleRow}>
           <h1 className={s.listTitle}>Accounts</h1>
           <span className={`${s.countPill} ${s.pillTotal}`} aria-label={`${all.length} accounts`}>
             {all.length}
           </span>
         </div>
-        <p className={s.subtitle}>Administrator and department-head accounts. Only the Super Admin can create, deactivate or reset them.</p>
+        <p className={s.subtitle}>Administrator and department-head accounts. Only the superadmin can create, deactivate or reset them.</p>
       </div>
 
       <section className={s.panel} aria-label="Accounts">

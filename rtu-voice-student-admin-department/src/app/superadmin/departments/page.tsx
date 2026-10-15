@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { BackToDashboard, adminStyles as s } from "@/components/admin/bits";
+import { adminStyles as s } from "@/components/admin/bits";
 import m from "@/components/admin/modals.module.css";
-import { ConfirmDialog, SuperadminOnly } from "@/components/admin/superadmin";
+import { ConfirmDialog } from "@/components/admin/superadmin";
 import x from "@/components/admin/superadmin.module.css";
 import { Icon } from "@/components/Icon";
 import { Modal } from "@/components/Modal";
@@ -14,16 +14,8 @@ import type { DepartmentRecord } from "@/lib/types";
 type Editing = { type: "add" } | { type: "rename"; dept: DepartmentRecord } | null;
 type Toggling = { dept: DepartmentRecord; active: boolean } | null;
 
-/** Super Admin › Departments (SRS §3, §7): add, rename and deactivate departments. */
+/** Superadmin Portal › Departments (SRS §3, §7): add, rename and deactivate departments. */
 export default function DepartmentsPage() {
-  return (
-    <SuperadminOnly>
-      <Departments />
-    </SuperadminOnly>
-  );
-}
-
-function Departments() {
   const { departments, complaints, deptAccounts, setDepartmentActive } = useDemoStore();
   const toast = useToast();
   const [editing, setEditing] = useState<Editing>(null);
@@ -38,7 +30,6 @@ function Departments() {
   return (
     <div className="container">
       <div className={s.head}>
-        <BackToDashboard />
         <div className={s.listTitleRow}>
           <h1 className={s.listTitle}>Departments</h1>
           <span className={`${s.countPill} ${s.pillTotal}`} aria-label={`${departments.length} departments`}>

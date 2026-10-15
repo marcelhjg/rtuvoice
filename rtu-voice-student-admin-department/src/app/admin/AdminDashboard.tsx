@@ -95,7 +95,7 @@ export function AdminDashboard() {
 type Modals = ReturnType<typeof useComplaintModals>;
 
 function PendingQueue({ modals }: { modals: Modals }) {
-  // Only active departments can receive new assignments (Super Admin › Departments).
+  // Only active departments can receive new assignments (Superadmin › Departments).
   const { complaints, activeDepartments } = useDemoStore();
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<"newest" | "oldest">("newest");
