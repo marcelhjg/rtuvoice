@@ -107,7 +107,7 @@ export function ConsoleShell({ role, nav, homeHref, profileHref, consoleLabel, c
       <div className={`${styles.overlay} ${menuOpen ? styles.overlayOpen : ""}`} onClick={() => setMenuOpen(false)} aria-hidden="true" />
       <aside id="console-sidebar" className={`${styles.sidebar} ${menuOpen ? styles.sidebarOpen : ""}`} aria-label={menuLabel} aria-hidden={!menuOpen} inert={!menuOpen}>
         <div className={styles.sidebarHead}>
-          <Logo href={homeHref} />
+          <Logo href={homeHref} badge />
         </div>
         <nav className={styles.nav}>
           {nav.map((item) => {

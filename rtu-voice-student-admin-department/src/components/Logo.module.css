@@ -25,6 +25,14 @@
 }
 .badge .mark {
   width: 50px;
+  /* The gear's center is at (87, 87) in the 200x179 image, not at its
+     middle, because the sound wave sticks out on the right. Shift the
+     image so the gear sits in the middle of the circle. */
+  transform: translate(6.4%, 1.4%);
+}
+/* On a white sidebar the white circle would vanish, so tint it. */
+.light .badge {
+  background: var(--surface-soft);
 }
 .text {
   display: flex;
