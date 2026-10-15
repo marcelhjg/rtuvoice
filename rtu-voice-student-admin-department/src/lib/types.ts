@@ -113,6 +113,16 @@ export interface DepartmentAccount {
 export const DEPARTMENT_STATUSES = ["In Progress", "Resolved"] as const;
 export type DepartmentStatus = (typeof DEPARTMENT_STATUSES)[number];
 
+/**
+ * The one status a department may move a complaint to next (SRS: Assigned → In Progress → Resolved).
+ * No skipping (Assigned → Resolved) and no going back; Resolved has no next status.
+ */
+export function nextDepartmentStatus(status: Status): DepartmentStatus | null {
+  if (status === "Assigned") return "In Progress";
+  if (status === "In Progress") return "Resolved";
+  return null;
+}
+
 export interface AdminAccount {
   firstName: string;
   lastName: string;

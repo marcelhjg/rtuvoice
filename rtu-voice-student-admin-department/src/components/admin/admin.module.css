@@ -449,7 +449,7 @@
   .table th[data-col="assign"] { width: 228px; }
   .table th[data-col="reject"] { width: 112px; }
   .table th[data-col="actions-admin"] { width: 280px; } /* 120 + 8 + 128 + padding */
-  .table th[data-col="actions-dept"] { width: 308px; } /* 144 + 8 + 132 + padding */
+  .table th[data-col="actions-dept"] { width: 336px; } /* 40 + 8 + 136 + 8 + 120 + padding */
 
   /* Fixed button slots in the master queue */
   .slotView {

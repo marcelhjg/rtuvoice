@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent, type ReactNode } from "react";
-import { ComplaintDetailsDialog } from "@/components/ComplaintDetailsDialog";
+import { ComplaintDetailsDialog, ComplaintUpdatesDialog } from "@/components/ComplaintDetailsDialog";
 import { useDemoStore } from "@/lib/demo-store";
 import { DEPARTMENTS, type Complaint, type Department } from "@/lib/types";
 import { Icon } from "../Icon";
@@ -46,7 +46,8 @@ export function useComplaintModals() {
 
   let node: ReactNode = null;
   if (open && c) {
-    if (open.kind === "details") node = <ComplaintDetailsDialog key={`details-${c.trackingId}`} complaint={c} onClose={close} />;
+    // Tracking ID → details only (no "View updates" inside: that lives on the row).
+    if (open.kind === "details") node = <ComplaintDetailsDialog key={`details-${c.trackingId}`} complaint={c} onClose={close} showUpdatesButton={false} />;
     if (open.kind === "assign")
       node = (
         <AssignModal
@@ -90,7 +91,8 @@ export function useComplaintModals() {
           }}
         />
       );
-    if (open.kind === "updates") node = <ComplaintDetailsDialog key={`updates-${c.trackingId}`} complaint={c} onClose={close} />;
+    // Row "View updates" → the updates view directly, not the details first.
+    if (open.kind === "updates") node = <ComplaintUpdatesDialog key={`updates-${c.trackingId}`} complaint={c} onClose={close} />;
   }
 
   return { ...api, modals: node };
@@ -215,15 +217,6 @@ function ReassignModal({ c, onClose, onConfirm }: { c: Complaint; onClose: () =>
   return (
     <Modal open onClose={onClose} align="left" size="sm" title="Reassign complaint" subtitle={`${c.trackingId} · Currently with ${c.department}`}>
       <form onSubmit={submit} noValidate className={m.form}>
-        {c.status === "In Progress" ? (
-          <div className={m.warn} role="note">
-            <Icon name="alert-triangle" size={20} />
-            <p>
-              <strong>This complaint is already In Progress.</strong> {c.department} has started working on it. Reassigning will pull it from their
-              dashboard and notify both offices.
-            </p>
-          </div>
-        ) : null}
         <div className={`field ${errors.dept ? "has-error" : ""}`}>
           <label htmlFor="reassign-dept" className={m.label}>
             New department <span className="req">*</span>

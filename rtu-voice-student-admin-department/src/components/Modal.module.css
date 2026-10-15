@@ -327,10 +327,10 @@
   }
   .dialog:has(.modalResultCard) .head,
   .dialog:has(.modalResultCard) .left .head {
-    padding: 1rem 1.25rem;
+    padding: 0.75rem 1rem;
   }
   .dialog:has(.modalResultCard) .body {
-    padding: 1.25rem;
+    padding: 1rem;
   }
   .smallDialog {
     padding: 2rem 1.5rem 1.5rem;

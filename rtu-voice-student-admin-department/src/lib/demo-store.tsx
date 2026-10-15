@@ -15,6 +15,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { DEMO_OTP, DEMO_STUDENT, DEPARTMENT_ACCOUNTS, buildAdminAccounts, buildSeed, firstSentence } from "./demo-data";
 import { simulatePriority } from "./sla";
 import type { Account, ActivityEntry, AdminAccount, Category, Complaint, Department, DepartmentStatus, EvidenceFile, Priority, PublicConcern } from "./types";
+import { nextDepartmentStatus } from "./types";
 import { generateTrackingId, normalizeTrackingId } from "./validation";
 
 const STORAGE_KEY = "rtu-voice-demo-v2";
@@ -343,7 +344,8 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
   const updateDepartmentStatus = useCallback(
     (trackingId: string, status: DepartmentStatus) => {
       const target = departmentComplaints.find((c) => c.trackingId === trackingId);
-      if (!sessionDept || !target || target.status === "Resolved" || target.status === status) return false;
+      // Only the next step is allowed: Assigned → In Progress → Resolved (no skipping, no going back).
+      if (!sessionDept || !target || nextDepartmentStatus(target.status) !== status) return false;
       const from = target.status;
       const at = new Date().toISOString();
       patch(
@@ -357,14 +359,13 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
               timeline: c.timeline.some((t) => t.status === "In Progress") ? c.timeline : [...c.timeline, { status: "In Progress", label: "In Progress", at }],
             };
           }
-          // Resolved (may jump straight from Assigned: the work-started step is filled in too).
-          const started = c.timeline.some((t) => t.status === "In Progress");
+          // Resolved: only reachable from In Progress, so the work-started step is already on the timeline.
           return {
             ...c,
             status,
             acknowledgedAt: c.acknowledgedAt ?? at,
             resolvedAt: at,
-            timeline: [...c.timeline, ...(started ? [] : [{ status: "In Progress" as const, label: "In Progress", at }]), { status: "Resolved" as const, label: "Resolved", at }],
+            timeline: [...c.timeline, { status: "Resolved" as const, label: "Resolved", at }],
           };
         },
         { action: "Status changed", trackingId, department: sessionDept, detail: `${from} → ${status}` },
