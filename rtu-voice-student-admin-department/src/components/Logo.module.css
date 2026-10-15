@@ -51,15 +51,25 @@
 .rtu {
   color: var(--blue-wordmark);
 }
+/* Brand accent everywhere (#EFB41F), the same as the landing page. */
 .voice {
-  color: var(--gold-text);
+  color: var(--yellow);
 }
 .campus {
   font-family: var(--font-inter);
   font-weight: 500;
   font-size: 11px;
   line-height: 15px;
-  white-space: nowrap;
+  /* wraps instead of being cut off when the header is tight (e.g. tablet with a long portal label) */
+  white-space: normal;
+}
+.light .campus,
+.dark .campus {
+  text-transform: uppercase;
+}
+/* One line on desktop; each half gets its own line on phones. */
+.campusLine {
+  display: inline;
 }
 
 /* On navy: the light-background wordmark colors fail contrast here */
@@ -69,10 +79,6 @@
 .dark .rtu,
 .footer .rtu {
   color: var(--blue-on-dark);
-}
-.dark .voice,
-.footer .voice {
-  color: var(--yellow);
 }
 .footer {
   color: var(--white);
@@ -97,11 +103,21 @@
   .wordmark {
     font-size: 22px;
   }
-  /* Too small to read at phone widths; the footer keeps the full name. */
-  .campus {
-    display: none;
+  /* The full university name stays on phones, on two lines so it fits. */
+  .text {
+    gap: 3px;
   }
-  .footer .campus {
+  .campus {
+    font-size: 10px;
+    line-height: 1.2;
+    letter-spacing: 0;
+  }
+  /* Title case is narrower than capitals, so the name fits next to the menu and avatar buttons */
+  .light .campus,
+  .dark .campus {
+    text-transform: none;
+  }
+  .campusLine {
     display: block;
   }
   .footer .campus {
@@ -117,5 +133,18 @@
   }
   .wordmark {
     font-size: 19px;
+  }
+}
+/* Very small phones (320px class): the name needs three lines, so tighten them to stay inside the 56px header. */
+@media (max-width: 340px) {
+  .text {
+    gap: 1px;
+  }
+  .wordmark {
+    font-size: 17px;
+  }
+  .campus {
+    font-size: 9.5px;
+    line-height: 1.15;
   }
 }

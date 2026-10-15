@@ -32,7 +32,11 @@ export function Logo({ href = "/", variant = "light", badge = false }: LogoProps
               INSTITUTE OF COMPUTER STUDIES
             </>
           ) : (
-            "RIZAL TECHNOLOGICAL UNIVERSITY - PASIG CAMPUS"
+            <>
+              {/* Title case in the markup; desktop shows it in capitals via CSS. */}
+              <span className={styles.campusLine}>Rizal Technological University –</span>{" "}
+              <span className={styles.campusLine}>Pasig Campus</span>
+            </>
           )}
         </span>
       </span>
