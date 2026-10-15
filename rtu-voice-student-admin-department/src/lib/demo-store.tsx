@@ -40,8 +40,9 @@ export interface NewStaffAccountInput {
   firstName: string;
   lastName: string;
   email: string;
-  title: string;
-  /** Required for department heads. */
+  /** Optional: defaults to "Administrator", or "<department> account" for a department. */
+  title?: string;
+  /** Required for department accounts. */
   department?: Department;
 }
 
@@ -452,7 +453,8 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       if (email === SUPERADMIN_ACCOUNT.email || state.admins.some((a) => a.email === email) || state.deptAccounts.some((d) => d.email === email) || email === state.student.email.toLowerCase())
         return "An account with this email already exists.";
       const now = new Date().toISOString();
-      const base = { firstName: input.firstName.trim(), lastName: input.lastName.trim(), email, title: input.title.trim(), active: true, addedAt: now };
+      const title = input.title?.trim() || (input.kind === "admin" ? "Administrator" : `${input.department} account`);
+      const base = { firstName: input.firstName.trim(), lastName: input.lastName.trim(), email, title, active: true, addedAt: now };
       if (input.kind === "admin") {
         setState((s) => ({ ...s, admins: [...s.admins, { ...base, lastActiveAt: now }] }));
         return null;

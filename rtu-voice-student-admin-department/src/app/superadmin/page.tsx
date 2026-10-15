@@ -192,7 +192,8 @@ function CreateAccountModal({ onClose }: { onClose: () => void }) {
   const hasAccount = (d: string) => deptAccounts.some((a) => a.department === d);
   const available = activeDepartments.filter((d) => !hasAccount(d));
   const toast = useToast();
-  const [form, setForm] = useState<NewStaffAccountInput>({ kind: "admin", firstName: "", lastName: "", email: "", title: "Administrator", department: "" });
+  const [form, setForm] = useState<NewStaffAccountInput>({ kind: "admin", firstName: "", lastName: "", email: "", department: "" });
+  const noneLeft = form.kind === "department" && available.length === 0;
   const [errors, setErrors] = useState<Partial<Record<keyof NewStaffAccountInput, string | null>>>({});
   const [busy, setBusy] = useState(false);
   const set = (key: keyof NewStaffAccountInput, value: string) => {
@@ -202,12 +203,11 @@ function CreateAccountModal({ onClose }: { onClose: () => void }) {
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
-    if (busy) return;
+    if (busy || noneLeft) return;
     const next = {
       firstName: validateName(form.firstName, "First name"),
       lastName: validateName(form.lastName, "Last name"),
       email: validateEmail(form.email),
-      title: !form.title.trim() ? "Enter a job title." : form.title.trim().length > 60 ? "Keep the title under 60 characters." : null,
       department:
         form.kind === "department" && !form.department
           ? available.length
@@ -224,7 +224,7 @@ function CreateAccountModal({ onClose }: { onClose: () => void }) {
       setBusy(false);
       return;
     }
-    toast(`${form.kind === "admin" ? "Administrator" : "Department-head"} account created for ${form.email.trim().toLowerCase()} (simulated: no email sent).`, "success");
+    toast(`${form.kind === "admin" ? "Administrator" : `${form.department}`} account created for ${form.email.trim().toLowerCase()} (simulated: no email sent).`, "success");
     onClose();
   };
 
@@ -251,11 +251,11 @@ function CreateAccountModal({ onClose }: { onClose: () => void }) {
               value={form.kind}
               onChange={(e) => {
                 const k = e.target.value as NewStaffAccountInput["kind"];
-                setForm((f) => ({ ...f, kind: k, title: k === "admin" ? "Administrator" : "", department: "" }));
+                setForm((f) => ({ ...f, kind: k, department: "" }));
               }}
             >
               <option value="admin">Administrator</option>
-              <option value="department">Department head</option>
+              <option value="department">Department (one shared account)</option>
             </select>,
             true,
           )}
@@ -267,40 +267,35 @@ function CreateAccountModal({ onClose }: { onClose: () => void }) {
             <input id="acc-email" className="input" type="email" placeholder="name@rtu.edu.ph" value={form.email} onChange={(e) => set("email", e.target.value)} />,
             true,
           )}
-          {field(
-            "title",
-            "Job title",
-            <input
-              id="acc-title"
-              className="input"
-              placeholder={form.kind === "admin" ? "Administrator" : "e.g. Head of Facilities"}
-              value={form.title}
-              onChange={(e) => set("title", e.target.value)}
-            />,
-            form.kind === "admin",
-          )}
           {form.kind === "department"
-            ? field(
-                "department",
-                "Department",
-                <select id="acc-department" className="select" value={form.department} onChange={(e) => set("department", e.target.value)}>
-                  <option value="" disabled>
-                    Choose a department
-                  </option>
-                  {activeDepartments.map((d) => (
-                    <option key={d} value={d} disabled={hasAccount(d)}>
-                      {d}
-                      {hasAccount(d) ? " (has an account)" : ""}
+            ? noneLeft
+              ? (
+                  <p className={`alert alert-info ${x.full}`} role="status">
+                    Every department already has its account. Add a new department first (Departments page), then create its account here.
+                  </p>
+                )
+              : field(
+                  "department",
+                  "Department",
+                  // Only departments without an account are listed: one shared account per department.
+                  <select id="acc-department" className="select" value={form.department} onChange={(e) => set("department", e.target.value)}>
+                    <option value="" disabled>
+                      Choose a department
                     </option>
-                  ))}
-                </select>,
-              )
+                    {available.map((d) => (
+                      <option key={d} value={d}>
+                        {d}
+                      </option>
+                    ))}
+                  </select>,
+                  true,
+                )
             : null}
         </div>
         <p className={m.help}>
           {form.kind === "department" ? (
             <>
-              Each department has <strong>one shared account</strong>, used by its head and staff. Departments that already have one can&apos;t get another.{" "}
+              Each department has <strong>one shared account</strong>, used by its head and staff. Departments that already have one aren&apos;t listed.{" "}
             </>
           ) : null}
           <em>Demo build: no email is sent. New accounts sign in with the demo password.</em>
@@ -309,7 +304,7 @@ function CreateAccountModal({ onClose }: { onClose: () => void }) {
           <button type="button" className={`btn btn-soft ${m.btn}`} onClick={onClose}>
             Cancel
           </button>
-          <button type="submit" className={`btn btn-primary ${m.btn}`} disabled={busy}>
+          <button type="submit" className={`btn btn-primary ${m.btn}`} disabled={busy || noneLeft}>
             Create account
           </button>
         </div>
