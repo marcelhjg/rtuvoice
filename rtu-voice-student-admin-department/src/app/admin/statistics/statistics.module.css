@@ -34,7 +34,7 @@
   color: #4a5470;
 }
 .tileValue {
-  font-family: var(--font-instrument);
+  font-family: var(--font-inter);
   font-weight: 600;
   font-size: 40px;
   line-height: 1.05;

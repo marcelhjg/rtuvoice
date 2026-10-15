@@ -9,7 +9,7 @@
   max-width: 1281px;
 }
 .eyebrow {
-  font-family: var(--font-instrument);
+  font-family: var(--font-inter);
   font-weight: 700;
   font-size: 16px;
   color: var(--yellow);
@@ -23,7 +23,7 @@
 }
 .lead {
   margin-top: 18px;
-  font-family: var(--font-hedvig);
+  font-family: var(--font-inter);
   font-size: 20px;
 }
 .chips {
@@ -42,7 +42,7 @@
   padding: 0 20px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.14);
-  font-family: var(--font-instrument);
+  font-family: var(--font-inter);
   font-size: 16px;
 }
 
@@ -88,7 +88,7 @@
 }
 .sectionBody {
   margin-top: 22px;
-  font-family: var(--font-instrument);
+  font-family: var(--font-inter);
   font-weight: 500;
   font-size: 20px;
   line-height: 1.5;
@@ -116,7 +116,7 @@
   align-items: flex-start;
   border-radius: 14px;
   padding: 26px 32px;
-  font-family: var(--font-instrument);
+  font-family: var(--font-inter);
   font-weight: 500;
   font-size: 20px;
   line-height: 1.5;
@@ -141,7 +141,7 @@
 }
 .footnote {
   margin-top: -4px;
-  font-family: var(--font-instrument);
+  font-family: var(--font-inter);
   font-weight: 500;
   font-size: 13px;
   color: #3a3a3a;
@@ -231,7 +231,7 @@
 }
 .tableNote {
   margin-top: 26px;
-  font-family: var(--font-instrument);
+  font-family: var(--font-inter);
   font-size: 15px;
   color: #555;
 }
@@ -321,7 +321,7 @@
 }
 .retainText {
   margin-top: 10px;
-  font-family: var(--font-instrument);
+  font-family: var(--font-inter);
   font-weight: 500;
   font-size: 15px;
   line-height: 1.1;

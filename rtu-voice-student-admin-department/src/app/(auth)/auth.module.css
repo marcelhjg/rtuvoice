@@ -23,7 +23,7 @@
   max-width: 600px;
 }
 .tagline {
-  font-family: var(--font-instrument);
+  font-family: var(--font-inter);
   font-weight: 500;
   font-size: 16px;
   letter-spacing: 0.3px;

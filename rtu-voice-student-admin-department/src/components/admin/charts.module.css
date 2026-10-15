@@ -12,7 +12,7 @@
   gap: 12px;
 }
 .cardTitle {
-  font-family: var(--font-instrument);
+  font-family: var(--font-inter);
   font-weight: 700;
   font-size: 18px;
   color: #17213b;

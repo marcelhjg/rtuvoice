@@ -12,13 +12,6 @@
   font-display: swap;
 }
 @font-face {
-  font-family: "Instrument Sans";
-  src: url("/fonts/instrument-sans-variable.woff2") format("woff2");
-  font-weight: 400 700;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
   font-family: "Bricolage Grotesque";
   src: url("/fonts/bricolage-grotesque-variable.woff2") format("woff2");
   font-weight: 200 800;
@@ -29,27 +22,6 @@
   font-family: "Playfair";
   src: url("/fonts/playfair-variable.woff2") format("woff2");
   font-weight: 300 900;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Hedvig Letters Sans";
-  src: url("/fonts/hedvig-letters-sans-400.woff2") format("woff2");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Inria Serif";
-  src: url("/fonts/inria-serif-400.woff2") format("woff2");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Inria Serif";
-  src: url("/fonts/inria-serif-700.woff2") format("woff2");
-  font-weight: 700;
   font-style: normal;
   font-display: swap;
 }
@@ -99,11 +71,8 @@
 
   /* Type */
   --font-inter: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-instrument: "Instrument Sans", system-ui, sans-serif;
   --font-bricolage: "Bricolage Grotesque", system-ui, sans-serif;
   --font-playfair: "Playfair", Georgia, serif;
-  --font-hedvig: "Hedvig Letters Sans", system-ui, sans-serif;
-  --font-inria: "Inria Serif", Georgia, serif;
 
   /* Shared type scale */
   --text-xs: 0.75rem;
@@ -301,7 +270,7 @@ p {
   gap: 8px;
   border: 1px solid transparent;
   border-radius: 999px;
-  font-family: var(--font-instrument);
+  font-family: var(--font-inter);
   font-weight: 600;
   font-size: 0.875rem;
   line-height: 1;
@@ -594,7 +563,7 @@ p {
   padding-bottom: 36px;
 }
 .page-title {
-  font-family: var(--font-instrument);
+  font-family: var(--font-inter);
   font-weight: 700;
   font-size: 36px;
   line-height: 39px;

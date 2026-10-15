@@ -98,7 +98,7 @@
   color: var(--text-muted);
 }
 .empty h2 {
-  font-family: var(--font-instrument);
+  font-family: var(--font-inter);
   font-weight: 600;
   font-size: 20px;
   color: var(--black);
@@ -115,7 +115,7 @@
 }
 .idLabel {
   margin-top: 6px;
-  font-family: var(--font-instrument);
+  font-family: var(--font-inter);
   font-size: 17px;
   color: #5b5b5b;
 }
@@ -131,7 +131,7 @@
   display: grid;
   grid-template-columns: 122px 1fr;
   row-gap: 6px;
-  font-family: var(--font-instrument);
+  font-family: var(--font-inter);
   font-size: 15px;
 }
 .meta dt {
@@ -148,7 +148,7 @@
 }
 .progressTitle {
   margin-top: 30px;
-  font-family: var(--font-instrument);
+  font-family: var(--font-inter);
   font-weight: 600;
   font-size: 17px;
 }
@@ -210,7 +210,7 @@
   border-color: var(--rejected-fg);
 }
 .tlLabel {
-  font-family: var(--font-instrument);
+  font-family: var(--font-inter);
   font-weight: 600;
   font-size: 15px;
   color: #1f1f1f;
