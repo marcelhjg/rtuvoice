@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 import { ComplaintStatusDetails } from "@/components/ComplaintStatusDetails";
 import { Icon } from "@/components/Icon";
 import { Modal } from "@/components/Modal";
@@ -75,24 +75,15 @@ export function ComplaintDetailsDialog({
 }
 
 /**
- * Staff "View updates" (admin and department rows): opens directly on the complaint's
- * status-change history and the department's update messages, without the details first.
+ * Staff "View updates" (admin and department rows): opens straight to the department's
+ * update messages, in the same pop-up students see, without opening the details first.
  */
 export function ComplaintUpdatesDialog({ complaint, onClose }: { complaint: Complaint; onClose: () => void }) {
-  const history = [...complaint.timeline].sort((a, b) => a.at.localeCompare(b.at));
-  const section = (title: string, body: ReactNode) => (
-    <section className={trackStyles.updatesSection}>
-      <h3 className={trackStyles.updatesHeading}>{title}</h3>
-      {body}
-    </section>
-  );
   return (
     <Modal
       open
       onClose={onClose}
-      align="left"
-      title="Complaint updates"
-      subtitle={`${complaint.trackingId} · ${complaint.title}`}
+      title="Update from the department"
       hideClose
       mobileContent
       footer={
@@ -101,20 +92,7 @@ export function ComplaintUpdatesDialog({ complaint, onClose }: { complaint: Comp
         </button>
       }
     >
-      {section(
-        "Status history",
-        <ol className={trackStyles.historyList}>
-          {history.map((t, i) => (
-            <li key={`${t.status}-${t.at}-${i}`} className={trackStyles.historyItem}>
-              <span className={trackStyles.historyLabel}>{t.label}</span>
-              <span className={trackStyles.updateMeta}>
-                {formatMonthDay(t.at)}, {formatTime(t.at)}
-              </span>
-            </li>
-          ))}
-        </ol>,
-      )}
-      {section("Department updates", <UpdateMessages complaint={complaint} />)}
+      <UpdateMessages complaint={complaint} />
       <div className={trackStyles.updateNote}>
         <Icon name="info" size={20} />
         Update messages are visible to the student and administrators. They are never shown on the public dashboard.

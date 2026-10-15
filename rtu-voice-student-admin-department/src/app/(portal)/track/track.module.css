@@ -407,48 +407,6 @@
   flex: none;
   color: var(--blue);
 }
-/* Staff updates view: status history + department updates */
-.updatesSection {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.updatesSection + .updatesSection {
-  margin-top: 18px;
-}
-.updatesSection + .updateNote {
-  margin-top: 18px;
-}
-.updatesHeading {
-  margin: 0;
-  font-family: var(--font-inter);
-  font-size: 14px;
-  font-weight: 700;
-  color: #17213b;
-}
-.historyList {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  border: 1px solid #d5dbef;
-  border-radius: 10px;
-}
-.historyItem {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 4px 12px;
-  padding: 10px 14px;
-}
-.historyItem + .historyItem {
-  border-top: 1px solid #e3e7f2;
-}
-.historyLabel {
-  font-size: 14px;
-  font-weight: 600;
-  color: #17213b;
-}
 .closeBtn {
   min-height: 41px;
   min-width: 137px;
