@@ -458,6 +458,9 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
         return null;
       }
       if (!input.department || !state.departments.some((d) => d.name === input.department && d.active)) return "Choose an active department.";
+      // One account per department: the head's account is shared by the department's staff.
+      if (state.deptAccounts.some((a) => a.department === input.department))
+        return `${input.department} already has an account. Each department has one shared account; reactivate it or reset its password instead.`;
       setState((s) => ({ ...s, deptAccounts: [...s.deptAccounts, { ...base, department: input.department! }] }));
       return null;
     },

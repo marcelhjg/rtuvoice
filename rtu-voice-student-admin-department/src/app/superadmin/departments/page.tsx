@@ -25,7 +25,8 @@ export default function DepartmentsPage() {
     const mine = complaints.filter((c) => c.department === name);
     return { total: mine.length, open: mine.filter((c) => c.status === "Assigned" || c.status === "In Progress").length };
   };
-  const heads = (name: string) => deptAccounts.filter((a) => a.department === name && a.active !== false);
+  // One shared account per department (active or deactivated).
+  const accountOf = (name: string) => deptAccounts.find((a) => a.department === name);
 
   return (
     <div className="container">
@@ -51,7 +52,7 @@ export default function DepartmentsPage() {
             <thead>
               <tr>
                 <th scope="col">Department</th>
-                <th scope="col">Department head</th>
+                <th scope="col">Account</th>
                 <th scope="col">Open</th>
                 <th scope="col">Total</th>
                 <th scope="col">Status</th>
@@ -63,24 +64,23 @@ export default function DepartmentsPage() {
             <tbody>
               {departments.map((d) => {
                 const n = counts(d.name);
-                const h = heads(d.name);
+                const acc = accountOf(d.name);
                 return (
                   <tr key={d.name} className={d.active ? undefined : x.inactiveRow}>
                     <td data-label="Department" className={s.strong}>
                       {d.name}
                     </td>
-                    <td data-label="Department head" className={x.headCell}>
-                      {h.length ? (
-                        h.map((a) => (
-                          <span key={a.email}>
-                            <span className={x.headName}>
-                              {a.firstName} {a.lastName}
-                            </span>
-                            <span className={x.sub}>{a.email}</span>
+                    <td data-label="Account" className={x.headCell}>
+                      {acc ? (
+                        <span>
+                          <span className={x.headName}>
+                            {acc.firstName} {acc.lastName}
+                            {acc.active === false ? <span className={x.sub}>Deactivated</span> : null}
                           </span>
-                        ))
+                          <span className={x.sub}>{acc.email}</span>
+                        </span>
                       ) : (
-                        <span className={s.muted}>No active head account</span>
+                        <span className={s.muted}>No account yet</span>
                       )}
                     </td>
                     <td data-label="Open">{n.open}</td>

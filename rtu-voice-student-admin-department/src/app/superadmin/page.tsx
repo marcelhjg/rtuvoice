@@ -60,7 +60,7 @@ export default function AccountsPage() {
             {all.length}
           </span>
         </div>
-        <p className={s.subtitle}>Administrator and department-head accounts. Only the superadmin can create, deactivate or reset them.</p>
+        <p className={s.subtitle}>Administrator accounts and one shared account per department. Only the superadmin can create, deactivate or reset them.</p>
       </div>
 
       <section className={s.panel} aria-label="Accounts">
@@ -187,7 +187,10 @@ export default function AccountsPage() {
 }
 
 function CreateAccountModal({ onClose }: { onClose: () => void }) {
-  const { activeDepartments, createStaffAccount } = useDemoStore();
+  const { activeDepartments, deptAccounts, createStaffAccount } = useDemoStore();
+  // One account per department: only departments without an account can be picked.
+  const hasAccount = (d: string) => deptAccounts.some((a) => a.department === d);
+  const available = activeDepartments.filter((d) => !hasAccount(d));
   const toast = useToast();
   const [form, setForm] = useState<NewStaffAccountInput>({ kind: "admin", firstName: "", lastName: "", email: "", title: "Administrator", department: "" });
   const [errors, setErrors] = useState<Partial<Record<keyof NewStaffAccountInput, string | null>>>({});
@@ -205,14 +208,19 @@ function CreateAccountModal({ onClose }: { onClose: () => void }) {
       lastName: validateName(form.lastName, "Last name"),
       email: validateEmail(form.email),
       title: !form.title.trim() ? "Enter a job title." : form.title.trim().length > 60 ? "Keep the title under 60 characters." : null,
-      department: form.kind === "department" && !form.department ? "Choose the department this head manages." : null,
+      department:
+        form.kind === "department" && !form.department
+          ? available.length
+            ? "Choose the department this account is for."
+            : "Every active department already has an account. Add a new department first."
+          : null,
     };
     setErrors(next);
     if (Object.values(next).some(Boolean)) return;
     setBusy(true);
     const error = createStaffAccount({ ...form, department: form.kind === "department" ? form.department : undefined });
     if (error) {
-      setErrors({ email: error });
+      setErrors(error.includes("already has an account") || error.includes("department") ? { department: error } : { email: error });
       setBusy(false);
       return;
     }
@@ -280,8 +288,9 @@ function CreateAccountModal({ onClose }: { onClose: () => void }) {
                     Choose a department
                   </option>
                   {activeDepartments.map((d) => (
-                    <option key={d} value={d}>
+                    <option key={d} value={d} disabled={hasAccount(d)}>
                       {d}
+                      {hasAccount(d) ? " (has an account)" : ""}
                     </option>
                   ))}
                 </select>,
@@ -289,6 +298,11 @@ function CreateAccountModal({ onClose }: { onClose: () => void }) {
             : null}
         </div>
         <p className={m.help}>
+          {form.kind === "department" ? (
+            <>
+              Each department has <strong>one shared account</strong>, used by its head and staff. Departments that already have one can&apos;t get another.{" "}
+            </>
+          ) : null}
           <em>Demo build: no email is sent. New accounts sign in with the demo password.</em>
         </p>
         <div className={m.footer}>
