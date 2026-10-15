@@ -109,6 +109,8 @@
 
   /* Layout */
   --header-h: 91px;
+  /* The header before login (landing, login, register…) is a little more compact than the portal header. */
+  --public-header-h: 72px;
   --page-max: 1280px;
   --gutter: 3rem;
 }
@@ -116,6 +118,11 @@
 @media (max-width: 1023px) {
   :root {
     --gutter: 2rem;
+  }
+}
+@media (max-width: 767px) {
+  :root {
+    --public-header-h: 3.5rem;
   }
 }
 @media (max-width: 640px) {

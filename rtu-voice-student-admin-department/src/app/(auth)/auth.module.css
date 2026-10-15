@@ -1,6 +1,6 @@
 /* ---------- Stage: full-bleed campus photo (Figma: LOGIN / REGISTER frames) ---------- */
 .stage {
-  min-height: calc(100vh - var(--header-h));
+  min-height: calc(100vh - var(--public-header-h));
   background:
     linear-gradient(90deg, rgba(8, 20, 55, 0.55) 0%, rgba(8, 20, 55, 0.3) 55%, rgba(8, 20, 55, 0.12) 100%),
     url("/images/campus-auth.jpg") center / cover no-repeat;
@@ -297,6 +297,8 @@
   .inner {
     grid-template-columns: 1fr;
     justify-items: center;
+    /* keep the hero and the card together in the middle (the grid rows used to stretch apart) */
+    align-content: center;
     gap: 32px;
     padding-top: 36px;
   }
@@ -696,8 +698,9 @@
   .inner {
     box-sizing: border-box;
     min-height: calc(100svh - 3.5rem);
-    justify-content: flex-start;
-    gap: 0.75rem;
+    /* hero + card centered together, the hero sitting just above the card */
+    justify-content: center;
+    gap: 1.25rem;
     padding: 1.25rem 1rem max(1rem, env(safe-area-inset-bottom));
   }
   .hero {
@@ -736,7 +739,7 @@
   }
   .cardCol {
     display: flex;
-    flex: 1 0 auto;
+    flex: 0 0 auto;
     align-items: center;
     justify-content: center;
     width: 100%;

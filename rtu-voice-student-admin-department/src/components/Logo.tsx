@@ -8,9 +8,11 @@ interface LogoProps {
   variant?: "light" | "dark" | "footer";
   /** Show the circular white badge behind the mark (sidebar). */
   badge?: boolean;
+  /** Smaller mark and wordmark, for the header before login. */
+  compact?: boolean;
 }
 
-export function Logo({ href = "/", variant = "light", badge = false }: LogoProps) {
+export function Logo({ href = "/", variant = "light", badge = false, compact = false }: LogoProps) {
   const content = (
     <>
       {variant !== "footer" && (
@@ -44,7 +46,7 @@ export function Logo({ href = "/", variant = "light", badge = false }: LogoProps
   );
 
   return (
-    <Link href={href} className={`${styles.logo} ${styles[variant]}`}>
+    <Link href={href} className={`${styles.logo} ${styles[variant]} ${compact ? styles.compact : ""}`}>
       {content}
     </Link>
   );

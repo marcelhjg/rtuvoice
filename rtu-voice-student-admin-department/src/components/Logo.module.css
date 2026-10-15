@@ -93,6 +93,23 @@
   font-size: 26px;
 }
 
+/* Compact (header before login): only above phone width; phones already use the small sizes below. */
+@media (min-width: 641px) {
+  .compact {
+    gap: 14px;
+  }
+  .compact .mark {
+    width: 54px;
+  }
+  .compact .wordmark {
+    font-size: 24px;
+  }
+  .compact .campus {
+    font-size: 10.5px;
+    line-height: 14px;
+  }
+}
+
 @media (max-width: 640px) {
   .logo {
     gap: 10px;
