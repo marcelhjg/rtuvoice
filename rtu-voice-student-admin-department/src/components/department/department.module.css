@@ -48,18 +48,23 @@
 .viewUpdatesBtn:hover {
   background: var(--surface-soft);
 }
-.resolvedNote {
-  align-self: center;
-  font-family: var(--font-inter);
-  font-size: 12px;
-  line-height: 1.35;
-  color: #4a5470;
-}
 .rowActions {
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
+  /* the Locked chip fills the second slot */
+  --slot-w: 132px;
+  --slot-h: 38px;
+}
+/* Fixed slots so the menu/buttons line up on every row and every page.
+   144px fits "Update status" without cutting it off. */
+.slotFirst {
+  width: 144px;
+}
+.slotSecond {
+  width: 132px;
+  justify-content: center;
 }
 .titleCell {
   min-width: 200px;
@@ -128,6 +133,14 @@
   font-size: 12.5px;
   color: #4a5470;
 }
+/* Desktop: SLA and attention text wrap inside their fixed-width columns
+   instead of widening them. */
+@media (min-width: 1201px) {
+  .slaCell,
+  .reason {
+    white-space: normal;
+  }
+}
 @media (max-width: 960px) {
   .rowActions {
     justify-content: flex-start;
@@ -155,9 +168,16 @@
     padding: 8px 12px;
     white-space: normal;
   }
-  .resolvedNote {
+  .rowActions {
+    --slot-w: 100%;
+    --slot-h: 44px;
+  }
+  .rowActions > span {
     grid-column: 1 / -1;
-    font-size: 13px;
+  }
+  .slotFirst,
+  .slotSecond {
+    width: 100%;
   }
   .reason,
   .slaCell {

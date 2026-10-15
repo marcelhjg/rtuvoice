@@ -6,7 +6,7 @@ import { formatShortDate } from "@/lib/format";
 import { daysBetween, slaInfo } from "@/lib/sla";
 import { DEPARTMENTS, type Complaint } from "@/lib/types";
 import { normalizeTrackingId } from "@/lib/validation";
-import { BackToDashboard, Pager, PriorityPill, SearchBox, StatusPill, adminStyles as s } from "./bits";
+import { BackToDashboard, Pager, PriorityPill, SearchBox, StatusPill, adminStyles as s, colType } from "./bits";
 import { useComplaintModals } from "./useComplaintModals";
 
 const PAGE_SIZE = 8;
@@ -158,7 +158,7 @@ export function ComplaintList({ kind }: { kind: ListKind }) {
             <thead>
               <tr>
                 {columns.map((col) => (
-                  <th key={col.label} scope="col">
+                  <th key={col.label} scope="col" data-col={colType(col.label)}>
                     {col.label}
                   </th>
                 ))}

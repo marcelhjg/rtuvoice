@@ -9,7 +9,7 @@ import { normalizeTrackingId } from "@/lib/validation";
 import { Icon } from "../Icon";
 import { Modal } from "../Modal";
 import { useToast } from "../Toast";
-import { BackToDashboard, Pager, PriorityDot, SearchBox, StatusPill, adminStyles as s } from "../admin/bits";
+import { BackToDashboard, LockedChip, Pager, PriorityDot, SearchBox, StatusPill, adminStyles as s } from "../admin/bits";
 import { StatCards } from "../admin/StatCards";
 import { useComplaintModals } from "../admin/useComplaintModals";
 import m from "../admin/modals.module.css";
@@ -60,10 +60,10 @@ function RowActions({
   if (c.status === "Resolved") {
     return (
       <div className={d.rowActions}>
-        <button type="button" className={d.viewUpdatesBtn} onClick={() => onView(c.trackingId)}>
+        <button type="button" className={`${d.viewUpdatesBtn} ${d.slotFirst}`} onClick={() => onView(c.trackingId)}>
           View updates
         </button>
-        <span className={d.resolvedNote}>Resolved — no further changes can be made.</span>
+        <LockedChip reason="This complaint is resolved, so no further changes can be made." />
       </div>
     );
   }
@@ -72,7 +72,7 @@ function RowActions({
     <div className={d.rowActions}>
       <select
         aria-label={`Update status of ${c.trackingId}`}
-        className={`select ${d.updateSelect}`}
+        className={`select ${d.updateSelect} ${d.slotFirst}`}
         value=""
         onChange={(e) => onStatus(c, e.target.value as DepartmentStatus)}
       >
@@ -87,7 +87,7 @@ function RowActions({
           </option>
         ))}
       </select>
-      <button type="button" className={d.addBtn} onClick={() => onAdd(c.trackingId)} aria-label={`Add update to ${c.trackingId}`}>
+      <button type="button" className={`${d.addBtn} ${d.slotSecond}`} onClick={() => onAdd(c.trackingId)} aria-label={`Add update to ${c.trackingId}`}>
         <Icon name="plus" size={15} strokeWidth={2.6} /> Add Update
       </button>
     </div>
@@ -110,14 +110,20 @@ function Table({
       <caption className="visually-hidden">{caption}</caption>
       <thead>
         <tr>
-          <th scope="col">Date</th>
-          <th scope="col">Tracking ID</th>
-          <th scope="col">Title</th>
-          {mode === "queue" ? <th scope="col">Assigned</th> : null}
-          <th scope="col">Priority</th>
-          <th scope="col">Status</th>
-          <th scope="col">{mode === "attention" ? "Needs attention" : "SLA"}</th>
-          <th scope="col">
+          <th scope="col" data-col="date">Date</th>
+          <th scope="col" data-col="id">Tracking ID</th>
+          <th scope="col" data-col="title">Title</th>
+          {mode === "queue" ? (
+            <th scope="col" data-col="date">
+              Assigned
+            </th>
+          ) : null}
+          <th scope="col" data-col="priority">Priority</th>
+          <th scope="col" data-col="status">Status</th>
+          <th scope="col" data-col={mode === "attention" ? "attention" : "sla"}>
+            {mode === "attention" ? "Needs attention" : "SLA"}
+          </th>
+          <th scope="col" data-col="actions-dept">
             <span className="visually-hidden">Update status and add update</span>
           </th>
         </tr>
