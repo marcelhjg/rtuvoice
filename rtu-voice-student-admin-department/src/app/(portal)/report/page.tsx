@@ -21,14 +21,15 @@ export default function ReportPage() {
   const [category, setCategory] = useState<Category | "">("");
   const [description, setDescription] = useState("");
   const [files, setFiles] = useState<File[]>([]);
-  const [optOut, setOptOut] = useState(false);
+  // Sharing is opt-in: nothing reaches the public dashboard unless the student ticks the box.
+  const [share, setShare] = useState(false);
   const [errors, setErrors] = useState<Errors>({});
   const [dragging, setDragging] = useState(false);
   const [busy, setBusy] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
 
   const usedBytes = files.reduce((sum, f) => sum + f.size, 0);
-  const dirty = Boolean(title || category || description || files.length || optOut);
+  const dirty = Boolean(title || category || description || files.length || share);
 
   const addFiles = (list: FileList | File[]) => {
     const incoming = Array.from(list);
@@ -88,7 +89,7 @@ export default function ReportPage() {
         category: category as Category,
         description,
         files: files.map((f) => ({ name: f.name, size: f.size, type: f.type })),
-        optOutOfPublic: optOut,
+        optOutOfPublic: !share,
       });
       router.push(`/report/submitted?id=${encodeURIComponent(created.trackingId)}`);
     }, 700);
@@ -108,8 +109,8 @@ export default function ReportPage() {
         <div>
           <strong>Personal matters are not handled here.</strong>
           <br />
-          Harassment, bullying, discrimination and illegal activities are not encouraged to be submitted through this system.
-          Please go in person to campus security, the Guidance Office or HR
+          This system does not handle harassment, bullying, discrimination or illegal activity. Report these in person to
+          Campus Security, the Guidance Office or HR.
         </div>
       </div>
 
@@ -122,7 +123,7 @@ export default function ReportPage() {
           <input
             id="report-title"
             className="input"
-            placeholder={'Short summary, e.g.  "Leaking roof in Room 305"'}
+            placeholder={'e.g. "Leaking roof in Room 305"'}
             value={title}
             maxLength={TITLE_MAX + 20}
             aria-invalid={!!errors.title || undefined}
@@ -212,8 +213,7 @@ export default function ReportPage() {
             id="report-files"
             tabIndex={0}
             role="button"
-            aria-labelledby="evidence-label"
-            aria-describedby="evidence-rules"
+            aria-describedby="evidence-label evidence-privacy"
             className={`${styles.drop} ${dragging ? styles.dropActive : ""} ${errors.files ? styles.dropError : ""}`}
             onClick={() => fileInput.current?.click()}
             onKeyDown={(e) => {
@@ -237,6 +237,10 @@ export default function ReportPage() {
               JPG/PNG, MP3/WAV, PDF or MP4 • 5 MB total per submission
             </span>
           </div>
+          {/* Staff see files as "Evidence 1", "Evidence 2"…, but what is inside a file can still identify the student. */}
+          <span id="evidence-privacy" className="field-hint">
+            Staff can open your files. Leave out anything that shows who you are, like your face, name or ID. A voice message can identify you.
+          </span>
           <input
             ref={fileInput}
             type="file"
@@ -290,13 +294,14 @@ export default function ReportPage() {
           )}
         </div>
 
-        {/* Public dashboard opt-out */}
+        {/* Public dashboard opt-in */}
         <label className={styles.optOut}>
-          <input type="checkbox" className="checkbox" checked={optOut} onChange={(e) => setOptOut(e.target.checked)} />
+          <input type="checkbox" className="checkbox" checked={share} onChange={(e) => setShare(e.target.checked)} />
           <span>
-            <span className={styles.optOutTitle}>Do not release this concern to the public dashboard.</span>
+            <span className={styles.optOutTitle}>Share a summary on the public dashboard</span>
             <span className={styles.optOutText}>
-              Leave unchecked to share an AI-written, depersonalized title and summary with other logged-in students.
+              Other logged-in students will see an AI-written, depersonalized title and summary with its status. Your name is
+              never shown. Leave this unticked to keep your concern off the dashboard.
             </span>
           </span>
         </label>

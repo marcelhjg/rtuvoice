@@ -18,6 +18,7 @@ export const ALLOWED_EVIDENCE: Record<string, string[]> = {
 };
 export const EVIDENCE_ACCEPT = ".jpg,.jpeg,.png,.pdf,.mp3,.wav,.mp4";
 
+/** SRS §1: only official @rtu.edu.ph addresses can register or log in. */
 export function validateEmail(value: string): string | null {
   const v = value.trim().toLowerCase();
   if (!v) return "Enter your university email.";
@@ -39,6 +40,10 @@ export interface PasswordCheck {
   ok: boolean;
 }
 
+/**
+ * Password rules shown live under the field. SRS §1 asks for one lowercase, one uppercase and one
+ * digit; the 8-character minimum (PASSWORD_MIN) is an addition in this build.
+ */
 export function passwordChecks(value: string): PasswordCheck[] {
   return [
     { label: `At least ${PASSWORD_MIN} characters`, ok: value.length >= PASSWORD_MIN },
@@ -82,6 +87,7 @@ export function generateTrackingId(existing: Set<string>): string {
   }
 }
 
+/** Uppercases and removes spaces ("stu-a3f1b " → "STU-A3F1B"), so lookups don't depend on how the ID was typed. */
 export function normalizeTrackingId(value: string): string {
   return value.trim().toUpperCase().replace(/\s+/g, "");
 }

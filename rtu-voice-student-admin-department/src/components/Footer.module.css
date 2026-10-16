@@ -17,7 +17,7 @@
 .contact {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 0;
   font-family: var(--font-inter);
   font-size: 16px;
 }
@@ -27,21 +27,26 @@
   text-decoration: underline;
   text-underline-offset: 3px;
   width: fit-content;
+  /* 40px tall tap target; the gap above was folded into this height */
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
 }
 .links a:hover {
   color: var(--yellow);
 }
 .heading {
   font-weight: 700;
+  margin-bottom: 4px;
 }
 .built {
-  margin-top: 6px;
+  margin-top: 10px;
 }
 .bottom {
   margin: 0 55px;
   border-top: 1px solid rgba(255, 255, 255, 0.35);
   padding: 14px 0 22px;
-  font-family: var(--font-instrument);
+  font-family: var(--font-inter);
   font-size: 0.75rem;
   color: rgba(255, 255, 255, 0.85);
 }
@@ -65,7 +70,7 @@
   }
   .links,
   .contact {
-    gap: 12px;
+    gap: 0;
     font-size: 15px;
   }
 }

@@ -12,13 +12,6 @@
   font-display: swap;
 }
 @font-face {
-  font-family: "Instrument Sans";
-  src: url("/fonts/instrument-sans-variable.woff2") format("woff2");
-  font-weight: 400 700;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
   font-family: "Bricolage Grotesque";
   src: url("/fonts/bricolage-grotesque-variable.woff2") format("woff2");
   font-weight: 200 800;
@@ -29,27 +22,6 @@
   font-family: "Playfair";
   src: url("/fonts/playfair-variable.woff2") format("woff2");
   font-weight: 300 900;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Hedvig Letters Sans";
-  src: url("/fonts/hedvig-letters-sans-400.woff2") format("woff2");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Inria Serif";
-  src: url("/fonts/inria-serif-400.woff2") format("woff2");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Inria Serif";
-  src: url("/fonts/inria-serif-700.woff2") format("woff2");
-  font-weight: 700;
   font-style: normal;
   font-display: swap;
 }
@@ -64,6 +36,8 @@
   --yellow: #efb41f;
   --gold: #d7a121;
   --gold-muted: #b99236;
+  /* Text-safe variants: --yellow and --blue fail contrast in these spots. */
+  --blue-on-dark: #8fb4ff; /* 7.5:1 on --navy */
 
   /* Neutrals */
   --white: #ffffff;
@@ -96,11 +70,8 @@
 
   /* Type */
   --font-inter: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-instrument: "Instrument Sans", system-ui, sans-serif;
   --font-bricolage: "Bricolage Grotesque", system-ui, sans-serif;
   --font-playfair: "Playfair", Georgia, serif;
-  --font-hedvig: "Hedvig Letters Sans", system-ui, sans-serif;
-  --font-inria: "Inria Serif", Georgia, serif;
 
   /* Shared type scale */
   --text-xs: 0.75rem;
@@ -138,6 +109,8 @@
 
   /* Layout */
   --header-h: 91px;
+  /* The header before login (landing, login, register…) is a little more compact than the portal header. */
+  --public-header-h: 72px;
   --page-max: 1280px;
   --gutter: 3rem;
 }
@@ -145,6 +118,11 @@
 @media (max-width: 1023px) {
   :root {
     --gutter: 2rem;
+  }
+}
+@media (max-width: 767px) {
+  :root {
+    --public-header-h: 3.5rem;
   }
 }
 @media (max-width: 640px) {
@@ -163,6 +141,12 @@
 html {
   font-size: 100%;
   -webkit-text-size-adjust: 100%;
+}
+/* Minimum supported width: 320 CSS px (WCAG 2.1 SC 1.4.10 Reflow; the smallest phones in use).
+   Every page must fit at 320px without sideways scrolling. Below that the layout stops
+   shrinking and the page scrolls sideways instead of breaking. */
+body {
+  min-width: 320px;
 }
 body {
   margin: 0;
@@ -298,7 +282,7 @@ p {
   gap: 8px;
   border: 1px solid transparent;
   border-radius: 999px;
-  font-family: var(--font-instrument);
+  font-family: var(--font-inter);
   font-weight: 600;
   font-size: 0.875rem;
   line-height: 1;
@@ -526,7 +510,7 @@ p {
   width: 18px;
   height: 18px;
   border: 1.6px solid #555;
-  border-radius: 50%;
+  border-radius: 4px; /* square, so it reads as a checkbox and not a radio button */
   background: var(--white);
   flex: none;
   margin: 2px 0 0;
@@ -591,7 +575,7 @@ p {
   padding-bottom: 36px;
 }
 .page-title {
-  font-family: var(--font-instrument);
+  font-family: var(--font-inter);
   font-weight: 700;
   font-size: 36px;
   line-height: 39px;

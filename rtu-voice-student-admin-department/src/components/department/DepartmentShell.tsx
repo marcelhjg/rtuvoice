@@ -2,7 +2,10 @@
 
 import type { ReactNode } from "react";
 import { useDemoStore } from "@/lib/demo-store";
+import type { Role } from "@/lib/types";
 import { ConsoleShell, type ConsoleNavItem } from "../admin/ConsoleShell";
+
+const DEPARTMENT_ROLES: Role[] = ["department"];
 
 /** Hamburger menu from the Figma "Department Portal" sidebar frame (roadmap Sprint 5). */
 const NAV: ConsoleNavItem[] = [
@@ -20,7 +23,7 @@ export function DepartmentShell({ children }: { children: ReactNode }) {
   const { session } = useDemoStore();
   return (
     <ConsoleShell
-      role="department"
+      roles={DEPARTMENT_ROLES}
       nav={NAV}
       homeHref="/department"
       profileHref="/department/profile"

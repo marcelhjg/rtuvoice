@@ -6,7 +6,7 @@
   padding-bottom: 26px;
 }
 .title {
-  font-family: var(--font-instrument);
+  font-family: var(--font-inter);
   font-weight: 700;
   font-size: 32px;
   line-height: 1.15;
@@ -19,7 +19,7 @@
   flex-wrap: wrap;
 }
 .listTitle {
-  font-family: var(--font-instrument);
+  font-family: var(--font-inter);
   font-weight: 700;
   font-size: 38px;
   line-height: 1.1;
@@ -27,15 +27,16 @@
 }
 .subtitle {
   margin-top: 8px;
-  font-family: var(--font-instrument);
+  font-family: var(--font-inter);
   font-size: 16px;
   color: #4a5470;
 }
 .back {
   display: inline-flex;
   align-items: center;
+  min-height: 40px;
   gap: 8px;
-  margin-bottom: 14px;
+  margin-bottom: 4px;
   font-family: var(--font-inter);
   font-weight: 600;
   font-size: 14px;
@@ -112,7 +113,7 @@
   color: #17213b;
 }
 .searchInput::placeholder {
-  color: #7a8399;
+  color: #5b6478;
 }
 .searchInput:focus,
 .filter:focus {
@@ -221,21 +222,24 @@
   justify-content: flex-end;
   white-space: nowrap;
 }
-.lockedReason {
+/* Takes the same slot as the button it replaces (--slot-w), so rows line up. */
+.lockedChip {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 40px;
-  padding: 6px 10px;
+  gap: 6px;
+  width: var(--slot-w, 128px);
+  height: var(--slot-h, 40px);
+  padding: 0 10px;
+  border: 1px dashed #b8bfcf;
   border-radius: 6px;
   background: #f3f5fa;
   font-family: var(--font-inter);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
-  line-height: 1.35;
   color: #4a5470;
-  white-space: normal;
-  text-align: center;
+  white-space: nowrap;
+  cursor: help;
 }
 .empty {
   padding: 48px 16px;
@@ -306,7 +310,7 @@
   color: #c62828;
 }
 .dMedium {
-  color: #b7791f;
+  color: #8a5a00;
 }
 .dLow {
   color: #17784a;
@@ -329,14 +333,14 @@
   padding: 0 18px;
   border: 0;
   border-radius: 6px;
-  background: #dc3a3a;
+  background: #c62828;
   color: var(--white);
   font-family: var(--font-inter);
   font-weight: 600;
   font-size: 13px;
 }
 .reject:hover {
-  background: #c22e2e;
+  background: #a91f1f;
 }
 .ghostBtn {
   height: 40px;
@@ -426,6 +430,37 @@
   padding: 0 4px;
 }
 
+/* ---------- Desktop: same column widths on every table ----------
+   Each header carries data-col (see colType in bits.tsx). Title has no width,
+   so it takes the remaining space; every other kind of column is the same
+   width on every admin and department page. */
+@media (min-width: 1201px) {
+  .table thead th {
+    box-sizing: border-box;
+  }
+  .table th[data-col="date"] { width: 100px; }
+  .table th[data-col="id"] { width: 116px; }
+  .table th[data-col="category"] { width: 210px; }
+  .table th[data-col="dept"] { width: 172px; }
+  .table th[data-col="priority"] { width: 100px; }
+  .table th[data-col="status"] { width: 120px; }
+  .table th[data-col="sla"] { width: 176px; }
+  .table th[data-col="attention"] { width: 250px; }
+  .table th[data-col="assign"] { width: 228px; }
+  .table th[data-col="reject"] { width: 112px; }
+  .table th[data-col="actions-admin"] { width: 280px; } /* 120 + 8 + 128 + padding */
+  .table th[data-col="actions-dept"] { width: 336px; } /* 40 + 8 + 136 + 8 + 120 + padding */
+
+  /* Fixed button slots in the master queue */
+  .slotView {
+    width: 120px;
+  }
+  .slotMain {
+    width: 128px;
+    justify-content: center;
+  }
+}
+
 /* ---------- Responsive: tables become cards ---------- */
 @media (min-width: 961px) and (max-width: 1200px) {
   /* Mid-width screens: stack row buttons so wide tables fit without scrolling */
@@ -497,7 +532,7 @@
     font-weight: 600;
     letter-spacing: 0.6px;
     text-transform: uppercase;
-    color: #7a8399;
+    color: #5b6478;
   }
   .table td[data-label=""]::before {
     display: none;
@@ -519,7 +554,20 @@
     width: 100%;
   }
 }
+@media (max-width: 400px) {
+  /* Small phones: a narrower label column leaves the value column room for whole words */
+  .table td,
+  .table td:first-child {
+    grid-template-columns: 92px minmax(0, 1fr);
+    gap: 8px;
+  }
+}
 @media (max-width: 640px) {
+  /* Stack the label above the assign menu so "Assign department…" isn't cut off */
+  .table td:has(> .rowSelect) {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
   .head {
     padding-top: 24px;
     padding-bottom: 18px;

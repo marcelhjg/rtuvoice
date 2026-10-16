@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useDemoStore } from "@/lib/demo-store";
 import { homeFor } from "@/lib/routes";
+import type { Role } from "@/lib/types";
 import { Icon, type IconName } from "../Icon";
 import { Logo } from "../Logo";
 import { LogoutDialog } from "../portal/LogoutDialog";
@@ -19,8 +20,8 @@ export interface ConsoleNavItem {
 }
 
 export interface ConsoleShellProps {
-  /** The only role allowed on these pages; everyone else is sent to their own portal. */
-  role: "admin" | "department";
+  /** Roles allowed on these pages (the console is shared by admin and superadmin); everyone else is sent to their own portal. */
+  roles: Role[];
   nav: ConsoleNavItem[];
   /** Home route (logo link). */
   homeHref: string;
@@ -34,7 +35,7 @@ export interface ConsoleShellProps {
 }
 
 /** Shared layout for the Central Admin Console and the Department Portal. */
-export function ConsoleShell({ role, nav, homeHref, profileHref, consoleLabel, consoleSub, menuLabel, children }: ConsoleShellProps) {
+export function ConsoleShell({ roles, nav, homeHref, profileHref, consoleLabel, consoleSub, menuLabel, children }: ConsoleShellProps) {
   const { ready, session, logout } = useDemoStore();
   const router = useRouter();
   const pathname = usePathname();
@@ -49,8 +50,8 @@ export function ConsoleShell({ role, nav, homeHref, profileHref, consoleLabel, c
   useEffect(() => {
     if (!ready || loggingOut.current) return;
     if (!session) router.replace(`/login?next=${encodeURIComponent(pathname)}`);
-    else if (session.role !== role) router.replace(homeFor(session.role));
-  }, [ready, session, router, pathname]);
+    else if (!roles.includes(session.role)) router.replace(homeFor(session.role));
+  }, [ready, session, router, pathname, roles]);
 
   useEffect(() => {
     setMenuOpen(false);
@@ -81,7 +82,7 @@ export function ConsoleShell({ role, nav, homeHref, profileHref, consoleLabel, c
     router.replace("/login");
   }, [logout, router, toast]);
 
-  if (!ready || !session || session.role !== role) {
+  if (!ready || !session || !roles.includes(session.role)) {
     return (
       <div className={styles.loading} aria-busy="true">
         <span className="spinner" /> Loading…
@@ -107,7 +108,7 @@ export function ConsoleShell({ role, nav, homeHref, profileHref, consoleLabel, c
       <div className={`${styles.overlay} ${menuOpen ? styles.overlayOpen : ""}`} onClick={() => setMenuOpen(false)} aria-hidden="true" />
       <aside id="console-sidebar" className={`${styles.sidebar} ${menuOpen ? styles.sidebarOpen : ""}`} aria-label={menuLabel} aria-hidden={!menuOpen} inert={!menuOpen}>
         <div className={styles.sidebarHead}>
-          <Logo href={homeHref} />
+          <Logo href={homeHref} badge />
         </div>
         <nav className={styles.nav}>
           {nav.map((item) => {

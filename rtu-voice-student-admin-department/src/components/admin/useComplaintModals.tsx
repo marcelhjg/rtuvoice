@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, type FormEvent, type ReactNode } from "react";
-import { ComplaintDetailsDialog } from "@/components/ComplaintDetailsDialog";
+import { ComplaintDetailsDialog, ComplaintUpdatesDialog } from "@/components/ComplaintDetailsDialog";
 import { useDemoStore } from "@/lib/demo-store";
-import { DEPARTMENTS, type Complaint, type Department } from "@/lib/types";
+import type { Complaint, Department } from "@/lib/types";
 import { Icon } from "../Icon";
 import { Modal } from "../Modal";
 import { useToast } from "../Toast";
@@ -46,7 +46,8 @@ export function useComplaintModals() {
 
   let node: ReactNode = null;
   if (open && c) {
-    if (open.kind === "details") node = <ComplaintDetailsDialog key={`details-${c.trackingId}`} complaint={c} onClose={close} />;
+    // Tracking ID → details only (no "View updates" inside: that lives on the row).
+    if (open.kind === "details") node = <ComplaintDetailsDialog key={`details-${c.trackingId}`} complaint={c} onClose={close} showUpdatesButton={false} />;
     if (open.kind === "assign")
       node = (
         <AssignModal
@@ -90,7 +91,8 @@ export function useComplaintModals() {
           }}
         />
       );
-    if (open.kind === "updates") node = <ComplaintDetailsDialog key={`updates-${c.trackingId}`} complaint={c} onClose={close} />;
+    // Row "View updates" → the updates view directly, not the details first.
+    if (open.kind === "updates") node = <ComplaintUpdatesDialog key={`updates-${c.trackingId}`} complaint={c} onClose={close} />;
   }
 
   return { ...api, modals: node };
@@ -99,6 +101,7 @@ export function useComplaintModals() {
 /* ---------------------------------------------------------------------------------- */
 
 function AssignModal({ c, initial, onClose, onConfirm }: { c: Complaint; initial: Department | ""; onClose: () => void; onConfirm: (d: Department) => void }) {
+  const { activeDepartments } = useDemoStore();
   const [dept, setDept] = useState<Department | "">(initial);
   const [error, setError] = useState<string | null>(null);
   const submit = (e: FormEvent) => {
@@ -128,7 +131,7 @@ function AssignModal({ c, initial, onClose, onConfirm }: { c: Complaint; initial
             <option value="" disabled>
               Select department
             </option>
-            {DEPARTMENTS.map((d) => (
+            {activeDepartments.map((d) => (
               <option key={d} value={d}>
                 {d}
               </option>
@@ -199,6 +202,7 @@ function RejectModal({ c, onClose, onConfirm }: { c: Complaint; onClose: () => v
 }
 
 function ReassignModal({ c, onClose, onConfirm }: { c: Complaint; onClose: () => void; onConfirm: (d: Department, reason: string) => void }) {
+  const { activeDepartments } = useDemoStore();
   const [dept, setDept] = useState<Department | "">("");
   const [reason, setReason] = useState("");
   const [errors, setErrors] = useState<{ dept?: string; reason?: string }>({});
@@ -215,15 +219,6 @@ function ReassignModal({ c, onClose, onConfirm }: { c: Complaint; onClose: () =>
   return (
     <Modal open onClose={onClose} align="left" size="sm" title="Reassign complaint" subtitle={`${c.trackingId} · Currently with ${c.department}`}>
       <form onSubmit={submit} noValidate className={m.form}>
-        {c.status === "In Progress" ? (
-          <div className={m.warn} role="note">
-            <Icon name="alert-triangle" size={20} />
-            <p>
-              <strong>This complaint is already In Progress.</strong> {c.department} has started working on it. Reassigning will pull it from their
-              dashboard and notify both offices.
-            </p>
-          </div>
-        ) : null}
         <div className={`field ${errors.dept ? "has-error" : ""}`}>
           <label htmlFor="reassign-dept" className={m.label}>
             New department <span className="req">*</span>
@@ -240,7 +235,7 @@ function ReassignModal({ c, onClose, onConfirm }: { c: Complaint; onClose: () =>
             <option value="" disabled>
               Select department
             </option>
-            {DEPARTMENTS.filter((d) => d !== c.department).map((d) => (
+            {activeDepartments.filter((d) => d !== c.department).map((d) => (
               <option key={d} value={d}>
                 {d}
               </option>

@@ -12,7 +12,7 @@ export function Footer() {
         <nav className={styles.links} aria-label="Footer">
           <span className={styles.heading}>Links</span>
           <Link href="/about">About</Link>
-          <Link href="/privacy">Privacy Note</Link>
+          <Link href="/privacy">Privacy Notice</Link>
           <Link href="/terms">Terms of Use</Link>
         </nav>
         <div className={styles.contact}>

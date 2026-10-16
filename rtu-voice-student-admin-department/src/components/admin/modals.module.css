@@ -8,11 +8,11 @@
   font-size: 16px;
 }
 .danger {
-  background: #dc3a3a;
+  background: #c62828;
   color: var(--white);
 }
 .danger:hover {
-  background: #c22e2e;
+  background: #a91f1f;
 }
 .form {
   display: flex;

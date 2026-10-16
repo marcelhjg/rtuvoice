@@ -64,7 +64,7 @@ export default function LandingPage() {
 
       {/* How it works */}
       <section id="how-it-works" className={styles.how} aria-labelledby="how-title">
-        <p className={styles.eyebrow}>HOW IT WORKS?</p>
+        <p className={styles.eyebrow}>HOW IT WORKS</p>
         <h2 id="how-title" className={styles.sectionTitle}>
           From concern to resolution.
         </h2>
@@ -136,7 +136,7 @@ export default function LandingPage() {
             </h2>
             <p className={styles.resolvedText}>
               Browse short, depersonalized summaries of concerns shared by other students, with their current status. Log in
-              to view. You can choose not to release your own concern when you submit it.
+              to view. Your own concern appears here only if you choose to share it when you submit.
             </p>
             <p className={styles.resolvedNote}>Concern text is processed by an AI service to write these summaries.</p>
           </div>

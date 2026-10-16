@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { OtpVerifyCard } from "@/components/forms/OtpVerifyCard";
 import { useDemoStore } from "@/lib/demo-store";
 import styles from "../../auth.module.css";
@@ -9,6 +10,11 @@ import styles from "../../auth.module.css";
 export default function ForgotPasswordVerifyPage() {
   const { ready, resetEmail, markResetVerified } = useDemoStore();
   const router = useRouter();
+
+  // Load the next step ahead of time so the switch after the code is quick.
+  useEffect(() => {
+    router.prefetch("/forgot-password/reset");
+  }, [router]);
 
   if (!ready) return <div className={styles.card} aria-busy="true" style={{ minHeight: 320 }} />;
 

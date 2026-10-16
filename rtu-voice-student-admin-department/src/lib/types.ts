@@ -14,7 +14,10 @@ export type Status = (typeof STATUSES)[number];
 export const PUBLIC_STATUSES = ["Assigned", "In Progress", "Resolved"] as const;
 export type PublicStatus = (typeof PUBLIC_STATUSES)[number];
 
-/** Department portals that complaints can be assigned to (names as used in the Figma admin screens). */
+/**
+ * The departments the demo starts with (names as used in the Figma admin screens). The live list
+ * is state in the demo store: the superadmin can add, rename and deactivate departments.
+ */
 export const DEPARTMENTS = [
   "Facilities Office",
   "Registrar's Office",
@@ -23,7 +26,15 @@ export const DEPARTMENTS = [
   "Cashier's Office",
   "ICT Office",
 ] as const;
-export type Department = (typeof DEPARTMENTS)[number];
+/** A department name. Departments are managed by the superadmin, so this is any string. */
+export type Department = string;
+
+export interface DepartmentRecord {
+  name: Department;
+  /** Inactive departments can't receive new assignments; their history stays visible. */
+  active: boolean;
+  addedAt: string;
+}
 
 /** Set by the (simulated) AI step when a complaint is assigned. Never shown to students. */
 export const PRIORITIES = ["High", "Medium", "Low"] as const;
@@ -36,12 +47,16 @@ export const SLA: Record<Priority, { acknowledge: number; resolve: number }> = {
   Low: { acknowledge: 5, resolve: 21 },
 };
 
-export type Role = "student" | "admin" | "department";
+/** SRS §6: four roles. The single superadmin has its own small portal (accounts, departments, Activity Log). */
+export type Role = "student" | "admin" | "department" | "superadmin";
 
 export interface EvidenceFile {
   name: string;
   size: number; // bytes
   type: string;
+  /** Object path in the private "evidence" storage bucket, set by the backend after upload
+   *  (e.g. "<complaint uuid>/<random>.jpg", never the original file name). Absent in this demo. */
+  path?: string;
 }
 
 export interface TimelineEvent {
@@ -107,11 +122,24 @@ export interface DepartmentAccount {
   email: string;
   title: string;
   department: Department;
+  /** Deactivated accounts can't log in (Superadmin › Accounts). Missing means active. */
+  active?: boolean;
+  addedAt?: string;
 }
 
 /** The only statuses a department can set (Assigned is set automatically on assignment). */
 export const DEPARTMENT_STATUSES = ["In Progress", "Resolved"] as const;
 export type DepartmentStatus = (typeof DEPARTMENT_STATUSES)[number];
+
+/**
+ * The one status a department may move a complaint to next (SRS: Assigned → In Progress → Resolved).
+ * No skipping (Assigned → Resolved) and no going back; Resolved has no next status.
+ */
+export function nextDepartmentStatus(status: Status): DepartmentStatus | null {
+  if (status === "Assigned") return "In Progress";
+  if (status === "In Progress") return "Resolved";
+  return null;
+}
 
 export interface AdminAccount {
   firstName: string;
@@ -120,9 +148,12 @@ export interface AdminAccount {
   title: string;
   addedAt: string;
   lastActiveAt: string;
+  /** Deactivated accounts can't log in (Superadmin › Accounts). Missing means active. */
+  active?: boolean;
 }
 
-export const ACTIVITY_ACTIONS = ["Assigned", "Reassigned", "Rejected", "Status changed", "Update posted"] as const;
+/** SRS §3/§4: the Activity Log records assignments, reassignments and status changes (a rejection is a status change). */
+export const ACTIVITY_ACTIONS = ["Assigned", "Reassigned", "Rejected", "Status changed"] as const;
 export type ActivityAction = (typeof ACTIVITY_ACTIONS)[number];
 
 export interface ActivityEntry {

@@ -1,0 +1,156 @@
+/* Super Admin pages: Accounts and Departments */
+
+.confirmBody {
+  font-family: var(--font-inter);
+  font-size: 15px;
+  line-height: 1.55;
+  color: #334155;
+}
+.confirmBody p + p {
+  margin-top: 8px;
+}
+.confirmError {
+  display: block;
+  margin-top: 12px;
+}
+
+.toolbarAction {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 18px;
+  white-space: nowrap;
+}
+
+.person {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.initial {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--navy);
+  border: 2px solid var(--gold);
+  color: var(--white);
+  font-family: var(--font-bricolage);
+  font-size: 16px;
+}
+.inactiveRow td {
+  color: #5b6478;
+}
+.inactiveRow .initial {
+  background: #8a93a8;
+  border-color: #c9cfdc;
+}
+.sub {
+  display: block;
+  font-size: 12.5px;
+  color: #5b6478;
+}
+.headName {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #17213b;
+}
+
+/* Status pills */
+.active {
+  background: #d9f2e3;
+  color: #166534;
+}
+.inactive {
+  background: #e7e9f0;
+  color: #374151;
+}
+
+/* Row action slots: [secondary 132] [primary 120], so rows line up */
+.rowActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.slotA {
+  width: 132px;
+  justify-content: center;
+}
+.slotB {
+  width: 120px;
+  justify-content: center;
+}
+.dangerOutline {
+  border-color: #c62828;
+  color: #c62828;
+}
+.dangerOutline:hover:not(:disabled) {
+  background: #fdecec;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.formGrid .full {
+  grid-column: 1 / -1;
+}
+
+.empty {
+  padding: 40px 16px;
+  text-align: center;
+  color: #4a5470;
+}
+
+@media (max-width: 960px) {
+  /* Phone cards: the head's name and email sit under the label, so emails don't break mid-word.
+     Doubled class to outrank the shared .table td grid rule. */
+  .headCell.headCell {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+  }
+  .toolbarAction {
+    margin-left: 0;
+    width: 100%;
+    justify-content: center;
+  }
+  .rowActions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+  .slotA,
+  .slotB {
+    width: 100%;
+    min-height: 44px;
+  }
+}
+@media (max-width: 560px) {
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Small phones: the card layout's value column is ~130px, so drop the avatar and tighten
+   the buttons; otherwise "Administrator", "Deactivate" and emails break mid-word. */
+@media (max-width: 480px) {
+  .initial {
+    display: none;
+  }
+  .person {
+    gap: 0;
+  }
+  .slotA,
+  .slotB {
+    padding: 0 8px;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+}

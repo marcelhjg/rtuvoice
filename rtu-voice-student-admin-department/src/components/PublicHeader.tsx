@@ -14,7 +14,7 @@ export function PublicHeader() {
   return (
     <header className={styles.header}>
       <div className={styles.inner}>
-        <Logo href="/" />
+        <Logo href="/" compact />
         <nav className={styles.nav} aria-label="Account">
           <Link
             href={loginPage ? "/register" : "/login"}

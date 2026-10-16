@@ -27,6 +27,46 @@ export function PriorityDot({ priority }: { priority?: Priority }) {
   return <span className={`${s.dot} ${cls}`}>{priority}</span>;
 }
 
+/**
+ * Short "Locked" chip shown in place of an action button that can no longer be used.
+ * It takes the same slot width as the button it replaces so table columns stay aligned;
+ * the full reason is in the tooltip and read out by screen readers.
+ */
+export function LockedChip({ reason }: { reason: string }) {
+  return (
+    <span className={s.lockedChip} title={reason}>
+      <Icon name="lock" size={14} strokeWidth={2.2} />
+      Locked
+      <span className="visually-hidden">: {reason}</span>
+    </span>
+  );
+}
+
+/**
+ * Column type for a table header, used as data-col so the same kind of column has the
+ * same width on every admin and department table (see .table th[data-col] in admin.module.css).
+ */
+export type ColType = "date" | "id" | "title" | "category" | "dept" | "priority" | "status" | "sla" | "attention" | "assign" | "reject" | "actions-admin" | "actions-dept";
+const COL_BY_LABEL: Record<string, ColType> = {
+  Date: "date",
+  Assigned: "date",
+  Resolved: "date",
+  "Tracking ID": "id",
+  Title: "title",
+  Category: "category",
+  Department: "dept",
+  Priority: "priority",
+  Status: "status",
+  SLA: "sla",
+  "Acknowledge by": "sla",
+  Acknowledged: "sla",
+  "Resolve by": "sla",
+  "Resolved in": "sla",
+};
+export function colType(label: string): ColType | undefined {
+  return COL_BY_LABEL[label];
+}
+
 export function BackToDashboard({ href = "/admin" }: { href?: string }) {
   return (
     <Link href={href} className={s.back}>

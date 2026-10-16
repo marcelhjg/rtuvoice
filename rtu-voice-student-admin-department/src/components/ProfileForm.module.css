@@ -17,7 +17,7 @@
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
 }
 .cardTitle {
-  font-family: var(--font-instrument);
+  font-family: var(--font-inter);
   font-weight: 700;
   font-size: 36px;
   line-height: 1.2;

@@ -24,8 +24,9 @@
   line-height: 0.98;
   letter-spacing: -0.5px;
 }
+/* Lighter than --blue so it reads on the dark hero photo (about 5:1). */
 .blue {
-  color: var(--blue);
+  color: var(--blue-on-dark);
 }
 .yellow {
   color: var(--yellow);
@@ -33,7 +34,7 @@
 .heroText {
   max-width: 726px;
   margin: 26px auto 0;
-  font-family: var(--font-hedvig);
+  font-family: var(--font-inter);
   font-size: 20px;
   line-height: 1.05;
 }
@@ -52,7 +53,7 @@
   min-height: 54px;
   padding: 0 32px;
   border-radius: 10px;
-  font-family: var(--font-instrument);
+  font-family: var(--font-inter);
   font-weight: 700;
   font-size: 17px;
   text-decoration: none;
@@ -84,7 +85,7 @@
 
 /* ---------- Shared section type ---------- */
 .eyebrow {
-  font-family: var(--font-instrument);
+  font-family: var(--font-inter);
   font-weight: 500;
   font-size: 16px;
   text-align: center;
@@ -110,7 +111,7 @@
 .sectionLead {
   margin-top: 18px;
   text-align: center;
-  font-family: var(--font-instrument);
+  font-family: var(--font-inter);
   font-weight: 500;
   font-size: 16px;
   color: var(--text-muted);
@@ -158,7 +159,7 @@
 }
 .stepNo {
   margin-top: 38px;
-  font-family: var(--font-instrument);
+  font-family: var(--font-inter);
   font-weight: 500;
   font-size: 16px;
   color: var(--yellow);
@@ -172,7 +173,7 @@
 .stepText {
   margin-top: 24px;
   max-width: 180px;
-  font-family: var(--font-instrument);
+  font-family: var(--font-inter);
   font-weight: 500;
   font-size: 16px;
   line-height: 1;
@@ -199,15 +200,16 @@
 }
 .raiseCard {
   position: relative;
-  height: 106px;
-  overflow: hidden;
+  min-height: 106px;
   background: var(--white);
   border-radius: 10px;
   border-top: 5px solid var(--yellow);
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 18px 10px 0;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 10px 16px;
   text-align: center;
 }
 .accentNavy {
@@ -219,25 +221,23 @@
   font-size: 15px;
   line-height: 1;
 }
+/* The icon used to sit half outside the card (clipped by overflow: hidden),
+   which read as a rendering bug. It now sits fully inside. */
 .raiseIcon {
-  position: absolute;
-  left: 50%;
-  bottom: -26px;
-  transform: translateX(-50%);
-  width: 62px;
-  height: 62px;
+  width: 52px;
+  height: 52px;
+  flex: none;
   border-radius: 50%;
   border: 1px solid #e3e3e3;
   background: var(--white);
-  display: flex;
-  justify-content: center;
-  padding-top: 10px;
+  display: grid;
+  place-items: center;
   color: #222;
 }
 .raiseNote {
   margin-top: 44px;
   text-align: center;
-  font-family: var(--font-instrument);
+  font-family: var(--font-inter);
   font-weight: 500;
   font-size: 16px;
   color: var(--text-muted);
@@ -259,7 +259,7 @@
   gap: 40px;
 }
 .privacyEyebrow {
-  font-family: var(--font-instrument);
+  font-family: var(--font-inter);
   font-weight: 500;
   font-size: 16px;
   color: var(--yellow);
@@ -273,7 +273,7 @@
 }
 .privacyText {
   margin-top: 30px;
-  font-family: var(--font-instrument);
+  font-family: var(--font-inter);
   font-weight: 500;
   font-size: 16px;
   color: #a7adbc;
@@ -285,9 +285,11 @@
 }
 .privacyText + .privacyLink,
 .privacyLink {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
   margin-top: 18px;
-  font-family: var(--font-instrument);
+  font-family: var(--font-inter);
   font-weight: 700;
   font-size: 16px;
   color: var(--yellow);
@@ -318,7 +320,7 @@
   color: var(--yellow);
 }
 .audienceText {
-  font-family: var(--font-instrument);
+  font-family: var(--font-inter);
   font-weight: 500;
   font-size: 16px;
   line-height: 1.05;
@@ -340,14 +342,14 @@
 }
 .resolvedText {
   margin-top: 26px;
-  font-family: var(--font-instrument);
+  font-family: var(--font-inter);
   font-weight: 500;
   font-size: 16px;
   line-height: 1;
 }
 .resolvedNote {
   margin-top: 26px;
-  font-family: var(--font-instrument);
+  font-family: var(--font-inter);
   font-weight: 500;
   font-size: 16px;
   color: var(--text-muted);
@@ -371,7 +373,7 @@
   padding: 0 26px;
   border-radius: 8px;
   background: var(--white);
-  font-family: var(--font-instrument);
+  font-family: var(--font-inter);
   font-weight: 500;
   font-size: 16px;
 }
@@ -415,7 +417,7 @@
   border: 0;
   background: transparent;
   text-align: left;
-  font-family: var(--font-instrument);
+  font-family: var(--font-inter);
   font-weight: 500;
   font-size: 20px;
   color: var(--black);
@@ -431,7 +433,7 @@
 }
 .faqPanel {
   padding: 0 38px 26px;
-  font-family: var(--font-instrument);
+  font-family: var(--font-inter);
   font-weight: 500;
   font-size: 20px;
   line-height: 1;
@@ -467,7 +469,7 @@
 }
 .ctaText {
   margin-top: 12px;
-  font-family: var(--font-instrument);
+  font-family: var(--font-inter);
   font-size: 16px;
 }
 .ctaActions {
@@ -484,7 +486,7 @@
   min-width: 198px;
   padding: 0 20px;
   border-radius: 5px;
-  font-family: var(--font-instrument);
+  font-family: var(--font-inter);
   font-size: 16px;
   text-decoration: none;
 }
@@ -610,9 +612,6 @@
   }
 }
 
-.blue {
-  color: var(--blue);
-}
 .sectionTitle,
 .sectionTitleLeft,
 .privacyTitle {

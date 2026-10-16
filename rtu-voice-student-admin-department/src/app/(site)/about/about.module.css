@@ -9,7 +9,7 @@
   max-width: 1281px;
 }
 .eyebrow {
-  font-family: var(--font-instrument);
+  font-family: var(--font-inter);
   font-weight: 700;
   font-size: 16px;
   color: var(--yellow);
@@ -24,7 +24,7 @@
 .lead {
   margin-top: 40px;
   max-width: 726px;
-  font-family: var(--font-hedvig);
+  font-family: var(--font-inter);
   font-size: 20px;
   line-height: 1;
 }
@@ -44,7 +44,7 @@
   padding: 0 22px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.14);
-  font-family: var(--font-instrument);
+  font-family: var(--font-inter);
   font-weight: 600;
   font-size: 16px;
 }
@@ -73,7 +73,7 @@
 .whyText {
   margin-top: 26px;
   max-width: 762px;
-  font-family: var(--font-hedvig);
+  font-family: var(--font-inter);
   font-size: 20px;
   line-height: 0.95;
   color: var(--text-muted);
@@ -170,7 +170,7 @@
 .teamLead {
   max-width: 898px;
   margin: 24px auto 0;
-  font-family: var(--font-instrument);
+  font-family: var(--font-inter);
   font-weight: 500;
   font-size: 18px;
 }
@@ -212,7 +212,7 @@
 }
 .memberName {
   margin-top: 30px;
-  font-family: var(--font-instrument);
+  font-family: var(--font-inter);
   font-weight: 700;
   font-size: 16px;
   padding: 0 10px;
@@ -252,14 +252,14 @@
 }
 .adviserLabel {
   display: block;
-  font-family: var(--font-instrument);
+  font-family: var(--font-inter);
   font-weight: 700;
   font-size: 16px;
   color: var(--gold);
 }
 .adviserName {
   display: block;
-  font-family: var(--font-instrument);
+  font-family: var(--font-inter);
   font-weight: 700;
   font-size: 16px;
 }
@@ -279,7 +279,7 @@
   text-align: center;
 }
 .projectLabel {
-  font-family: var(--font-instrument);
+  font-family: var(--font-inter);
   font-weight: 700;
   font-size: 16px;
   color: var(--gold);
@@ -287,7 +287,7 @@
 .projectName {
   max-width: 1074px;
   margin: 26px auto 0;
-  font-family: var(--font-instrument);
+  font-family: var(--font-inter);
   font-weight: 700;
   font-size: 20px;
   line-height: 0.95;
@@ -308,7 +308,7 @@
   padding: 0 30px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.14);
-  font-family: var(--font-instrument);
+  font-family: var(--font-inter);
   font-weight: 600;
   font-size: 16px;
 }
@@ -327,7 +327,7 @@
 }
 .contactText {
   margin-top: 18px;
-  font-family: var(--font-instrument);
+  font-family: var(--font-inter);
   font-weight: 500;
   font-size: 18px;
 }

@@ -5,6 +5,9 @@
   height: 38px;
   min-height: 38px;
   padding-left: 12px;
+  /* tighter arrow area so "Update status" (87px) fits in the 136px slot */
+  padding-right: 30px;
+  background-position: right 10px center;
   border: 1px solid #c9cfdc;
   border-radius: 8px;
   background-color: var(--white);
@@ -48,21 +51,57 @@
 .viewUpdatesBtn:hover {
   background: var(--surface-soft);
 }
-.resolvedNote {
-  align-self: center;
-  font-family: var(--font-inter);
-  font-size: 12px;
-  line-height: 1.35;
-  color: #4a5470;
-}
 .rowActions {
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
+  /* the Locked chip fills the second slot */
+  --slot-w: 132px;
+  --slot-h: 38px;
+}
+/* Fixed slots so the menu/buttons line up on every row and every page:
+   [View updates 40] [Update status 136] [Add Update 120]. Resolved rows show
+   one Locked chip across the last two slots. */
+.slotFirst {
+  width: 136px;
+}
+.slotSecond {
+  width: 120px;
+  padding: 0 10px;
+  justify-content: center;
+}
+.rowLocked {
+  --slot-w: 264px; /* 136 + 8 + 120 */
+}
+.viewIconBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex: none;
+  width: 40px;
+  height: 38px;
+  padding: 0;
+  border: 1px solid #14367e;
+  border-radius: 8px;
+  background: var(--white);
+  color: #14367e;
+  font-family: var(--font-inter);
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+}
+.viewIconBtn:hover {
+  background: var(--surface-soft);
+}
+/* The icon carries the meaning on desktop (aria-label + tooltip); phones show the words too. */
+.viewIconText {
+  display: none;
 }
 .titleCell {
-  min-width: 200px;
+  /* keeps titles readable on smaller laptops; at 1366px the title gets ~172px */
+  min-width: 160px;
 }
 .slaCell {
   font-size: 13px;
@@ -128,6 +167,14 @@
   font-size: 12.5px;
   color: #4a5470;
 }
+/* Desktop: SLA and attention text wrap inside their fixed-width columns
+   instead of widening them. */
+@media (min-width: 1201px) {
+  .slaCell,
+  .reason {
+    white-space: normal;
+  }
+}
 @media (max-width: 960px) {
   .rowActions {
     justify-content: flex-start;
@@ -155,9 +202,24 @@
     padding: 8px 12px;
     white-space: normal;
   }
-  .resolvedNote {
+  .rowActions {
+    --slot-w: 100%;
+    --slot-h: 44px;
+  }
+  .viewIconBtn {
     grid-column: 1 / -1;
-    font-size: 13px;
+    width: 100%;
+    height: 44px;
+  }
+  .viewIconText {
+    display: inline;
+  }
+  .rowActions > span {
+    grid-column: 1 / -1;
+  }
+  .slotFirst,
+  .slotSecond {
+    width: 100%;
   }
   .reason,
   .slaCell {
@@ -167,4 +229,28 @@
   .titleCell {
     min-width: 0;
   }
+}
+
+/* Status and update confirmations */
+.confirmText {
+  margin: 0;
+  font-family: var(--font-inter);
+  font-size: 15px;
+  line-height: 1.55;
+  color: #334155;
+}
+.confirmQuote {
+  margin: 14px 0 0;
+  padding: 12px 14px;
+  max-height: 40vh;
+  overflow-y: auto;
+  border-left: 3px solid #14367e;
+  border-radius: 0 8px 8px 0;
+  background: #f3f5fa;
+  font-family: var(--font-inter);
+  font-size: 14px;
+  line-height: 1.55;
+  color: #17213b;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }

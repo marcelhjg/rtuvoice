@@ -79,6 +79,7 @@
 .viewAll {
   display: inline-flex;
   align-items: center;
+  min-height: 40px;
   gap: 6px;
   margin-top: 16px;
   margin-right: 40px;

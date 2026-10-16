@@ -119,7 +119,7 @@
   min-width: 0;
 }
 .name {
-  font-family: var(--font-instrument);
+  font-family: var(--font-inter);
   font-weight: 700;
   font-size: 15px;
   color: var(--black);

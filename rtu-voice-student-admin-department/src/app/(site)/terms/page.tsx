@@ -123,8 +123,9 @@ export default function TermsPage() {
 
         <LegalSection n={13} title="Public dashboard">
           <p>
-            Other logged-in students can see an AI-written, depersonalized title and summary of your concern and its status.
-            You can opt out with the checkbox on the concern form. Update messages from departments are never shown publicly.
+            If you tick &ldquo;Share a summary on the public dashboard&rdquo; on the concern form, other logged-in students can see
+            an AI-written, depersonalized title and summary of your concern and its status. If you leave it unticked, nothing is
+            shown. Update messages from departments are never shown publicly.
           </p>
         </LegalSection>
 

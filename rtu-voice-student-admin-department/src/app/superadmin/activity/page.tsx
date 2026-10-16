@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { BackToDashboard, Pager, SearchBox, adminStyles as s } from "@/components/admin/bits";
-import { useComplaintModals } from "@/components/admin/useComplaintModals";
+import { Pager, SearchBox, adminStyles as s } from "@/components/admin/bits";
 import { useDemoStore } from "@/lib/demo-store";
 import { formatLongDate, formatTime } from "@/lib/format";
 import { ACTIVITY_ACTIONS, type ActivityAction } from "@/lib/types";
@@ -15,13 +14,11 @@ const ACTION_CLASS: Record<ActivityAction, string> = {
   Reassigned: styles.aReassigned,
   Rejected: styles.aRejected,
   "Status changed": styles.aStatus,
-  "Update posted": styles.aUpdate,
 };
 
-/** Activity Log (roadmap Sprint 4): changes made by admins and departments. Admin-only. */
+/** Superadmin Portal › Activity Log (SRS §3, §4, §6): changes made by admins and departments. Superadmin-only. */
 export default function ActivityLogPage() {
   const { activity } = useDemoStore();
-  const modals = useComplaintModals();
   const [query, setQuery] = useState("");
   const [action, setAction] = useState("");
   const [role, setRole] = useState("");
@@ -39,7 +36,6 @@ export default function ActivityLogPage() {
   return (
     <div className="container">
       <div className={s.head}>
-        <BackToDashboard />
         <div className={s.listTitleRow}>
           <h1 className={s.listTitle}>Activity Log</h1>
           <span className={`${s.countPill} ${s.pillTotal}`}>{activity.length}</span>
@@ -107,10 +103,8 @@ export default function ActivityLogPage() {
                     {formatLongDate(a.at)}
                     <span className={styles.time}>{formatTime(a.at)}</span>
                   </td>
-                  <td data-label="Tracking ID">
-                    <button type="button" className={s.idLink} onClick={() => modals.openDetails(a.trackingId)}>
-                      {a.trackingId}
-                    </button>
+                  <td data-label="Tracking ID" className={s.strong}>
+                    {a.trackingId}
                   </td>
                   <td data-label="Actor">
                     <span className={s.strong}>{a.actor}</span>
@@ -131,7 +125,6 @@ export default function ActivityLogPage() {
         </div>
         <Pager page={current} pageSize={PAGE_SIZE} total={rows.length} onPage={setPage} />
       </section>
-      {modals.modals}
     </div>
   );
 }

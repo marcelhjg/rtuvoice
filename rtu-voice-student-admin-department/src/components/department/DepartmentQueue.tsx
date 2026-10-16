@@ -4,12 +4,12 @@ import { useMemo, useState, type FormEvent } from "react";
 import { useDemoStore } from "@/lib/demo-store";
 import { formatMonthDay, formatShortDate, formatTime } from "@/lib/format";
 import { attentionInfo, slaInfo } from "@/lib/sla";
-import { DEPARTMENT_STATUSES, PRIORITIES, type Complaint, type DepartmentStatus } from "@/lib/types";
+import { PRIORITIES, nextDepartmentStatus, type Complaint, type DepartmentStatus } from "@/lib/types";
 import { normalizeTrackingId } from "@/lib/validation";
 import { Icon } from "../Icon";
 import { Modal } from "../Modal";
 import { useToast } from "../Toast";
-import { BackToDashboard, Pager, PriorityDot, SearchBox, StatusPill, adminStyles as s } from "../admin/bits";
+import { BackToDashboard, LockedChip, Pager, PriorityDot, SearchBox, StatusPill, adminStyles as s } from "../admin/bits";
 import { StatCards } from "../admin/StatCards";
 import { useComplaintModals } from "../admin/useComplaintModals";
 import m from "../admin/modals.module.css";
@@ -29,19 +29,31 @@ function useQueueActions() {
   const { updateDepartmentStatus } = useDemoStore();
   const toast = useToast();
   const [updating, setUpdating] = useState<string | null>(null);
+  // A status change waits here until the department head confirms it; nothing changes before that.
+  const [pending, setPending] = useState<{ c: Complaint; status: DepartmentStatus } | null>(null);
   const modals = useComplaintModals();
 
-  const setStatus = (c: Complaint, status: DepartmentStatus) => {
+  const confirmStatus = () => {
+    if (!pending) return;
+    const { c, status } = pending;
+    setPending(null);
     if (updateDepartmentStatus(c.trackingId, status)) {
       toast(`${c.trackingId} marked ${status === "In Progress" ? "In progress" : status}. The student is notified by email (simulated).`, "success");
+    } else {
+      toast(`${c.trackingId} can't move to ${status === "In Progress" ? "In progress" : status} from ${c.status}.`, "error");
     }
   };
 
   return {
     modals,
-    setStatus,
+    setStatus: (c: Complaint, status: DepartmentStatus) => setPending({ c, status }),
     openUpdate: (id: string) => setUpdating(id),
-    updateModal: updating ? <AddUpdateModal key={updating} id={updating} onClose={() => setUpdating(null)} /> : null,
+    updateModal: (
+      <>
+        {updating ? <AddUpdateModal key={updating} id={updating} onClose={() => setUpdating(null)} /> : null}
+        {pending ? <ConfirmStatusModal key={pending.c.trackingId} c={pending.c} status={pending.status} onCancel={() => setPending(null)} onConfirm={confirmStatus} /> : null}
+      </>
+    ),
   };
 }
 
@@ -57,37 +69,46 @@ function RowActions({
   onAdd: (id: string) => void;
   onView: (id: string) => void;
 }) {
-  if (c.status === "Resolved") {
+  const next = nextDepartmentStatus(c.status);
+  // Every row can open its updates directly (the details pop-up no longer has this button).
+  const viewButton = (
+    <button type="button" className={d.viewIconBtn} onClick={() => onView(c.trackingId)} aria-label={`View updates for ${c.trackingId}`} title="View updates">
+      <Icon name="history" size={18} strokeWidth={2} />
+      <span className={d.viewIconText}>View updates</span>
+    </button>
+  );
+  if (c.status === "Resolved" || !next) {
     return (
-      <div className={d.rowActions}>
-        <button type="button" className={d.viewUpdatesBtn} onClick={() => onView(c.trackingId)}>
-          View updates
-        </button>
-        <span className={d.resolvedNote}>Resolved — no further changes can be made.</span>
+      <div className={`${d.rowActions} ${d.rowLocked}`}>
+        {viewButton}
+        <LockedChip reason="This complaint is resolved, so its status can't change and no more updates can be added." />
       </div>
     );
   }
 
   return (
     <div className={d.rowActions}>
+      {viewButton}
       <select
         aria-label={`Update status of ${c.trackingId}`}
-        className={`select ${d.updateSelect}`}
+        className={`select ${d.updateSelect} ${d.slotFirst}`}
         value=""
-        onChange={(e) => onStatus(c, e.target.value as DepartmentStatus)}
+        onChange={(e) => {
+          const st = e.target.value as DepartmentStatus;
+          // value stays "" (controlled), so the row shows no change until the head confirms
+          if (st === next) onStatus(c, st);
+        }}
       >
         <option value="" disabled>
           Update status
         </option>
-        {/* "Assigned" is never offered: it is set automatically when an administrator assigns the complaint. */}
-        {DEPARTMENT_STATUSES.map((st) => (
-          <option key={st} value={st} disabled={c.status === st}>
-            {st === "In Progress" ? "In progress" : st}
-            {c.status === st ? " (current)" : ""}
-          </option>
-        ))}
+        {/* Only the next step is offered (Assigned → In Progress → Resolved). "Assigned" is set by the administrator. */}
+        <option value="" disabled>
+          {c.status === "In Progress" ? "In progress" : c.status} (current)
+        </option>
+        {next ? <option value={next}>{next === "In Progress" ? "In progress" : next}</option> : null}
       </select>
-      <button type="button" className={d.addBtn} onClick={() => onAdd(c.trackingId)} aria-label={`Add update to ${c.trackingId}`}>
+      <button type="button" className={`${d.addBtn} ${d.slotSecond}`} onClick={() => onAdd(c.trackingId)} aria-label={`Add update to ${c.trackingId}`}>
         <Icon name="plus" size={15} strokeWidth={2.6} /> Add Update
       </button>
     </div>
@@ -110,14 +131,20 @@ function Table({
       <caption className="visually-hidden">{caption}</caption>
       <thead>
         <tr>
-          <th scope="col">Date</th>
-          <th scope="col">Tracking ID</th>
-          <th scope="col">Title</th>
-          {mode === "queue" ? <th scope="col">Assigned</th> : null}
-          <th scope="col">Priority</th>
-          <th scope="col">Status</th>
-          <th scope="col">{mode === "attention" ? "Needs attention" : "SLA"}</th>
-          <th scope="col">
+          <th scope="col" data-col="date">Date</th>
+          <th scope="col" data-col="id">Tracking ID</th>
+          <th scope="col" data-col="title">Title</th>
+          {mode === "queue" ? (
+            <th scope="col" data-col="date">
+              Assigned
+            </th>
+          ) : null}
+          <th scope="col" data-col="priority">Priority</th>
+          <th scope="col" data-col="status">Status</th>
+          <th scope="col" data-col={mode === "attention" ? "attention" : "sla"}>
+            {mode === "attention" ? "Needs attention" : "SLA"}
+          </th>
+          <th scope="col" data-col="actions-dept">
             <span className="visually-hidden">Update status and add update</span>
           </th>
         </tr>
@@ -387,14 +414,69 @@ export function NeedsAttention() {
 const when = (iso: string) => `${formatMonthDay(iso)}, ${formatTime(iso)}`;
 
 /** "Add Update": writes the message the student reads through View Update (never public). */
+/** Confirmation before a department head changes a complaint's status (In Progress or Resolved). */
+function ConfirmStatusModal({
+  c,
+  status,
+  onCancel,
+  onConfirm,
+}: {
+  c: Complaint;
+  status: DepartmentStatus;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const label = status === "In Progress" ? "In progress" : "Resolved";
+  return (
+    <Modal
+      open
+      onClose={onCancel}
+      align="left"
+      size="sm"
+      variant="dialog"
+      title={`Mark as ${label}?`}
+      subtitle={`${c.trackingId} · ${c.title}`}
+      footer={
+        <div className={m.footer}>
+          <button type="button" className={`btn btn-soft ${m.btn}`} onClick={onCancel} disabled={busy}>
+            Cancel
+          </button>
+          <button
+            type="button"
+            className={`btn btn-primary ${m.btn}`}
+            disabled={busy}
+            onClick={() => {
+              if (busy) return;
+              setBusy(true);
+              onConfirm();
+            }}
+          >
+            Mark {label}
+          </button>
+        </div>
+      }
+    >
+      <p className={d.confirmText}>
+        {status === "In Progress"
+          ? "This tells the student your office has started working on it. An administrator can no longer reassign it, and the status can't go back to Assigned."
+          : "This closes the complaint. After this you can't change its status or add more updates."}
+      </p>
+    </Modal>
+  );
+}
+
 function AddUpdateModal({ id, onClose }: { id: string; onClose: () => void }) {
   const { departmentComplaints, addDepartmentUpdate } = useDemoStore();
   const toast = useToast();
   const c = departmentComplaints.find((x) => x.trackingId === id);
   const [message, setMessage] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState(false);
+  const [posting, setPosting] = useState(false);
   if (!c || c.status === "Resolved") return null;
 
+  // Step 1: validate, then ask for confirmation. Nothing is posted yet.
   const submit = (e: FormEvent) => {
     e.preventDefault();
     const text = message.trim();
@@ -402,11 +484,49 @@ function AddUpdateModal({ id, onClose }: { id: string; onClose: () => void }) {
       setError(text ? `Write a little more (at least ${UPDATE_MIN} characters).` : "Enter the update for the student.");
       return;
     }
-    if (addDepartmentUpdate(c.trackingId, text)) {
+    setConfirming(true);
+  };
+
+  // Step 2: post once. The guard stops a double click from posting twice.
+  const post = () => {
+    if (posting) return;
+    setPosting(true);
+    if (addDepartmentUpdate(c.trackingId, message.trim())) {
       toast(`Update added to ${c.trackingId}. The student is notified by email (simulated).`, "success");
       onClose();
+    } else {
+      setPosting(false);
+      setConfirming(false);
+      toast(`Couldn't post the update to ${c.trackingId}.`, "error");
     }
   };
+
+  if (confirming) {
+    return (
+      <Modal
+        open
+        onClose={() => setConfirming(false)}
+        align="left"
+        size="sm"
+        variant="dialog"
+        title="Post this update?"
+        subtitle={`${c.trackingId} · ${c.title}`}
+        footer={
+          <div className={m.footer}>
+            <button type="button" className={`btn btn-soft ${m.btn}`} onClick={() => setConfirming(false)} disabled={posting}>
+              Back to edit
+            </button>
+            <button type="button" className={`btn btn-primary ${m.btn}`} onClick={post} disabled={posting}>
+              Post update
+            </button>
+          </div>
+        }
+      >
+        <p className={d.confirmText}>The student and administrators will see this message. You can&apos;t edit or delete it after posting.</p>
+        <blockquote className={d.confirmQuote}>{message.trim()}</blockquote>
+      </Modal>
+    );
+  }
 
   const previous = [...c.updates].sort((a, b) => b.at.localeCompare(a.at));
 
@@ -457,7 +577,7 @@ function AddUpdateModal({ id, onClose }: { id: string; onClose: () => void }) {
             Cancel
           </button>
           <button type="submit" className={`btn btn-primary ${m.btn}`}>
-            Post update
+            Review update
           </button>
         </div>
       </form>

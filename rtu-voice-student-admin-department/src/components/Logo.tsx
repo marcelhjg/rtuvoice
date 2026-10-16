@@ -8,9 +8,11 @@ interface LogoProps {
   variant?: "light" | "dark" | "footer";
   /** Show the circular white badge behind the mark (sidebar). */
   badge?: boolean;
+  /** Smaller mark and wordmark, for the header before login. */
+  compact?: boolean;
 }
 
-export function Logo({ href = "/", variant = "light", badge = false }: LogoProps) {
+export function Logo({ href = "/", variant = "light", badge = false, compact = false }: LogoProps) {
   const content = (
     <>
       {variant !== "footer" && (
@@ -22,7 +24,7 @@ export function Logo({ href = "/", variant = "light", badge = false }: LogoProps
         <span className={styles.wordmark}>
           <span className={styles.rtu}>RTU</span> <span className={styles.voice}>Voice</span>
         </span>
-        <span className={styles.campus}>
+        <span className={styles.campus} aria-hidden={variant === "footer" ? undefined : true}>
           {variant === "footer" ? (
             <>
               RIZAL TECHNOLOGICAL UNIVERSITY -
@@ -32,7 +34,11 @@ export function Logo({ href = "/", variant = "light", badge = false }: LogoProps
               INSTITUTE OF COMPUTER STUDIES
             </>
           ) : (
-            "RIZAL TECHNOLOGICAL UNIVERSITY - PASIG CAMPUS"
+            <>
+              {/* Title case in the markup; desktop shows it in capitals via CSS. */}
+              <span className={styles.campusLine}>Rizal Technological University –</span>{" "}
+              <span className={styles.campusLine}>Pasig Campus</span>
+            </>
           )}
         </span>
       </span>
@@ -40,7 +46,7 @@ export function Logo({ href = "/", variant = "light", badge = false }: LogoProps
   );
 
   return (
-    <Link href={href} className={`${styles.logo} ${styles[variant]}`} aria-label="RTU Voice home">
+    <Link href={href} className={`${styles.logo} ${styles[variant]} ${compact ? styles.compact : ""}`}>
       {content}
     </Link>
   );
