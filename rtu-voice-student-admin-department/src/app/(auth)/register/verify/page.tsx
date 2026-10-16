@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { OtpVerifyCard } from "@/components/forms/OtpVerifyCard";
 import { useToast } from "@/components/Toast";
 import { useDemoStore } from "@/lib/demo-store";
@@ -12,24 +12,19 @@ export default function RegisterVerifyPage() {
   const { ready, pendingSignup, completeSignup } = useDemoStore();
   const router = useRouter();
   const toast = useToast();
-  // Set once the code is accepted. completeSignup() clears pendingSignup straight away, so without
-  // this the page re-rendered into the "no registration waiting" card before the dashboard opened.
-  const [finished, setFinished] = useState(false);
+  // Once the code is accepted, completeSignup() clears pendingSignup straight away. Keep the email so
+  // this same card stays on screen until the dashboard appears (no in-between screen).
+  const [doneEmail, setDoneEmail] = useState<string | null>(null);
+  const email = pendingSignup?.email ?? doneEmail;
+
+  // Load the dashboard ahead of time so the switch after the code is quick.
+  useEffect(() => {
+    router.prefetch("/dashboard");
+  }, [router]);
 
   if (!ready) return <div className={styles.card} aria-busy="true" style={{ minHeight: 320 }} />;
 
-  if (finished) {
-    return (
-      <div className={styles.card} aria-busy="true" role="status">
-        <h2 className={`${styles.cardTitle} ${styles.cardTitleNavy}`}>Account created</h2>
-        <p className={`${styles.cardSubtitle} ${styles.caption}`} style={{ marginTop: 16 }}>
-          <span className="spinner" /> Opening your dashboard…
-        </p>
-      </div>
-    );
-  }
-
-  if (!pendingSignup) {
+  if (!email) {
     return (
       <div className={styles.card}>
         <h2 className={`${styles.cardTitle} ${styles.cardTitleNavy}`}>Verify Account</h2>
@@ -47,10 +42,10 @@ export default function RegisterVerifyPage() {
 
   return (
     <OtpVerifyCard
-      email={pendingSignup.email}
+      email={email}
       purpose="activate"
       onVerified={() => {
-        setFinished(true);
+        setDoneEmail(email);
         const account = completeSignup();
         toast(`Account created. Welcome, ${account?.firstName ?? "student"}!`, "success");
         router.replace("/dashboard");

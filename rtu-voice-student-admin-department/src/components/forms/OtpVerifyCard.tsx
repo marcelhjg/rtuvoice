@@ -52,11 +52,14 @@ export function OtpVerifyCard({ email, purpose, onVerified }: Props) {
     }
     setBusy(true);
     window.setTimeout(() => {
-      setBusy(false);
       if (code === DEMO_OTP) {
+        // Stay busy: the page navigates away next, so the button keeps its spinner until it does.
         setError(null);
         onVerified();
-      } else {
+        return;
+      }
+      setBusy(false);
+      {
         const used = attempts + 1;
         setAttempts(used);
         setDigits(Array(6).fill(""));

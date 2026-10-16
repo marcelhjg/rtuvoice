@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { PasswordField } from "@/components/forms/Fields";
 import { Icon } from "@/components/Icon";
 import { useToast } from "@/components/Toast";
@@ -19,24 +19,18 @@ export default function ResetPasswordPage() {
   const [confirm, setConfirm] = useState("");
   const [errors, setErrors] = useState<{ password?: string | null; confirm?: string | null }>({});
   const [busy, setBusy] = useState(false);
-  // Set once the new password is saved. finishReset() clears the reset state straight away, so
-  // without this the page flashed "Verify the code…" before the login page opened.
+  // Set once the new password is saved. finishReset() clears the reset state straight away; this keeps
+  // the form (with its spinner) on screen until the login page appears, instead of the start-over card.
   const [finished, setFinished] = useState(false);
+
+  // Load the login page ahead of time so the switch is quick.
+  useEffect(() => {
+    router.prefetch("/login");
+  }, [router]);
 
   if (!ready) return <div className={styles.card} aria-busy="true" style={{ minHeight: 420 }} />;
 
-  if (finished) {
-    return (
-      <div className={styles.card} aria-busy="true" role="status">
-        <h2 className={styles.cardTitle}>Password updated</h2>
-        <p className={`${styles.cardSubtitle} ${styles.caption}`} style={{ marginTop: 16 }}>
-          <span className="spinner" /> Opening the login page…
-        </p>
-      </div>
-    );
-  }
-
-  if (!resetEmail || !resetVerified) {
+  if (!finished && (!resetEmail || !resetVerified)) {
     return (
       <div className={styles.card}>
         <h2 className={styles.cardTitle}>Set a new password</h2>
