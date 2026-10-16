@@ -19,8 +19,22 @@ export default function ResetPasswordPage() {
   const [confirm, setConfirm] = useState("");
   const [errors, setErrors] = useState<{ password?: string | null; confirm?: string | null }>({});
   const [busy, setBusy] = useState(false);
+  // Set once the new password is saved. finishReset() clears the reset state straight away, so
+  // without this the page flashed "Verify the code…" before the login page opened.
+  const [finished, setFinished] = useState(false);
 
   if (!ready) return <div className={styles.card} aria-busy="true" style={{ minHeight: 420 }} />;
+
+  if (finished) {
+    return (
+      <div className={styles.card} aria-busy="true" role="status">
+        <h2 className={styles.cardTitle}>Password updated</h2>
+        <p className={`${styles.cardSubtitle} ${styles.caption}`} style={{ marginTop: 16 }}>
+          <span className="spinner" /> Opening the login page…
+        </p>
+      </div>
+    );
+  }
 
   if (!resetEmail || !resetVerified) {
     return (
@@ -46,6 +60,7 @@ export default function ResetPasswordPage() {
     setBusy(true);
     // SIMULATED: the password is not stored or sent anywhere in this build.
     window.setTimeout(() => {
+      setFinished(true);
       finishReset();
       toast("Password updated (demo). You can now log in.", "success");
       router.replace("/login");
