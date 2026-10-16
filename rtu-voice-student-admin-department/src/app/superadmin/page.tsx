@@ -35,7 +35,8 @@ export default function AccountsPage() {
   const toast = useToast();
   const [query, setQuery] = useState("");
   const [kind, setKind] = useState("");
-  const [status, setStatus] = useState("");
+  // Active by default; "All statuses" or "Deactivated" show the rest.
+  const [status, setStatus] = useState("active");
   const [creating, setCreating] = useState(false);
   const [pending, setPending] = useState<Pending>(null);
 
@@ -60,8 +61,9 @@ export default function AccountsPage() {
       <div className={s.head}>
         <div className={s.listTitleRow}>
           <h1 className={s.listTitle}>Accounts</h1>
-          <span className={`${s.countPill} ${s.pillTotal}`} aria-label={`${all.length} accounts`}>
-            {all.length}
+          {/* Counts the rows shown, so it follows the search, role and status filters. */}
+          <span className={`${s.countPill} ${s.pillTotal}`} aria-label={`${rows.length} of ${all.length} accounts shown`}>
+            {rows.length}
           </span>
         </div>
         <p className={s.subtitle}>Administrator accounts and one active, shared account per department. Only the superadmin can create or deactivate them.</p>
@@ -73,7 +75,7 @@ export default function AccountsPage() {
           <select aria-label="Filter by role" className={`select ${s.filter}`} value={kind} onChange={(e) => setKind(e.target.value)}>
             <option value="">All roles</option>
             <option value="admin">Administrators</option>
-            <option value="department">Department heads</option>
+            <option value="department">Departments</option>
           </select>
           <select aria-label="Filter by status" className={`select ${s.filter}`} value={status} onChange={(e) => setStatus(e.target.value)}>
             <option value="">All statuses</option>
@@ -162,9 +164,9 @@ export default function AccountsPage() {
           onCancel={() => setPending(null)}
           onConfirm={() => {
             const error = deactivateStaffAccount(pending.row.email);
-            if (error) return error;
-            toast(`${name(pending.row)} deactivated.`, "success");
             setPending(null);
+            if (error) toast(error, "error");
+            else toast(`${name(pending.row)} deactivated.`, "success");
             return null;
           }}
         />

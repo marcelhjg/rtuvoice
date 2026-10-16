@@ -2,7 +2,7 @@
 
 import { Icon } from "@/components/Icon";
 import { StatusBadge } from "@/components/StatusBadge";
-import { formatLongDate, formatMonthDay, formatTime } from "@/lib/format";
+import { formatBytes, formatLongDate, formatMonthDay, formatTime } from "@/lib/format";
 import type { Complaint } from "@/lib/types";
 import styles from "@/app/(portal)/track/track.module.css";
 
@@ -59,11 +59,35 @@ export function ComplaintStatusDetails({
         <dd>{c.title}</dd>
         <dt>Category</dt>
         <dd>{c.category}</dd>
-        <dt>Assigned to</dt>
-        <dd>{c.department ?? (c.status === "Rejected" ? "—" : "Waiting for an administrator")}</dd>
         <dt>Submitted</dt>
         <dd>{formatLongDate(c.submittedAt)}</dd>
+        <dt>Assigned to</dt>
+        <dd>{c.department ?? (c.status === "Rejected" ? "—" : "Waiting for an administrator")}</dd>
       </dl>
+
+      {/* The student's own words and files, shown in every portal. Rendered as plain text (React escapes it),
+          keeping the line breaks they typed. Never the student's identity, and never the priority. */}
+      <div className={styles.detailBlock}>
+        <h3 className={styles.detailHeading}>Description</h3>
+        <p className={styles.description}>{c.description}</p>
+      </div>
+      <div className={styles.detailBlock}>
+        <h3 className={styles.detailHeading}>Evidence</h3>
+        {c.files.length ? (
+          // Frontend-only: only each file's name, size and type are stored, so there is nothing to open or download.
+          <ul className={styles.evidenceList} aria-label="Attached files">
+            {c.files.map((f, i) => (
+              <li key={`${f.name}-${i}`} className={styles.evidenceChip}>
+                <Icon name="file" size={15} strokeWidth={1.8} />
+                <span className={styles.evidenceName}>{f.name}</span>
+                <span className={styles.evidenceSize}>· {formatBytes(f.size)}</span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className={styles.noEvidence}>No evidence attached</p>
+        )}
+      </div>
 
       <hr className={styles.rule} />
 

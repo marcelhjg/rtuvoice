@@ -1,7 +1,7 @@
 "use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState, type FormEvent } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
+import { useEffect, useEffectEvent, useState, type FormEvent } from "react";
 import { ComplaintStatusDetails } from "@/components/ComplaintStatusDetails";
 import { Icon } from "@/components/Icon";
 import { Modal } from "@/components/Modal";
@@ -17,7 +17,6 @@ type Lookup = { state: "idle" } | { state: "invalid"; message: string } | { stat
 
 export function Tracker() {
   const params = useSearchParams();
-  const router = useRouter();
   const pathname = usePathname();
   const { findMyComplaint, ready } = useDemoStore();
 
@@ -44,14 +43,20 @@ export function Tracker() {
       setLookup(found ? { state: "found", complaint: found } : { state: "notfound", id });
       setQuery(id);
       setBusy(false);
-      router.replace(`${pathname}?id=${encodeURIComponent(id)}`, { scroll: false });
+      // Keep the URL shareable (?id=…). The native History API updates it without a server round trip
+      // (it stays in sync with useSearchParams); router.replace fetched the page again and that request
+      // was cancelled. Skipped when the URL already shows this ID.
+      if (params.get("id") !== id) window.history.replaceState(null, "", `${pathname}?id=${encodeURIComponent(id)}`);
     }, 350);
   };
 
-  // Auto-track when arriving with ?id=
+  // Auto-track when arriving with ?id= — once, when the demo store has loaded. An effect event reads the
+  // latest ID without re-running the effect each time the URL changes.
+  const autoTrack = useEffectEvent(() => {
+    if (initial) run(initial);
+  });
   useEffect(() => {
-    if (ready && initial) run(initial);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (ready) autoTrack();
   }, [ready]);
 
   const submit = (e: FormEvent) => {

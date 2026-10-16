@@ -69,7 +69,7 @@ admin sees them in **View Updates**; the superadmin sees the assignment and stat
 
 Sample dates are generated relative to the day you first open the site, so SLA timers
 ("Acknowledge in 1 day", "Overdue by 4 days") stay realistic. To reset all demo data, clear the
-site's local storage (DevTools → Application → Local Storage → delete `rtu-voice-demo-v2`), or open
+site's local storage (DevTools → Application → Local Storage → delete `rtu-voice-demo-v3`), or open
 the site in a private window.
 
 ## 4. Pages

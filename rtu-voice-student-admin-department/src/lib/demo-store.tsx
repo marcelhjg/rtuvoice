@@ -22,7 +22,9 @@ import type { Account, ActivityEntry, AdminAccount, Category, Complaint, Departm
 import { ACTIVITY_ACTIONS, nextDepartmentStatus } from "./types";
 import { generateTrackingId, normalizeTrackingId } from "./validation";
 
-const STORAGE_KEY = "rtu-voice-demo-v2";
+// Bumped from v2 so demo data saved during testing (e.g. a deactivated Central Admin) is ignored and the
+// seed loads again. Old v2 data is simply left unused in the browser.
+const STORAGE_KEY = "rtu-voice-demo-v3";
 
 interface PersistedState {
   session: Account | null;
@@ -222,6 +224,8 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
   const loginBlockedReason = useCallback(
     (email: string) => {
       const e = email.trim().toLowerCase();
+      // The single superadmin account can never be blocked (it is the only way to manage accounts).
+      if (e === SUPERADMIN_ACCOUNT.email) return null;
       const admin = adminByEmail(e);
       if (admin && admin.active === false) return "This account has been deactivated. Contact the system administrator.";
       const head = state.deptAccounts.find((d) => d.email === e);
@@ -261,6 +265,8 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
         session,
         student: session.role === "student" ? session : s.student,
         admins: s.admins.map((a) => (a.email === session.email ? { ...a, firstName: session.firstName, lastName: session.lastName } : a)),
+        // Department accounts too, or a department's new name is lost at the next login.
+        deptAccounts: s.deptAccounts.map((d) => (d.email === session.email ? { ...d, firstName: session.firstName, lastName: session.lastName } : d)),
       };
     });
   }, []);
@@ -308,20 +314,24 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
 
   const actorName = state.session ? `${state.session.firstName} ${state.session.lastName}`.trim() : "Admin";
 
-  const patch = (
-    trackingId: string,
-    fn: (c: Complaint) => Complaint,
-    entry: Omit<ActivityEntry, "id" | "at" | "actor" | "actorRole">,
-    by: { actor: string; actorRole: ActivityEntry["actorRole"] } = { actor: actorName, actorRole: "Admin" },
-  ) => {
-    const at = new Date().toISOString();
-    setState((s) => ({
-      ...s,
-      complaints: s.complaints.map((c) => (c.trackingId === trackingId ? fn(c) : c)),
-      activity: [{ ...entry, id: `act-${Date.now()}`, at, actor: by.actor, actorRole: by.actorRole }, ...s.activity],
-    }));
-    return at;
-  };
+  // Memoized so the callbacks below can list it as a dependency (it changes only with actorName).
+  const patch = useCallback(
+    (
+      trackingId: string,
+      fn: (c: Complaint) => Complaint,
+      entry: Omit<ActivityEntry, "id" | "at" | "actor" | "actorRole">,
+      by: { actor: string; actorRole: ActivityEntry["actorRole"] } = { actor: actorName, actorRole: "Admin" },
+    ) => {
+      const at = new Date().toISOString();
+      setState((s) => ({
+        ...s,
+        complaints: s.complaints.map((c) => (c.trackingId === trackingId ? fn(c) : c)),
+        activity: [{ ...entry, id: `act-${Date.now()}`, at, actor: by.actor, actorRole: by.actorRole }, ...s.activity],
+      }));
+      return at;
+    },
+    [actorName],
+  );
 
   const assignComplaint = useCallback(
     (trackingId: string, department: Department) => {
@@ -345,8 +355,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       );
       return priority;
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [state.complaints, actorName],
+    [state.complaints, patch],
   );
 
   // SRS §2 step 2: admin-only, a reason is required. The student still sees the rejected
@@ -366,8 +375,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
         { action: "Rejected", trackingId, detail: reason.trim() },
       );
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [actorName],
+    [patch],
   );
 
   const reassignComplaint = useCallback(
@@ -377,6 +385,8 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       // also blocked once the department has posted an update message, so an update can't
       // end up on a complaint now owned by another office.
       if (!target || target.status !== "Assigned" || target.updates.length > 0) return false;
+      // The new department must differ from the current one and be active (Superadmin › Departments).
+      if (department === target.department || !state.departments.some((d) => d.name === department && d.active)) return false;
       const from = target.department;
       const at = new Date().toISOString();
       // The new department starts fresh: status returns to Assigned and the SLA clock restarts.
@@ -394,8 +404,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       );
       return true;
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [state.complaints, actorName],
+    [state.complaints, state.departments, patch],
   );
 
   // ---- Department head actions -------------------------------------------------------------
@@ -443,8 +452,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       );
       return true;
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [departmentComplaints, sessionDept],
+    [departmentComplaints, sessionDept, patch],
   );
 
   // SRS §2 step 6: the department's message to the student (also visible to admins, never public).
@@ -462,7 +470,6 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       }));
       return true;
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [departmentComplaints, sessionDept],
   );
 
@@ -497,6 +504,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
   const deactivateStaffAccount = useCallback(
     (email: string) => {
       const e = email.trim().toLowerCase();
+      if (e === SUPERADMIN_ACCOUNT.email) return "The superadmin account can't be deactivated.";
       if (state.admins.some((a) => a.email === e)) {
         const othersActive = state.admins.filter((a) => a.email !== e && a.active !== false).length;
         if (othersActive === 0) return "At least one administrator must stay active.";
@@ -512,13 +520,16 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
     [state.admins, state.deptAccounts],
   );
 
-  const departmentNameError = (name: string, except?: string) => {
-    const n = name.trim();
-    if (n.length < 2) return "Enter a department name (at least 2 characters).";
-    if (n.length > 60) return "Keep the name under 60 characters.";
-    if (state.departments.some((d) => d.name.toLowerCase() === n.toLowerCase() && d.name !== except)) return "A department with this name already exists.";
-    return null;
-  };
+  const departmentNameError = useCallback(
+    (name: string, except?: string) => {
+      const n = name.trim();
+      if (n.length < 2) return "Enter a department name (at least 2 characters).";
+      if (n.length > 60) return "Keep the name under 60 characters.";
+      if (state.departments.some((d) => d.name.toLowerCase() === n.toLowerCase() && d.name !== except)) return "A department with this name already exists.";
+      return null;
+    },
+    [state.departments],
+  );
 
   const addDepartment = useCallback(
     (name: string) => {
@@ -527,8 +538,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       setState((s) => ({ ...s, departments: [...s.departments, { name: name.trim(), active: true, addedAt: new Date().toISOString() }] }));
       return null;
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [state.departments],
+    [departmentNameError],
   );
 
   // Renaming carries the new name to its complaints, update messages and head accounts.
@@ -553,8 +563,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       }));
       return null;
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [state.departments],
+    [state.departments, departmentNameError],
   );
 
   // Deactivate (final). A department with open work can't be deactivated: its complaints would be stranded.

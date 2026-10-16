@@ -141,6 +141,69 @@
   margin: 0;
   color: #1f1f1f;
 }
+/* Description and evidence (all portals' complaint details) */
+.detailBlock {
+  margin-top: 16px;
+}
+.detailHeading {
+  margin: 0 0 6px;
+  font-family: var(--font-inter);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.description {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #f8fafc;
+  font-family: var(--font-inter);
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: #1f1f1f;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.evidenceList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.evidenceChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 6px 10px;
+  border: 1px solid #d5dbef;
+  border-radius: 999px;
+  background: var(--surface-soft);
+  font-family: var(--font-inter);
+  font-size: 13px;
+  color: #17213b;
+}
+.evidenceChip svg {
+  flex: none;
+  color: var(--blue);
+}
+.evidenceName {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-weight: 600;
+}
+.evidenceSize {
+  flex: none;
+  color: var(--text-muted);
+}
+.noEvidence {
+  margin: 0;
+  font-family: var(--font-inter);
+  font-size: 14px;
+  color: var(--text-muted);
+}
 .rule {
   margin: 24px 0 0;
   border: 0;
@@ -299,6 +362,25 @@
   }
   .modalResultCard .rule {
     margin: 0;
+  }
+  .modalResultCard .detailBlock {
+    margin-top: 0;
+  }
+  .modalResultCard .detailHeading {
+    margin-bottom: 4px;
+    font-size: 0.8125rem;
+  }
+  .modalResultCard .description {
+    padding: 8px 10px;
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+  /* The modal's mobile rule enlarges every p and li; keep these at the details' size. */
+  .modalResultCard .evidenceChip.evidenceChip {
+    font-size: 0.8125rem;
+  }
+  .modalResultCard .noEvidence.noEvidence {
+    font-size: 0.875rem;
   }
   .modalResultCard .progressTitle {
     margin: -0.25rem 0 0;
