@@ -171,13 +171,13 @@
   display: grid;
   gap: 8px;
 }
-/* One row per file: name and size on the left, Open / Download on the right (wraps under on narrow screens). */
+/* One row per file: name and size on the left, Open / Download always pinned to the right. A long
+   file name wraps inside its own column instead of pushing the buttons down. */
 .evidenceChip {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
-  gap: 6px 12px;
+  gap: 12px;
   padding: 6px 8px 6px 12px;
   border: 1px solid #d5dbef;
   border-radius: 10px;
@@ -187,10 +187,16 @@
   color: #17213b;
 }
 .evidenceInfo {
-  display: inline-flex;
-  align-items: center;
-  flex-wrap: wrap;
+  display: flex;
+  align-items: flex-start;
   gap: 6px;
+  min-width: 0;
+}
+.evidenceInfo svg {
+  margin-top: 2px;
+}
+.evidenceText {
+  display: grid;
   min-width: 0;
 }
 .evidenceChip svg {
@@ -198,9 +204,8 @@
   color: var(--blue);
 }
 .evidenceActions {
-  display: inline-flex;
+  display: flex;
   gap: 6px;
-  flex: none;
 }
 .evidenceBtn {
   display: inline-flex;
@@ -229,13 +234,17 @@
   cursor: progress;
 }
 .evidenceName {
-  min-width: 0;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
   overflow-wrap: anywhere;
   font-weight: 600;
 }
 .evidenceSize {
-  flex: none;
   color: var(--text-muted);
+  white-space: nowrap;
 }
 .noEvidence {
   margin: 0;
@@ -418,7 +427,6 @@
   .modalResultCard .evidenceChip.evidenceChip {
     font-size: 0.8125rem;
   }
-  /* Bigger tap targets on phones. */
   .evidenceBtn {
     min-height: 40px;
   }
@@ -591,5 +599,26 @@
   }
   .viewUpdate {
     width: 100%;
+  }
+}
+
+/* Small phones: icon-only Open/Download (each keeps its "Open …"/"Download …" accessible name) so a
+   long file name still has room beside them; 40px square tap targets. */
+@media (max-width: 479px) {
+  .evidenceChip {
+    gap: 8px;
+  }
+  .evidenceBtn {
+    justify-content: center;
+    min-width: 40px;
+    padding: 0;
+  }
+  .evidenceBtnLabel {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 }

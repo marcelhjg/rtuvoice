@@ -123,18 +123,23 @@ export function ComplaintStatusDetails({
                 <li key={`${f.name}-${i}`} className={styles.evidenceChip}>
                   <span className={styles.evidenceInfo}>
                     <Icon name="file" size={15} strokeWidth={1.8} />
-                    <span className={styles.evidenceName}>{label}</span>
-                    <span className={styles.evidenceSize}>
-                      · {forStaff ? `${evidenceKind(f)} · ` : ""}
-                      {formatBytes(f.size)}
+                    <span className={styles.evidenceText}>
+                      {/* Long names are cut to two lines; the full name is in the tooltip. */}
+                      <span className={styles.evidenceName} title={label}>
+                        {label}
+                      </span>
+                      <span className={styles.evidenceSize}>
+                        {forStaff ? `${evidenceKind(f)} · ` : ""}
+                        {formatBytes(f.size)}
+                      </span>
                     </span>
                   </span>
                   <span className={styles.evidenceActions}>
                     <button type="button" className={styles.evidenceBtn} onClick={() => openEvidence(f, i, "open")} disabled={busyFile === i} aria-label={`Open ${label}`}>
-                      <Icon name="eye" size={15} strokeWidth={1.9} /> Open
+                      <Icon name="eye" size={15} strokeWidth={1.9} /> <span className={styles.evidenceBtnLabel}>Open</span>
                     </button>
                     <button type="button" className={styles.evidenceBtn} onClick={() => openEvidence(f, i, "download")} disabled={busyFile === i} aria-label={`Download ${label}`}>
-                      <Icon name="download" size={15} strokeWidth={1.9} /> Download
+                      <Icon name="download" size={15} strokeWidth={1.9} /> <span className={styles.evidenceBtnLabel}>Download</span>
                     </button>
                   </span>
                 </li>
