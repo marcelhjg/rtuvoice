@@ -30,10 +30,6 @@
   background: var(--progress-bg);
   color: var(--progress-fg);
 }
-.aUpdate {
-  background: var(--resolved-bg);
-  color: var(--resolved-fg);
-}
 @media (max-width: 960px) {
   .detail {
     max-width: none;

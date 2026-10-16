@@ -228,7 +228,6 @@ export function buildSeed(now: number): { complaints: Complaint[]; activity: Act
     for (const u of s.upd ?? []) {
       const at = iso(assigned + u.after * DAY + 10 * 60 * 1000);
       c.updates.push({ department: s.dept, at, message: u.msg });
-      log({ at, actor: s.dept, actorRole: "Department", action: "Update posted", trackingId: s.id, department: s.dept, detail: u.msg });
     }
     if (s.s === "Resolved") {
       const at = iso(assigned + (s.r ?? 5) * DAY);

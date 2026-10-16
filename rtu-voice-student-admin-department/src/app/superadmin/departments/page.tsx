@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { adminStyles as s } from "@/components/admin/bits";
+import { LockedChip, adminStyles as s } from "@/components/admin/bits";
 import m from "@/components/admin/modals.module.css";
 import { ConfirmDialog } from "@/components/admin/superadmin";
 import x from "@/components/admin/superadmin.module.css";
@@ -12,21 +12,23 @@ import { useDemoStore } from "@/lib/demo-store";
 import type { DepartmentRecord } from "@/lib/types";
 
 type Editing = { type: "add" } | { type: "rename"; dept: DepartmentRecord } | null;
-type Toggling = { dept: DepartmentRecord; active: boolean } | null;
+type Deactivating = DepartmentRecord | null;
 
-/** Superadmin Portal › Departments (SRS §3, §7): add, rename and deactivate departments. */
+/**
+ * Superadmin Portal › Departments (SRS §3): add, rename and deactivate departments. Deactivation is final
+ * (no reactivate in this scope). About 5 departments are expected; the final list is not yet set.
+ */
 export default function DepartmentsPage() {
-  const { departments, complaints, deptAccounts, setDepartmentActive } = useDemoStore();
+  const { departments, complaints, deptAccounts, deactivateDepartment } = useDemoStore();
   const toast = useToast();
   const [editing, setEditing] = useState<Editing>(null);
-  const [toggling, setToggling] = useState<Toggling>(null);
+  const [deactivating, setDeactivating] = useState<Deactivating>(null);
 
-  const counts = (name: string) => {
-    const mine = complaints.filter((c) => c.department === name);
-    return { total: mine.length, open: mine.filter((c) => c.status === "Assigned" || c.status === "In Progress").length };
-  };
-  // One shared account per department (active or deactivated).
-  const accountOf = (name: string) => deptAccounts.find((a) => a.department === name);
+  // Open = Assigned or In Progress. Shown because a department with open complaints can't be deactivated.
+  // (No other counts here: system-wide statistics are out of the superadmin's scope.)
+  const openCount = (name: string) => complaints.filter((c) => c.department === name && (c.status === "Assigned" || c.status === "In Progress")).length;
+  // The department's one active, shared account.
+  const accountOf = (name: string) => deptAccounts.find((a) => a.department === name && a.active !== false);
 
   return (
     <div className="container">
@@ -53,8 +55,7 @@ export default function DepartmentsPage() {
               <tr>
                 <th scope="col">Department</th>
                 <th scope="col">Account</th>
-                <th scope="col">Open</th>
-                <th scope="col">Total</th>
+                <th scope="col">Open complaints</th>
                 <th scope="col">Status</th>
                 <th scope="col">
                   <span className="visually-hidden">Actions</span>
@@ -63,7 +64,6 @@ export default function DepartmentsPage() {
             </thead>
             <tbody>
               {departments.map((d) => {
-                const n = counts(d.name);
                 const acc = accountOf(d.name);
                 return (
                   <tr key={d.name} className={d.active ? undefined : x.inactiveRow}>
@@ -75,16 +75,14 @@ export default function DepartmentsPage() {
                         <span>
                           <span className={x.headName}>
                             {acc.firstName} {acc.lastName}
-                            {acc.active === false ? <span className={x.sub}>Deactivated</span> : null}
                           </span>
                           <span className={x.sub}>{acc.email}</span>
                         </span>
                       ) : (
-                        <span className={s.muted}>No account yet</span>
+                        <span className={s.muted}>No active account</span>
                       )}
                     </td>
-                    <td data-label="Open">{n.open}</td>
-                    <td data-label="Total">{n.total}</td>
+                    <td data-label="Open complaints">{openCount(d.name)}</td>
                     <td data-label="Status">
                       <span className={`${s.pill} ${d.active ? x.active : x.inactive}`}>{d.active ? "Active" : "Deactivated"}</span>
                     </td>
@@ -94,13 +92,11 @@ export default function DepartmentsPage() {
                           Rename
                         </button>
                         {d.active ? (
-                          <button type="button" className={`${s.outlineBtn} ${x.slotB} ${x.dangerOutline}`} onClick={() => setToggling({ dept: d, active: false })}>
+                          <button type="button" className={`${s.outlineBtn} ${x.slotB} ${x.dangerOutline}`} onClick={() => setDeactivating(d)}>
                             Deactivate
                           </button>
                         ) : (
-                          <button type="button" className={`${s.outlineBtn} ${x.slotB}`} onClick={() => setToggling({ dept: d, active: true })}>
-                            Reactivate
-                          </button>
+                          <LockedChip reason="Deactivated departments can't be reactivated." />
                         )}
                       </div>
                     </td>
@@ -113,28 +109,27 @@ export default function DepartmentsPage() {
       </section>
 
       {editing ? <DepartmentNameModal editing={editing} onClose={() => setEditing(null)} /> : null}
-      {toggling ? (
+      {deactivating ? (
         <ConfirmDialog
-          title={toggling.active ? "Reactivate this department?" : "Deactivate this department?"}
-          subtitle={toggling.dept.name}
+          title="Deactivate this department?"
+          subtitle={deactivating.name}
           body={
-            toggling.active ? (
-              <p>Admins will be able to assign complaints to it again, and its head accounts can log in.</p>
-            ) : (
-              <>
-                <p>Admins won&apos;t be able to assign or reassign complaints to it, and its head accounts can&apos;t log in.</p>
-                <p>Its past complaints stay visible in lists and statistics.</p>
-              </>
-            )
+            <>
+              <p>Admins won&apos;t be able to assign or reassign complaints to it, and its account can&apos;t log in.</p>
+              <p>Its past complaints stay visible in lists and statistics.</p>
+              <p>
+                <strong>This can&apos;t be undone.</strong>
+              </p>
+            </>
           }
-          confirmLabel={toggling.active ? "Reactivate" : "Deactivate"}
-          danger={!toggling.active}
-          onCancel={() => setToggling(null)}
+          confirmLabel="Deactivate"
+          danger
+          onCancel={() => setDeactivating(null)}
           onConfirm={() => {
-            const error = setDepartmentActive(toggling.dept.name, toggling.active);
+            const error = deactivateDepartment(deactivating.name);
             if (error) return error;
-            toast(`${toggling.dept.name} ${toggling.active ? "reactivated" : "deactivated"}.`, "success");
-            setToggling(null);
+            toast(`${deactivating.name} deactivated.`, "success");
+            setDeactivating(null);
             return null;
           }}
         />
@@ -172,7 +167,7 @@ function DepartmentNameModal({ editing, onClose }: { editing: NonNullable<Editin
       align="left"
       size="sm"
       title={renaming ? "Rename department" : "Add department"}
-      subtitle={renaming ? `Currently “${renaming.name}”. Its complaints and head accounts move to the new name.` : "It can receive complaints right away."}
+      subtitle={renaming ? `Currently “${renaming.name}”. Its complaints and account move to the new name.` : "It can receive complaints right away."}
     >
       <form onSubmit={submit} noValidate className={m.form}>
         <div className={`field ${error ? "has-error" : ""}`}>

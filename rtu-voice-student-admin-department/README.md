@@ -55,7 +55,7 @@ land (student `/dashboard`, admin `/admin`, department `/department`, superadmin
 | --- | --- |
 | **Student** | Any `@rtu.edu.ph` email with the demo password **`rtuvoice123`**. `juan.cruz@rtu.edu.ph` is the Figma sample student "Juan Dela Cruz" and owns the sample complaints below. |
 | **Admin** | `admin@rtu.edu.ph`, `ics.admin@rtu.edu.ph`, `osa.admin@rtu.edu.ph` — use demo password **`rtuvoice123`**. Admin accounts cannot register; the Super Admin creates them. |
-| **Superadmin** | `superadmin@rtu.edu.ph` — demo password **`rtuvoice123`**. A separate, small portal at `/superadmin`: **Accounts** (create, deactivate and reset admin accounts and department accounts — one shared account per department, used by its head and staff), **Departments** (add, rename, deactivate) and the superadmin-only **Activity Log**. It has none of the admin console's complaint pages. |
+| **Superadmin** | `superadmin@rtu.edu.ph` — demo password **`rtuvoice123`**. A separate, deliberately small portal at `/superadmin`: **Accounts** (create and deactivate admin and department accounts — one active, shared account per department, used by its head and staff), **Departments** (add, rename, deactivate) and the superadmin-only **Activity Log**. It has none of the admin console's complaint pages. |
 | **Department** | One shared account per department: `facilities@rtu.edu.ph` (Facilities Office), `registrar@rtu.edu.ph`, `academic@rtu.edu.ph`, `osa@rtu.edu.ph` (Student Affairs), `cashier@rtu.edu.ph`, `ict@rtu.edu.ph` — use demo password **`rtuvoice123`**. Each account only sees its own department's complaints. Cannot register; the superadmin creates them. |
 | One-time code (register, forgot password) | **`123456`** — no email is sent |
 | Student's sample tracking IDs | `STU-A3F1B` (In Progress, has a department update), `STU-K92QD` (Resolved), `STU-77MZP` (Assigned, overdue), `STU-B04XR` (Rejected), `STU-M5T8C` (Resolved) |
@@ -65,7 +65,7 @@ log out → log in as `admin@rtu.edu.ph` → assign it from the Pending Validati
 as the student and track it. The Assigned status, department and timeline show up immediately.
 Then log in as that department's head (e.g. `facilities@rtu.edu.ph`), set the status to In progress or
 Resolved and use **Add Update**; the student sees both on the Status Tracker (**View Update**) and the
-admin sees them in **View Updates**; the superadmin sees every action in the Activity Log.
+admin sees them in **View Updates**; the superadmin sees the assignment and status changes in the Activity Log.
 
 Sample dates are generated relative to the day you first open the site, so SLA timers
 ("Acknowledge in 1 day", "Overdue by 4 days") stay realistic. To reset all demo data, clear the
@@ -131,20 +131,24 @@ complaint reassigned by an admin leaves its dashboard immediately); status moves
 **Assigned → In progress → Resolved** — the dropdown offers only the next step, each change asks for
 confirmation, nothing can be skipped or moved backward, and Resolved is locked (no status change, no
 updates); there is no Reject or Reassign anywhere; student identity is never shown; every status
-change and update message is written to the Activity Log under the department's name and appears
-right away on the student's tracker, the Public Dashboard status and the admin's Master Tracking
-Queue. Emails are simulated (a toast says who would be notified).
+change is written to the Activity Log under the department's name; status changes and update
+messages appear right away on the student's tracker, the Public Dashboard status and the admin's
+Master Tracking Queue. Emails are simulated (a toast says who would be notified).
 
 ### Superadmin Portal
 
-A separate, small portal (SRS §3, §7). The superadmin has none of the admin console's complaint pages.
+A single superadmin account with a deliberately limited scope (SRS §3), kept small because of the
+project timeline. The superadmin has none of the admin console's complaint pages.
 
 | Route | Notes |
 | --- | --- |
-| `/superadmin` | **Accounts**: every admin and department account; create (admin, or the one shared account of a department that has none yet), deactivate / reactivate, reset password (simulated). The last active admin can't be deactivated |
-| `/superadmin/departments` | **Departments**: add, rename (moves the department's complaints and account to the new name), deactivate (blocked while it has Assigned or In Progress complaints; a deactivated department disappears from Assign/Reassign and its account can't log in) |
-| `/superadmin/activity` | **Activity Log** (superadmin-only): every assignment, reassignment, rejection, status change and department update; filters by action and actor |
-| `/superadmin/profile` | Manage Profile |
+| `/superadmin` | **Accounts page + Account Management**: lists every admin and department account; **create** (an admin, or the one active shared account of a department that has none) and **deactivate**. Deactivation is final (no reactivate). A department whose account was deactivated can get a new one. The last active admin can't be deactivated |
+| `/superadmin/departments` | **Department Management**: **add**, **rename** (moves the department's complaints and account to the new name) and **deactivate** (final; blocked while it has Assigned or In Progress complaints; a deactivated department disappears from Assign/Reassign and its account can't log in). About 5 departments are expected; the final list is not yet set |
+| `/superadmin/activity` | **Activity Log** (superadmin-only): assignments, reassignments and status changes (including rejections) made by admins and departments; filters by action and actor. Department update messages are not logged |
+| `/superadmin/profile` | Manage Profile (from the profile menu) |
+
+Out of scope (future work, per the SRS): account activity log, category and SLA editing, AI settings,
+retention controls, system-wide statistics and emergency override.
 
 ## 5. Project structure
 

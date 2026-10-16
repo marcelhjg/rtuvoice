@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, type FormEvent, type ReactNode } from "react";
-import { SearchBox, adminStyles as s } from "@/components/admin/bits";
+import { LockedChip, SearchBox, adminStyles as s } from "@/components/admin/bits";
 import m from "@/components/admin/modals.module.css";
 import { ConfirmDialog } from "@/components/admin/superadmin";
 import x from "@/components/admin/superadmin.module.css";
@@ -23,11 +23,15 @@ interface Row {
   addedAt?: string;
 }
 
-type Pending = { type: "deactivate" | "reactivate" | "reset"; row: Row } | null;
+type Pending = { row: Row } | null;
 
-/** Superadmin Portal › Accounts (SRS §3, §7), the portal's home: lists every admin and department-head account; create, deactivate and reset them. */
+/**
+ * Superadmin Portal › Accounts (SRS §3), the portal's home: lists every admin and department account.
+ * Account Management is create and deactivate only (deactivation is final; there is no reactivate or
+ * password reset in this scope).
+ */
 export default function AccountsPage() {
-  const { admins, deptAccounts, setStaffAccountActive } = useDemoStore();
+  const { admins, deptAccounts, deactivateStaffAccount } = useDemoStore();
   const toast = useToast();
   const [query, setQuery] = useState("");
   const [kind, setKind] = useState("");
@@ -60,7 +64,7 @@ export default function AccountsPage() {
             {all.length}
           </span>
         </div>
-        <p className={s.subtitle}>Administrator accounts and one shared account per department. Only the superadmin can create, deactivate or reset them.</p>
+        <p className={s.subtitle}>Administrator accounts and one active, shared account per department. Only the superadmin can create or deactivate them.</p>
       </div>
 
       <section className={s.panel} aria-label="Accounts">
@@ -111,24 +115,19 @@ export default function AccountsPage() {
                     </span>
                   </td>
                   <td data-label="Email">{r.email}</td>
-                  <td data-label="Role">{r.kind === "admin" ? "Administrator" : "Department head"}</td>
+                  <td data-label="Role">{r.kind === "admin" ? "Administrator" : "Department"}</td>
                   <td data-label="Department">{r.department ?? <span className={s.muted}>—</span>}</td>
                   <td data-label="Status">
                     <span className={`${s.pill} ${r.active ? x.active : x.inactive}`}>{r.active ? "Active" : "Deactivated"}</span>
                   </td>
                   <td data-label="">
                     <div className={x.rowActions}>
-                      <button type="button" className={`${s.ghostBtn} ${x.slotA}`} onClick={() => setPending({ type: "reset", row: r })} disabled={!r.active}>
-                        Reset password
-                      </button>
                       {r.active ? (
-                        <button type="button" className={`${s.outlineBtn} ${x.slotB} ${x.dangerOutline}`} onClick={() => setPending({ type: "deactivate", row: r })}>
+                        <button type="button" className={`${s.outlineBtn} ${x.slotB} ${x.dangerOutline}`} onClick={() => setPending({ row: r })}>
                           Deactivate
                         </button>
                       ) : (
-                        <button type="button" className={`${s.outlineBtn} ${x.slotB}`} onClick={() => setPending({ type: "reactivate", row: r })}>
-                          Reactivate
-                        </button>
+                        <LockedChip reason="Deactivated accounts can't be reactivated." />
                       )}
                     </div>
                   </td>
@@ -142,41 +141,29 @@ export default function AccountsPage() {
 
       {creating ? <CreateAccountModal onClose={() => setCreating(false)} /> : null}
 
-      {pending?.type === "reset" ? (
+      {pending ? (
         <ConfirmDialog
-          title="Reset password?"
-          subtitle={`${name(pending.row)} · ${pending.row.email}`}
-          body={<p>A password reset email will be sent to this address. Their current password stops working once they set a new one.</p>}
-          confirmLabel="Send reset email"
-          onCancel={() => setPending(null)}
-          onConfirm={() => {
-            toast(`Password reset email sent to ${pending.row.email} (simulated).`, "success");
-            setPending(null);
-            return null;
-          }}
-        />
-      ) : null}
-      {pending && pending.type !== "reset" ? (
-        <ConfirmDialog
-          title={pending.type === "deactivate" ? "Deactivate this account?" : "Reactivate this account?"}
+          title="Deactivate this account?"
           subtitle={`${name(pending.row)} · ${pending.row.email}`}
           body={
-            pending.type === "deactivate" ? (
+            <>
               <p>
                 They won&apos;t be able to log in. Their past actions stay in the Activity Log
-                {pending.row.kind === "department" ? ", and complaints stay with their department" : ""}. You can reactivate the account later.
+                {pending.row.kind === "department" ? ", and the department's complaints stay with the department" : ""}.
               </p>
-            ) : (
-              <p>They will be able to log in again with their existing password.</p>
-            )
+              <p>
+                <strong>This can&apos;t be undone.</strong>
+                {pending.row.kind === "department" ? " You can then create a new account for this department." : ""}
+              </p>
+            </>
           }
-          confirmLabel={pending.type === "deactivate" ? "Deactivate" : "Reactivate"}
-          danger={pending.type === "deactivate"}
+          confirmLabel="Deactivate"
+          danger
           onCancel={() => setPending(null)}
           onConfirm={() => {
-            const error = setStaffAccountActive(pending.row.email, pending.type === "reactivate");
+            const error = deactivateStaffAccount(pending.row.email);
             if (error) return error;
-            toast(`${name(pending.row)} ${pending.type === "deactivate" ? "deactivated" : "reactivated"}.`, "success");
+            toast(`${name(pending.row)} deactivated.`, "success");
             setPending(null);
             return null;
           }}
@@ -188,8 +175,9 @@ export default function AccountsPage() {
 
 function CreateAccountModal({ onClose }: { onClose: () => void }) {
   const { activeDepartments, deptAccounts, createStaffAccount } = useDemoStore();
-  // One account per department: only departments without an account can be picked.
-  const hasAccount = (d: string) => deptAccounts.some((a) => a.department === d);
+  // One active account per department: only departments without an active account can be picked.
+  // A department whose account was deactivated can get a new one (deactivation is final).
+  const hasAccount = (d: string) => deptAccounts.some((a) => a.department === d && a.active !== false);
   const available = activeDepartments.filter((d) => !hasAccount(d));
   const toast = useToast();
   const [form, setForm] = useState<NewStaffAccountInput>({ kind: "admin", firstName: "", lastName: "", email: "", department: "" });
@@ -271,7 +259,7 @@ function CreateAccountModal({ onClose }: { onClose: () => void }) {
             ? noneLeft
               ? (
                   <p className={`alert alert-info ${x.full}`} role="status">
-                    Every department already has its account. Add a new department first (Departments page), then create its account here.
+                    Every department already has an active account. Add a new department first (Departments page), or deactivate a department&apos;s account to replace it.
                   </p>
                 )
               : field(
@@ -295,7 +283,7 @@ function CreateAccountModal({ onClose }: { onClose: () => void }) {
         <p className={m.help}>
           {form.kind === "department" ? (
             <>
-              Each department has <strong>one shared account</strong>, used by its head and staff. Departments that already have one aren&apos;t listed.{" "}
+              Each department has <strong>one active, shared account</strong>, used by its head and staff. Departments that already have one aren&apos;t listed.{" "}
             </>
           ) : null}
           <em>Demo build: no email is sent. New accounts sign in with the demo password.</em>

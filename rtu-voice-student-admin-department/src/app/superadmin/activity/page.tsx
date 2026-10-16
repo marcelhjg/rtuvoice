@@ -14,7 +14,6 @@ const ACTION_CLASS: Record<ActivityAction, string> = {
   Reassigned: styles.aReassigned,
   Rejected: styles.aRejected,
   "Status changed": styles.aStatus,
-  "Update posted": styles.aUpdate,
 };
 
 /** Superadmin Portal › Activity Log (SRS §3, §4, §6): changes made by admins and departments. Superadmin-only. */

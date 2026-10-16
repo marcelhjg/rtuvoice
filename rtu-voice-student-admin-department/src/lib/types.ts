@@ -149,7 +149,8 @@ export interface AdminAccount {
   active?: boolean;
 }
 
-export const ACTIVITY_ACTIONS = ["Assigned", "Reassigned", "Rejected", "Status changed", "Update posted"] as const;
+/** SRS §3/§4: the Activity Log records assignments, reassignments and status changes (a rejection is a status change). */
+export const ACTIVITY_ACTIONS = ["Assigned", "Reassigned", "Rejected", "Status changed"] as const;
 export type ActivityAction = (typeof ACTIVITY_ACTIONS)[number];
 
 export interface ActivityEntry {
