@@ -1,8 +1,8 @@
-# RTU Voice — Student Portal + Central Admin Console (Frontend)
+# RTU Voice — Frontend (Student, Admin, Department and Superadmin portals)
 
 Frontend for **RTU VOICE: An AI-Assisted Student Concern and Feedback Management System for
 Rizal Technological University – Pasig Campus**, built from the Group 4Voices Figma high-fidelity
-design (Page 1: student screens and Central Admin Console screens).
+design (Page 1: student screens and Central Admin Console screens) and the SRS.
 
 Stack: **Next.js 16 (App Router) · React 19 · TypeScript · CSS Modules**. No UI framework, no
 Tailwind, no chart library, no backend.
@@ -22,18 +22,21 @@ Tailwind, no chart library, no backend.
 
 ## 2. Run it
 
-1. Extract the ZIP. You get a folder named `rtu-voice-student-portal`.
-2. In VS Code: **File → Open Folder…** and choose that folder.
-3. Open the terminal: **Terminal → New Terminal**.
-4. Install dependencies (first time only, needs internet):
+1. Get the code and open the app folder (the app lives in this subfolder, not the repo root):
+   ```bash
+   git clone https://github.com/marcelhjg/rtuvoice.git
+   cd rtuvoice/rtu-voice-student-admin-department
+   ```
+2. Open that folder in VS Code (**File → Open Folder…**) and a terminal (**Terminal → New Terminal**).
+3. Install dependencies (first time only, needs internet):
    ```bash
    npm install
    ```
-5. Start the development server:
+4. Start the development server:
    ```bash
    npm run dev
    ```
-6. Open **http://localhost:3000** in your browser.
+5. Open **http://localhost:3000** in your browser.
 
 Other commands:
 
@@ -45,15 +48,15 @@ Other commands:
 
 ## 3. Demo accounts and test data
 
-One login page serves all three portals (SRS v3 "unified login"): the account's role decides where you
-land.
+One login page serves all four portals (SRS "unified login"): the account's role decides where you
+land (student `/dashboard`, admin `/admin`, department `/department`, superadmin `/superadmin`).
 
 | What | Value |
 | --- | --- |
 | **Student** | Any `@rtu.edu.ph` email with the demo password **`rtuvoice123`**. `juan.cruz@rtu.edu.ph` is the Figma sample student "Juan Dela Cruz" and owns the sample complaints below. |
 | **Admin** | `admin@rtu.edu.ph`, `ics.admin@rtu.edu.ph`, `osa.admin@rtu.edu.ph` — use demo password **`rtuvoice123`**. Admin accounts cannot register; the Super Admin creates them. |
 | **Superadmin** | `superadmin@rtu.edu.ph` — demo password **`rtuvoice123`**. A separate, small portal at `/superadmin`: **Accounts** (create, deactivate and reset admin accounts and department accounts — one shared account per department, used by its head and staff), **Departments** (add, rename, deactivate) and the superadmin-only **Activity Log**. It has none of the admin console's complaint pages. |
-| **Department head** | `facilities@rtu.edu.ph` (Facilities Office), `registrar@rtu.edu.ph`, `academic@rtu.edu.ph`, `osa@rtu.edu.ph` (Student Affairs), `cashier@rtu.edu.ph`, `ict@rtu.edu.ph` — use demo password **`rtuvoice123`**. Each account only sees its own department's complaints. Cannot register. |
+| **Department** | One shared account per department: `facilities@rtu.edu.ph` (Facilities Office), `registrar@rtu.edu.ph`, `academic@rtu.edu.ph`, `osa@rtu.edu.ph` (Student Affairs), `cashier@rtu.edu.ph`, `ict@rtu.edu.ph` — use demo password **`rtuvoice123`**. Each account only sees its own department's complaints. Cannot register; the superadmin creates them. |
 | One-time code (register, forgot password) | **`123456`** — no email is sent |
 | Student's sample tracking IDs | `STU-A3F1B` (In Progress, has a department update), `STU-K92QD` (Resolved), `STU-77MZP` (Assigned, overdue), `STU-B04XR` (Rejected), `STU-M5T8C` (Resolved) |
 
@@ -62,7 +65,7 @@ log out → log in as `admin@rtu.edu.ph` → assign it from the Pending Validati
 as the student and track it. The Assigned status, department and timeline show up immediately.
 Then log in as that department's head (e.g. `facilities@rtu.edu.ph`), set the status to In progress or
 Resolved and use **Add Update**; the student sees both on the Status Tracker (**View Update**) and the
-admin sees them in **View Updates** and the Activity Log.
+admin sees them in **View Updates**; the superadmin sees every action in the Activity Log.
 
 Sample dates are generated relative to the day you first open the site, so SLA timers
 ("Acknowledge in 1 day", "Overdue by 4 days") stay realistic. To reset all demo data, clear the
@@ -86,14 +89,14 @@ the site in a private window.
 | `/dashboard` | HOME | Student dashboard, recent resolved complaints |
 | *(side menu)* | SIDEBAR + 4 variants | Opens from the ☰ button; Esc or clicking outside closes it |
 | *(profile menu)* | HOME with dropdown | Manage Profile, Logout (with confirmation) |
-| `/report` | REPORT A CONCERN | Validation, 5 categories, evidence drag-and-drop (JPG/PNG/PDF/MP3/WAV/MP4, 5 MB total), opt-out checkbox |
+| `/report` | REPORT A CONCERN | Validation, 5 categories, evidence drag-and-drop (JPG/PNG/PDF/MP3/WAV/MP4, 5 MB total), **opt-in** "Share a summary on the public dashboard" checkbox (unticked by default) |
 | `/report/submitted?id=` | Frame (receipt) | Copy-to-clipboard tracking ID |
 | `/track?id=` | STATUS TRACKER + update pop-up | Format check, not-found state, timeline, View Update dialog; only your own complaints |
 | `/history` | History | Table on desktop, cards on mobile; IDs link to the tracker |
-| `/public-dashboard` | Public Dashboard | Built from released complaints (not opted out); status/category filters, pagination |
+| `/public-dashboard` | Public Dashboard | Approved complaints whose student chose to share them; status/category filters, pagination |
 | `/profile` | MANAGE PROFILE | Edit name, locked email, change password with rules |
 
-Priority levels are never shown anywhere in the student portal (SRS v3).
+Priority levels are never shown anywhere in the student portal (SRS §1).
 
 ### Central Admin Console
 
@@ -101,14 +104,13 @@ Priority levels are never shown anywhere in the student portal (SRS v3).
 | --- | --- | --- |
 | `/admin` | Admin HOME — Pending Validation Queue | Clickable stat boxes; search and Newest/Oldest sort; **Assign** dropdown per row (assigning = approval, then the simulated AI sets priority + public summary); **Reject** with a required reason |
 | `/admin?tab=master` | Admin HOME — Master Tracking Queue | Search, status and department filters, priority, SLA ("Acknowledge in…", "Resolve in…", "Overdue by…"), **View Updates**, **Reassign** |
-| *(pop-ups)* | Complaint details · Reject complaint · Reassign complaint · Complaint updates · Log out | Details include description, evidence and the SLA box; Reassign warns when the complaint is already In Progress and requires a reason |
+| *(pop-ups)* | Complaint details · Reject complaint · Reassign complaint · Update from the department · Log out | **Tracking ID** opens Complaint details (description, evidence, SLA box). The row's **View Updates** opens the department's update messages directly. Reassign needs a new department and a reason |
 | `/admin/complaints` | Total complaints | Department filter (incl. "Not assigned"), sort, pagination (8 per page) |
 | `/admin/assigned` | Assigned | Priority, Acknowledge by, Resolve by (red when overdue) |
 | `/admin/in-progress` | In progress | Priority, Acknowledged, Resolve by |
 | `/admin/resolved` | Resolved | Priority, Resolved in N days (late ones flagged) |
 | `/admin/statistics` | *(no Figma screen — see §6)* | Resolve rate, overdue count, average time to resolve; bar charts by category, department, priority; monthly trend; department filter; every chart has a table view |
-| `/admin/activity` | *(no Figma screen — see §6)* | Every assignment, reassignment, rejection, status change and department update; filters by action and actor |
-| `/admin/admins` | *(no Figma screen — see §6)* | Administrator accounts (read-only; accounts are created manually) |
+| `/admin/admins` | *(no Figma screen — see §6)* | View Admin: administrator accounts (read-only; the superadmin creates and deactivates them) |
 | `/admin/profile` | MANAGE PROFILE | Same form as the student profile |
 | *(side menu)* | Admin SIDEBAR variants | White menu with yellow active item, Logout at the bottom |
 
@@ -116,20 +118,33 @@ Priority levels are never shown anywhere in the student portal (SRS v3).
 
 | Route | Figma frame | Notes |
 | --- | --- | --- |
-| `/department` | Department Portal — Dashboard | Four clickable stat boxes (total, assigned, in progress, resolved), search by Tracking ID, status filter, table: Date, Tracking ID, Title, Assigned, Priority, Status, SLA, **Update status** + **Add Update** on every row |
+| `/department` | Department Portal — Dashboard | Four clickable stat boxes (total, assigned, in progress, resolved), search by Tracking ID, status filter, table: Date, Tracking ID, Title, Assigned, Priority, Status, SLA, then **View updates**, **Update status** and **Add Update** on every row (a 🔒 Locked chip once Resolved) |
 | `/department/needs-attention` | Sidebar item (no Figma screen — see §6) | Overdue and unacknowledged complaints, most overdue first, priority-level filter, search |
 | `/department/complaints`, `/assigned`, `/in-progress`, `/resolved` | Sidebar items (no Figma screens) | Filtered lists of the department's own complaints; same row actions as the dashboard |
 | `/department/statistics` | Sidebar item (no Figma screen) | Priority-level counts, monthly trend (received vs resolved), resolved rate, overdue count, average time to resolve — this department only |
 | `/department/profile` | MANAGE PROFILE | Same form as the other portals |
 | *(side menu)* | Department Portal SIDEBAR | Dashboard, Needs Attention, Total Complaints, Assigned, In Progress, Resolved, Statistics, Logout |
-| *(pop-ups)* | *(no Figma frame)* | Complaint details (click a Tracking ID) reuse the admin pop-up; **Add update** pop-up writes the message the student reads through View Update |
+| *(pop-ups)* | *(no Figma frame)* | Complaint details (click a Tracking ID) reuse the admin pop-up; status-change confirmation; **Add update** pop-up (then a "Post this update?" confirmation) writes the message the student reads through View Update |
 
-Rules enforced in the demo (SRS v3 §3–§4): a department only sees complaints assigned to it (a
-complaint reassigned by an admin leaves its dashboard immediately); the status dropdown offers only
-**In progress** and **Resolved** (never Assigned); there is no Reject or Reassign anywhere; student
-identity is never shown; every status change and update message is written to the Activity Log under
-the department's name and appears right away on the student's tracker, the Public Dashboard status
-and the admin's Master Tracking Queue. Emails are simulated (a toast says who would be notified).
+Rules enforced in the demo (SRS §2–§4): a department only sees complaints assigned to it (a
+complaint reassigned by an admin leaves its dashboard immediately); status moves strictly
+**Assigned → In progress → Resolved** — the dropdown offers only the next step, each change asks for
+confirmation, nothing can be skipped or moved backward, and Resolved is locked (no status change, no
+updates); there is no Reject or Reassign anywhere; student identity is never shown; every status
+change and update message is written to the Activity Log under the department's name and appears
+right away on the student's tracker, the Public Dashboard status and the admin's Master Tracking
+Queue. Emails are simulated (a toast says who would be notified).
+
+### Superadmin Portal
+
+A separate, small portal (SRS §3, §7). The superadmin has none of the admin console's complaint pages.
+
+| Route | Notes |
+| --- | --- |
+| `/superadmin` | **Accounts**: every admin and department account; create (admin, or the one shared account of a department that has none yet), deactivate / reactivate, reset password (simulated). The last active admin can't be deactivated |
+| `/superadmin/departments` | **Departments**: add, rename (moves the department's complaints and account to the new name), deactivate (blocked while it has Assigned or In Progress complaints; a deactivated department disappears from Assign/Reassign and its account can't log in) |
+| `/superadmin/activity` | **Activity Log** (superadmin-only): every assignment, reassignment, rejection, status change and department update; filters by action and actor |
+| `/superadmin/profile` | Manage Profile |
 
 ## 5. Project structure
 
@@ -142,6 +157,7 @@ src/
     (portal)/                student pages inside PortalShell (header, side menu, guard)
     admin/                   Central Admin Console pages inside AdminShell
     department/              Department Portal pages inside DepartmentShell
+    superadmin/              Superadmin Portal pages inside SuperadminShell
     not-found.tsx
   components/                Logo, headers, Footer, Modal, Toast, Icon, StatusBadge, ProfileForm,
                              forms/ (fields, OTP), legal/, portal/ (student shell),
@@ -157,13 +173,14 @@ src/
   styles/globals.css         design tokens from Figma, fonts, shared UI classes
 public/
   images/                    RTU Voice logo, campus photos (exported from the Figma file)
-  fonts/                     self-hosted Inter, Instrument Sans, Bricolage Grotesque,
-                             Playfair, Hedvig Letters Sans, Inria Serif (SIL OFL)
+  fonts/                     self-hosted Inter, Bricolage Grotesque, Playfair (SIL OFL)
 ```
 
 To connect a real backend later, replace the functions in `src/lib/demo-store.tsx`
 (`login`, `submitComplaint`, `assignComplaint`, `rejectComplaint`, `reassignComplaint`, …) with
-Supabase/RPC calls; the pages only talk to that hook.
+Supabase/RPC calls; the pages only talk to that hook. The comments on each function give the SRS rule
+it implements. Every rule must also be enforced on the server: the checks in the browser are not
+security.
 
 ## 6. Where this build differs from the Figma file — and why
 
@@ -198,7 +215,7 @@ Filled in because the Figma had no content:
 Designed here because Figma only has the menu item, not the screen (built in the same style as
 the admin list pages, following the roadmap's description):
 
-- **Statistics**, **Activity Log** and **View Admin** pages.
+- **Statistics** and **View Admin** pages (and the **Activity Log**, now in the Superadmin Portal).
 - **Assign department confirmation.** Page 1 has no assign pop-up. Picking a department in the
   row dropdown now opens a confirmation (styled like the admin pop-ups, content from the App screens
   "Assign Department" frame), because assigning approves the complaint and triggers the AI step.
@@ -208,8 +225,9 @@ Behaviour decisions where the Figma and the SRS disagree or are silent:
 - The Figma "Complaint updates" timeline shows a separate "Approved by Central Admin" entry before
   "Assigned". The SRS says assigning **is** the approval, so the timeline shows one entry.
 - "Acknowledged" is taken to mean the department moved the complaint to In Progress.
-- **Reassign** is disabled for Resolved complaints. Reassigning returns the complaint to Assigned
-  and restarts the SLA clock for the new department.
+- **Reassign** is only possible while the complaint is Assigned (SRS §4) — and, stricter than the
+  SRS, only until the department posts its first update message. Reassigning keeps it Assigned and
+  restarts the SLA clock for the new department.
 - The master queue has a department filter (SRS) but, like the Figma table, no department column;
   the department is shown in the details, updates and reassign pop-ups.
 - Stat box numbers are calculated from the demo data, so they differ from the Figma sample numbers
@@ -229,45 +247,51 @@ roadmap (Sprint 5) and SRS v3 in the style of the admin pages:
 - **SLA column** — for Assigned complaints it shows the acknowledge-within clock ("Acknowledge in 1
   day", red "Acknowledgement late by N days" once missed); afterwards the resolve clock ("Resolve in
   5 days", "Overdue by 4 days"), as in the Figma rows.
-- **Update status** — acts immediately and shows a toast (no confirm step). Resolved can be set back to
-  In progress to correct a mistake (this removes the Resolved step from the timeline). The current
-  status is greyed out in the list. Going straight from Assigned to Resolved also fills in the
-  In progress step so the student's timeline stays complete.
-- **Add Update** — 10–500 characters, lists the department's earlier updates, reminds that it is only
-  visible to the student and admins. Not public.
+- **Update status** — only the next step is offered (Assigned → In progress → Resolved), with a
+  confirmation before the change; Cancel leaves the status as it was. No skipping, no going back,
+  Resolved is final (SRS §2 step 5).
+- **Add Update** — 10–500 characters, lists the department's earlier updates, then a "Post this
+  update?" confirmation; it is only visible to the student and admins, never public, and posts once
+  even on a double click. Not available once Resolved.
 - **Total / Assigned / In progress / Resolved** pages keep the row actions so staff can work from any list.
 - **Statistics** — "Resolved rate" is resolved ÷ all complaints assigned to the department.
-- Department-head logins are **demo-only** (six fixed accounts, one per office). The department list is
-  still pending interviews with the offices, so adding an office means adding it to `DEPARTMENTS`
-  (`src/lib/types.ts`) and an account to `DEPARTMENT_ACCOUNTS` (`src/lib/demo-data.ts`).
+- Departments and their accounts are managed in the **Superadmin Portal** (one shared account per
+  department, used by its head and staff). The six offices in `DEPARTMENTS` (`src/lib/types.ts`) and
+  `DEPARTMENT_ACCOUNTS` (`src/lib/demo-data.ts`) are only the demo's starting data; the final list is
+  pending interviews with the offices.
 - The header shows "Department Portal" over the office name, as in Figma; on phones the office name
   moves into the profile menu.
 
 ### Both portals
 
 - Mobile and tablet layouts: Page 1 has desktop frames only, so smaller screens were designed from
-  the desktop frames. Wide tables turn into stacked cards below 960 px. Checked at 1440, 1280,
-  1200, 1100, 1024, 961, 820, 768, 390 and 360 px wide.
+  the desktop frames. Wide tables turn into stacked cards below 960 px. The minimum supported width
+  is **320 px** (WCAG 2.1 Reflow); every page and dialog was checked at 320, 360, 375, 390, 414, 480,
+  600, 768, 820, 1024, 1280, 1440 and 1920 px with nothing cut off or scrolling sideways.
 
-Kept as designed, but the team should decide:
+Still for the team to decide:
 
-- Footer/About/Privacy still show **[PROJECT EMAIL]** and **[PROJECT LEAD EMAIL]** placeholders.
-- The auth screens say the platform is "for reporting **harassment**", while the report form and
-  Terms say harassment is **not** handled here.
-- The landing hero says "three simple steps"; the next section shows four.
-- The landing notice "Anonymous submissions may be reviewed slower" conflicts with SRS v3 (login
-  is mandatory; there are no anonymous submissions).
-- The "RTU" part of the wordmark is dark blue on navy and nearly invisible (footer, student side
-  menu, admin header); the "COUNTS." word in the landing hero has the same problem on the photo.
-- The public-dashboard opt-out is unchecked by default, so concerns are shared unless the student
-  opts out.
+- **Public dashboard sharing is opt-in** (unticked by default). The SRS describes an *opt-out*
+  checkbox. Opt-in matches the "identity-shielded" promise better; if the group follows the SRS,
+  revert the "Make public dashboard sharing opt-in" commit or update the SRS.
+- **"Voice" in the logo is `#EFB41F`**, as requested. On the white header that is 1.87:1 contrast,
+  below WCAG's 3:1 for large text — the only remaining accessibility finding.
+- **SRS conflict on acknowledgement:** §2 says assignment *counts as* the department's
+  acknowledgement, but §3 and §5 show an "acknowledge within" indicator that can turn overdue. The
+  demo treats moving to In Progress as the acknowledgement. The group must pick one before the
+  backend computes SLAs.
+- **View Updates (admin):** SRS §3 says it shows the dates of status changes *and* the update
+  messages; it currently shows the update messages only, as requested.
 
 Technical limitations:
 
 - Icons are hand-drawn SVGs in the same outline style; the original Figma vector exports could
   not be downloaded from the build environment. The logo and campus photos **are** the original
   Figma images.
-- The 5 MB rule, file types, OTP limits, password rules and admin-only access are enforced in the
-  browser only. A real build must enforce them on the server (row-level security).
+- The 5 MB rule, file types, OTP limits, password rules, role access, one account per department
+  and the status order are enforced in the browser only. A real build must enforce them on the
+  server (row-level security). The password also requires 8+ characters, which the SRS doesn't ask for.
+- Not simulated at all: the 30-day purge of rejected complaints and the 1-year anonymization (SRS §6).
 - The AI priority is a keyword rule (`src/lib/sla.ts`), and the public summary is the first
-  sentence of the description. Both stand in for the OpenRouter call.
+  sentence of the description — so in the demo the "public" summary is **not** depersonalized. Both
+  stand in for the OpenRouter call, which must depersonalize the title and summary.
