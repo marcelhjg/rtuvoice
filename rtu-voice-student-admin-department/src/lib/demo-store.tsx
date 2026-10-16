@@ -10,6 +10,10 @@
  *
  * No request leaves the browser: there is no real authentication, no email/OTP delivery,
  * no file upload, no AI call and no complaint processing.
+ *
+ * When the real backend is built, each action below becomes a Supabase RPC / server action
+ * that enforces the same rule on the server (row-level security). The checks here only keep
+ * the demo honest; they are not security.
  */
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { DEMO_OTP, DEMO_STUDENT, DEPARTMENT_ACCOUNTS, SUPERADMIN_ACCOUNT, buildAdminAccounts, buildDepartments, buildSeed, firstSentence } from "./demo-data";
@@ -163,6 +167,9 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
     [state.admins],
   );
 
+  // Unified login (SRS §3, §7): the account's role decides the portal. Checked in this order:
+  // superadmin, department account, admin, the demo student, then any other RTU email (student).
+  // The password is checked in LoginForm against the single demo password.
   const login = useCallback(
     (email: string) => {
       const normalized = email.trim().toLowerCase();
@@ -252,6 +259,9 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  // SRS §2 step 1: a new complaint starts as Pending with a random tracking ID.
+  // `mine` marks it as the signed-in student's own; the real system keeps that link
+  // internally only (pseudonymous, SRS §1) and never shows it to staff.
   const submitComplaint = useCallback(
     (input: NewComplaintInput) => {
       const now = new Date().toISOString();
@@ -333,6 +343,8 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
     [state.complaints, actorName],
   );
 
+  // SRS §2 step 2: admin-only, a reason is required. The student still sees the rejected
+  // complaint on History and the Status Tracker. NOT simulated: the 30-day purge (SRS §6).
   const rejectComplaint = useCallback(
     (trackingId: string, reason: string) => {
       const at = new Date().toISOString();
@@ -355,6 +367,9 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
   const reassignComplaint = useCallback(
     (trackingId: string, department: Department, reason: string) => {
       const target = state.complaints.find((c) => c.trackingId === trackingId);
+      // SRS §4: reassign only while the complaint is still Assigned. Stricter than the SRS:
+      // also blocked once the department has posted an update message, so an update can't
+      // end up on a complaint now owned by another office.
       if (!target || target.status !== "Assigned" || target.updates.length > 0) return false;
       const from = target.department;
       const at = new Date().toISOString();
@@ -426,6 +441,8 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
     [departmentComplaints, sessionDept],
   );
 
+  // SRS §2 step 6: the department's message to the student (also visible to admins, never public).
+  // Locked once the complaint is Resolved.
   const addDepartmentUpdate = useCallback(
     (trackingId: string, message: string) => {
       const target = departmentComplaints.find((c) => c.trackingId === trackingId);
@@ -469,6 +486,8 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
     [state.admins, state.deptAccounts, state.departments, state.student.email],
   );
 
+  // Superadmin › Accounts: deactivate or reactivate. The last active admin can't be deactivated,
+  // otherwise no one could review new complaints.
   const setStaffAccountActive = useCallback(
     (email: string, active: boolean) => {
       const e = email.trim().toLowerCase();
@@ -549,6 +568,11 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
   const resetDemo = useCallback(() => setState(fresh()), []);
 
   const myComplaints = useMemo(() => state.complaints.filter((c) => c.mine), [state.complaints]);
+  // Public Dashboard (SRS §2 step 4, §3): only complaints an admin has approved (Assigned or later)
+  // and the student agreed to share, with the AI title/summary. Never the priority or department
+  // update messages. SIMULATED: there is no AI, so the "AI" title is the student's own title and the
+  // summary is the first sentence of their description (set in assignComplaint). The real AI step
+  // must depersonalize both.
   const publicConcerns = useMemo<PublicConcern[]>(
     () =>
       state.complaints
