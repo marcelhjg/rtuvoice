@@ -137,13 +137,14 @@ Master Tracking Queue. Emails are simulated (a toast says who would be notified)
 
 ### Superadmin Portal
 
-A single superadmin account with a deliberately limited scope (SRS §3), kept small because of the
+A single superadmin account with a deliberately limited scope (SRS §3; **reactivate** was added at the
+group's request, the SRS lists only deactivate), kept small because of the
 project timeline. The superadmin has none of the admin console's complaint pages.
 
 | Route | Notes |
 | --- | --- |
-| `/superadmin` | **Accounts page + Account Management**: lists every admin and department account; **create** (an admin, or the one active shared account of a department that has none) and **deactivate**. Deactivation is final (no reactivate). A department whose account was deactivated can get a new one. The last active admin can't be deactivated |
-| `/superadmin/departments` | **Department Management**: **add**, **rename** (moves the department's complaints and account to the new name) and **deactivate** (final; blocked while it has Assigned or In Progress complaints; a deactivated department disappears from Assign/Reassign and its account can't log in). About 5 departments are expected; the final list is not yet set |
+| `/superadmin` | **Accounts page + Account Management**: lists every admin and department account; **create** (an admin, or the one active shared account of a department that has none), **deactivate** and **reactivate** (each asks for confirmation). A department whose account was deactivated can get a new one; an old department account can be reactivated only if its department is active and has no other active account. The last active admin can't be deactivated. The status filter starts on Active |
+| `/superadmin/departments` | **Department Management**: **add**, **rename** (moves the department's complaints and account to the new name), **deactivate** (blocked while it has Assigned or In Progress complaints; a deactivated department disappears from Assign/Reassign and its account can't log in) and **reactivate** (it can receive complaints again and its active account can log in again). About 5 departments are expected; the final list is not yet set |
 | `/superadmin/activity` | **Activity Log** (superadmin-only): assignments, reassignments and status changes (including rejections) made by admins and departments; filters by action and actor. Department update messages are not logged |
 | `/superadmin/profile` | Manage Profile (from the profile menu) |
 

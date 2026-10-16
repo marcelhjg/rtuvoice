@@ -94,12 +94,14 @@ interface DemoStore extends PersistedState {
   /** Why this email can't log in (deactivated account or department), or null. */
   loginBlockedReason(email: string): string | null;
   createStaffAccount(input: NewStaffAccountInput): string | null;
-  /** Final: there is no reactivate in the superadmin's scope (SRS §3). */
   deactivateStaffAccount(email: string): string | null;
+  /** Added at the group's request (the SRS lists only create and deactivate). */
+  reactivateStaffAccount(email: string): string | null;
   addDepartment(name: string): string | null;
   renameDepartment(from: Department, to: string): string | null;
-  /** Final: there is no reactivate in the superadmin's scope (SRS §3). */
   deactivateDepartment(name: Department): string | null;
+  /** Added at the group's request (the SRS lists only add, rename and deactivate). */
+  reactivateDepartment(name: Department): string | null;
   resetDemo(): void;
 }
 
@@ -490,7 +492,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       }
       if (!input.department || !state.departments.some((d) => d.name === input.department && d.active)) return "Choose an active department.";
       // One active account per department: the head's account is shared by the department's staff.
-      // Deactivation is final, so a department whose account was deactivated can get a replacement.
+      // A department whose account was deactivated can get a replacement.
       if (state.deptAccounts.some((a) => a.department === input.department && a.active !== false))
         return `${input.department} already has an active account. Each department has one shared account.`;
       setState((s) => ({ ...s, deptAccounts: [...s.deptAccounts, { ...base, department: input.department! }] }));
@@ -499,8 +501,8 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
     [state.admins, state.deptAccounts, state.departments, state.student.email],
   );
 
-  // Superadmin › Accounts: deactivate (final). The last active admin can't be deactivated,
-  // otherwise no one could review new complaints.
+  // Superadmin › Accounts: deactivate (can be undone with reactivateStaffAccount). The last active
+  // admin can't be deactivated, otherwise no one could review new complaints.
   const deactivateStaffAccount = useCallback(
     (email: string) => {
       const e = email.trim().toLowerCase();
@@ -518,6 +520,28 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       return "Account not found.";
     },
     [state.admins, state.deptAccounts],
+  );
+
+  // Superadmin › Accounts: reactivate. A department account comes back only if its department is
+  // active and has no other active account (one shared account per department).
+  const reactivateStaffAccount = useCallback(
+    (email: string) => {
+      const e = email.trim().toLowerCase();
+      if (state.admins.some((a) => a.email === e)) {
+        setState((s) => ({ ...s, admins: s.admins.map((a) => (a.email === e ? { ...a, active: true } : a)) }));
+        return null;
+      }
+      const account = state.deptAccounts.find((d) => d.email === e);
+      if (!account) return "Account not found.";
+      if (!state.departments.some((d) => d.name === account.department && d.active))
+        return `${account.department} is deactivated. Reactivate the department first (Departments page).`;
+      const other = state.deptAccounts.find((d) => d.department === account.department && d.email !== e && d.active !== false);
+      if (other)
+        return `${account.department} already has an active account (${other.email}). Each department has one shared account, so deactivate that one first.`;
+      setState((s) => ({ ...s, deptAccounts: s.deptAccounts.map((d) => (d.email === e ? { ...d, active: true } : d)) }));
+      return null;
+    },
+    [state.admins, state.deptAccounts, state.departments],
   );
 
   const departmentNameError = useCallback(
@@ -566,7 +590,8 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
     [state.departments, departmentNameError],
   );
 
-  // Deactivate (final). A department with open work can't be deactivated: its complaints would be stranded.
+  // Deactivate (can be undone with reactivateDepartment). A department with open work can't be
+  // deactivated: its complaints would be stranded.
   const deactivateDepartment = useCallback(
     (name: Department) => {
       if (!state.departments.some((d) => d.name === name)) return "Department not found.";
@@ -576,6 +601,16 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       return null;
     },
     [state.departments, state.complaints],
+  );
+
+  // Reactivate: complaints can be assigned to it again, and its active account (if any) can log in again.
+  const reactivateDepartment = useCallback(
+    (name: Department) => {
+      if (!state.departments.some((d) => d.name === name)) return "Department not found.";
+      setState((s) => ({ ...s, departments: s.departments.map((d) => (d.name === name ? { ...d, active: true } : d)) }));
+      return null;
+    },
+    [state.departments],
   );
 
   const resetDemo = useCallback(() => setState(fresh()), []);
@@ -631,12 +666,14 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       loginBlockedReason,
       createStaffAccount,
       deactivateStaffAccount,
+      reactivateStaffAccount,
       addDepartment,
       renameDepartment,
       deactivateDepartment,
+      reactivateDepartment,
       resetDemo,
     }),
-    [state, ready, myComplaints, publicConcerns, login, logout, isAdminEmail, startSignup, verifyCode, completeSignup, startReset, markResetVerified, finishReset, updateProfile, submitComplaint, findMyComplaint, findComplaint, assignComplaint, rejectComplaint, reassignComplaint, departmentComplaints, updateDepartmentStatus, addDepartmentUpdate, activeDepartments, loginBlockedReason, createStaffAccount, deactivateStaffAccount, addDepartment, renameDepartment, deactivateDepartment, resetDemo],
+    [state, ready, myComplaints, publicConcerns, login, logout, isAdminEmail, startSignup, verifyCode, completeSignup, startReset, markResetVerified, finishReset, updateProfile, submitComplaint, findMyComplaint, findComplaint, assignComplaint, rejectComplaint, reassignComplaint, departmentComplaints, updateDepartmentStatus, addDepartmentUpdate, activeDepartments, loginBlockedReason, createStaffAccount, deactivateStaffAccount, reactivateStaffAccount, addDepartment, renameDepartment, deactivateDepartment, reactivateDepartment, resetDemo],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

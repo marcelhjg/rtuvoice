@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { LockedChip, adminStyles as s } from "@/components/admin/bits";
+import { adminStyles as s } from "@/components/admin/bits";
 import m from "@/components/admin/modals.module.css";
 import { ConfirmDialog } from "@/components/admin/superadmin";
 import x from "@/components/admin/superadmin.module.css";
@@ -15,14 +15,15 @@ type Editing = { type: "add" } | { type: "rename"; dept: DepartmentRecord } | nu
 type Deactivating = DepartmentRecord | null;
 
 /**
- * Superadmin Portal › Departments (SRS §3): add, rename and deactivate departments. Deactivation is final
- * (no reactivate in this scope). About 5 departments are expected; the final list is not yet set.
+ * Superadmin Portal › Departments (SRS §3): add, rename, deactivate and reactivate departments (reactivate
+ * was added at the group's request). About 5 departments are expected; the final list is not yet set.
  */
 export default function DepartmentsPage() {
-  const { departments, complaints, deptAccounts, deactivateDepartment } = useDemoStore();
+  const { departments, complaints, deptAccounts, deactivateDepartment, reactivateDepartment } = useDemoStore();
   const toast = useToast();
   const [editing, setEditing] = useState<Editing>(null);
   const [deactivating, setDeactivating] = useState<Deactivating>(null);
+  const [reactivating, setReactivating] = useState<Deactivating>(null);
 
   // Open = Assigned or In Progress. Shown because a department with open complaints can't be deactivated.
   // (No other counts here: system-wide statistics are out of the superadmin's scope.)
@@ -96,7 +97,9 @@ export default function DepartmentsPage() {
                             Deactivate
                           </button>
                         ) : (
-                          <LockedChip reason="Deactivated departments can't be reactivated." />
+                          <button type="button" className={`${s.outlineBtn} ${x.slotB}`} onClick={() => setReactivating(d)}>
+                            Reactivate
+                          </button>
                         )}
                       </div>
                     </td>
@@ -116,10 +119,7 @@ export default function DepartmentsPage() {
           body={
             <>
               <p>Admins won&apos;t be able to assign or reassign complaints to it, and its account can&apos;t log in.</p>
-              <p>Its past complaints stay visible in lists and statistics.</p>
-              <p>
-                <strong>This can&apos;t be undone.</strong>
-              </p>
+              <p>Its past complaints stay visible in lists and statistics. You can reactivate it later from this page.</p>
             </>
           }
           confirmLabel="Deactivate"
@@ -130,6 +130,31 @@ export default function DepartmentsPage() {
             if (error) return error;
             toast(`${deactivating.name} deactivated.`, "success");
             setDeactivating(null);
+            return null;
+          }}
+        />
+      ) : null}
+      {reactivating ? (
+        <ConfirmDialog
+          title="Reactivate this department?"
+          subtitle={reactivating.name}
+          body={
+            <>
+              <p>Admins will be able to assign and reassign complaints to it again.</p>
+              <p>
+                {accountOf(reactivating.name)
+                  ? `Its account (${accountOf(reactivating.name)!.email}) will be able to log in again.`
+                  : "It has no active account. Create one on the Accounts page, or reactivate its old account there."}
+              </p>
+            </>
+          }
+          confirmLabel="Reactivate"
+          onCancel={() => setReactivating(null)}
+          onConfirm={() => {
+            const error = reactivateDepartment(reactivating.name);
+            if (error) return error;
+            toast(`${reactivating.name} reactivated.`, "success");
+            setReactivating(null);
             return null;
           }}
         />

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, type FormEvent, type ReactNode } from "react";
-import { LockedChip, SearchBox, adminStyles as s } from "@/components/admin/bits";
+import { SearchBox, adminStyles as s } from "@/components/admin/bits";
 import m from "@/components/admin/modals.module.css";
 import { ConfirmDialog } from "@/components/admin/superadmin";
 import x from "@/components/admin/superadmin.module.css";
@@ -23,15 +23,15 @@ interface Row {
   addedAt?: string;
 }
 
-type Pending = { row: Row } | null;
+type Pending = { row: Row; action: "deactivate" | "reactivate" } | null;
 
 /**
  * Superadmin Portal › Accounts (SRS §3), the portal's home: lists every admin and department account.
- * Account Management is create and deactivate only (deactivation is final; there is no reactivate or
- * password reset in this scope).
+ * Account Management: create, deactivate and reactivate (reactivate was added at the group's request;
+ * the SRS lists only create and deactivate). There is no password reset in this scope.
  */
 export default function AccountsPage() {
-  const { admins, deptAccounts, deactivateStaffAccount } = useDemoStore();
+  const { admins, deptAccounts, deactivateStaffAccount, reactivateStaffAccount } = useDemoStore();
   const toast = useToast();
   const [query, setQuery] = useState("");
   const [kind, setKind] = useState("");
@@ -66,7 +66,7 @@ export default function AccountsPage() {
             {rows.length}
           </span>
         </div>
-        <p className={s.subtitle}>Administrator accounts and one active, shared account per department. Only the superadmin can create or deactivate them.</p>
+        <p className={s.subtitle}>Administrator accounts and one active, shared account per department. Only the superadmin can create, deactivate or reactivate them.</p>
       </div>
 
       <section className={s.panel} aria-label="Accounts">
@@ -125,11 +125,13 @@ export default function AccountsPage() {
                   <td data-label="">
                     <div className={x.rowActions}>
                       {r.active ? (
-                        <button type="button" className={`${s.outlineBtn} ${x.slotB} ${x.dangerOutline}`} onClick={() => setPending({ row: r })}>
+                        <button type="button" className={`${s.outlineBtn} ${x.slotB} ${x.dangerOutline}`} onClick={() => setPending({ row: r, action: "deactivate" })}>
                           Deactivate
                         </button>
                       ) : (
-                        <LockedChip reason="Deactivated accounts can't be reactivated." />
+                        <button type="button" className={`${s.outlineBtn} ${x.slotB}`} onClick={() => setPending({ row: r, action: "reactivate" })}>
+                          Reactivate
+                        </button>
                       )}
                     </div>
                   </td>
@@ -143,7 +145,7 @@ export default function AccountsPage() {
 
       {creating ? <CreateAccountModal onClose={() => setCreating(false)} /> : null}
 
-      {pending ? (
+      {pending?.action === "deactivate" ? (
         <ConfirmDialog
           title="Deactivate this account?"
           subtitle={`${name(pending.row)} · ${pending.row.email}`}
@@ -154,8 +156,8 @@ export default function AccountsPage() {
                 {pending.row.kind === "department" ? ", and the department's complaints stay with the department" : ""}.
               </p>
               <p>
-                <strong>This can&apos;t be undone.</strong>
-                {pending.row.kind === "department" ? " You can then create a new account for this department." : ""}
+                You can reactivate the account later from this page.
+                {pending.row.kind === "department" ? " You can also create a new account for this department instead." : ""}
               </p>
             </>
           }
@@ -171,6 +173,36 @@ export default function AccountsPage() {
           }}
         />
       ) : null}
+
+      {pending?.action === "reactivate" ? (
+        <ConfirmDialog
+          title="Reactivate this account?"
+          subtitle={`${name(pending.row)} · ${pending.row.email}`}
+          body={
+            pending.row.kind === "admin" ? (
+              <p>They&apos;ll be able to log in again with their existing password and review complaints.</p>
+            ) : (
+              <>
+                <p>
+                  It becomes the shared account of <strong>{pending.row.department}</strong> again. Its staff can log in with the existing password and work on the
+                  department&apos;s complaints.
+                </p>
+                <p>A department can have only one active account, so this works only if {pending.row.department} has no other active account.</p>
+              </>
+            )
+          }
+          confirmLabel="Reactivate"
+          onCancel={() => setPending(null)}
+          onConfirm={() => {
+            // A blocked reactivation (department deactivated, or another active account) stays in the dialog with the reason.
+            const error = reactivateStaffAccount(pending.row.email);
+            if (error) return error;
+            toast(`${name(pending.row)} reactivated.`, "success");
+            setPending(null);
+            return null;
+          }}
+        />
+      ) : null}
     </div>
   );
 }
@@ -178,7 +210,7 @@ export default function AccountsPage() {
 function CreateAccountModal({ onClose }: { onClose: () => void }) {
   const { activeDepartments, deptAccounts, createStaffAccount } = useDemoStore();
   // One active account per department: only departments without an active account can be picked.
-  // A department whose account was deactivated can get a new one (deactivation is final).
+  // A department whose account was deactivated can get a new one.
   const hasAccount = (d: string) => deptAccounts.some((a) => a.department === d && a.active !== false);
   const available = activeDepartments.filter((d) => !hasAccount(d));
   const toast = useToast();
