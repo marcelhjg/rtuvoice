@@ -54,6 +54,9 @@ export interface EvidenceFile {
   name: string;
   size: number; // bytes
   type: string;
+  /** Object path in the private "evidence" storage bucket, set by the backend after upload
+   *  (e.g. "<complaint uuid>/<random>.jpg", never the original file name). Absent in this demo. */
+  path?: string;
 }
 
 export interface TimelineEvent {

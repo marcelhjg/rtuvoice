@@ -213,7 +213,7 @@ export default function ReportPage() {
             id="report-files"
             tabIndex={0}
             role="button"
-            aria-describedby="evidence-label"
+            aria-describedby="evidence-label evidence-privacy"
             className={`${styles.drop} ${dragging ? styles.dropActive : ""} ${errors.files ? styles.dropError : ""}`}
             onClick={() => fileInput.current?.click()}
             onKeyDown={(e) => {
@@ -237,6 +237,10 @@ export default function ReportPage() {
               JPG/PNG, MP3/WAV, PDF or MP4 • 5 MB total per submission
             </span>
           </div>
+          {/* Staff see files as "Evidence 1", "Evidence 2"…, but what is inside a file can still identify the student. */}
+          <span id="evidence-privacy" className="field-hint">
+            Staff can open your files. Leave out anything that shows who you are, like your face, name or ID. A voice message can identify you.
+          </span>
           <input
             ref={fileInput}
             type="file"

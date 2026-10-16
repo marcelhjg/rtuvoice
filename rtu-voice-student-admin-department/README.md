@@ -186,6 +186,64 @@ Supabase/RPC calls; the pages only talk to that hook. The comments on each funct
 it implements. Every rule must also be enforced on the server: the checks in the browser are not
 security.
 
+### Evidence files (for the backend developer)
+
+The demo keeps only each file's name, size and type. The **Open** and **Download** buttons in
+Complaint details (every portal) already call `getEvidenceUrl()` in `src/lib/evidence.ts`; today
+they show a "this demo doesn't store the files" message because no file has a `path`. To make
+them work:
+
+1. **Upload through a server route, not straight from the browser.** The route checks the type
+   (by content, not just the extension) and the 5 MB total, removes metadata, then saves each file
+   to the private bucket `evidence` as `<complaint id>/<random>.<ext>`. Never use the student's file name in
+   the path. Save that path as `EvidenceFile.path`.
+2. **Remove metadata before saving.** Photos can carry GPS location and device details (EXIF), and
+   PDFs and media files can carry the author's name. For example, `sharp` drops image metadata unless
+   you ask it to keep it, and `ffmpeg -map_metadata -1` drops it from audio and video. Nothing
+   can anonymize a voice. The report form already warns students about this.
+3. **Fill in `getEvidenceUrl()`** with `supabase.storage.from("evidence").createSignedUrl(path, 60, …)`
+   (the exact call is in the comment there). Keep the expiry short: anyone with the link can use it
+   until it expires.
+4. **Let storage RLS decide who can read a file**: the student who owns the complaint, active
+   admins, and the active account of the department it is assigned to. Not the superadmin (out of scope).
+5. **Delete the files when the complaint is purged** (rejected complaints after 1 month). Deleting the
+   database row does **not** delete storage objects.
+
+Staff already see files as "Evidence 1", "Evidence 2"… (and downloads are named
+`STU-XXXXX-evidence-1.jpg`), because a file name can identify the student. Decide as a group whether
+staff should be allowed to **Download** at all: a downloaded copy stays on their device after the
+1-month purge. Remove the button in `ComplaintStatusDetails.tsx` if not.
+
+Sketch of the bucket and read policy. **The table and column names are assumptions** (`complaints`,
+`profiles`); change them to match the real schema.
+
+```sql
+-- Private bucket. 5 MB cap per object; the upload route checks the 5 MB total per complaint.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('evidence', 'evidence', false, 5242880,
+        array['image/jpeg', 'image/png', 'application/pdf', 'audio/mpeg', 'audio/wav', 'audio/x-wav', 'video/mp4']);
+
+-- Signing a link needs SELECT on the object. No INSERT/UPDATE/DELETE policies: only the
+-- server route (service role) writes or deletes files.
+create policy "evidence read: owner, admins, assigned department"
+on storage.objects for select to authenticated
+using (
+  bucket_id = 'evidence'
+  and exists (
+    select 1
+    from public.complaints c
+    join public.profiles p on p.id = auth.uid()
+    where c.id::text = (storage.foldername(name))[1]
+      and p.active
+      and (
+        c.student_id = auth.uid()
+        or p.role = 'admin'
+        or (p.role = 'department' and c.department = p.department)
+      )
+  )
+);
+```
+
 ## 6. Where this build differs from the Figma file — and why
 
 ### Student portal

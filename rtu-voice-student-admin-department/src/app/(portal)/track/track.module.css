@@ -168,26 +168,65 @@
   list-style: none;
   margin: 0;
   padding: 0;
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
   gap: 8px;
 }
+/* One row per file: name and size on the left, Open / Download on the right (wraps under on narrow screens). */
 .evidenceChip {
-  display: inline-flex;
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 6px;
-  max-width: 100%;
-  padding: 6px 10px;
+  justify-content: space-between;
+  gap: 6px 12px;
+  padding: 6px 8px 6px 12px;
   border: 1px solid #d5dbef;
-  border-radius: 999px;
+  border-radius: 10px;
   background: var(--surface-soft);
   font-family: var(--font-inter);
   font-size: 13px;
   color: #17213b;
 }
+.evidenceInfo {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
 .evidenceChip svg {
   flex: none;
   color: var(--blue);
+}
+.evidenceActions {
+  display: inline-flex;
+  gap: 6px;
+  flex: none;
+}
+.evidenceBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid #b8c3e6;
+  border-radius: 8px;
+  background: var(--white);
+  color: var(--blue);
+  font-family: var(--font-inter);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.evidenceBtn:hover {
+  background: #eef2fd;
+}
+.evidenceBtn:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+.evidenceBtn:disabled {
+  opacity: 0.6;
+  cursor: progress;
 }
 .evidenceName {
   min-width: 0;
@@ -378,6 +417,10 @@
   /* The modal's mobile rule enlarges every p and li; keep these at the details' size. */
   .modalResultCard .evidenceChip.evidenceChip {
     font-size: 0.8125rem;
+  }
+  /* Bigger tap targets on phones. */
+  .evidenceBtn {
+    min-height: 40px;
   }
   .modalResultCard .noEvidence.noEvidence {
     font-size: 0.875rem;
