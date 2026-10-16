@@ -191,8 +191,8 @@ export default function PrivacyPage() {
             personal data, to object to its processing, to correct inaccurate data, to request that your data be suspended,
             withdrawn, blocked, or deleted, to receive your data in a portable format, to claim compensation for damages caused
             by unlawful processing, and to file a complaint with the National Privacy Commission at privacy.gov.ph. To use any
-            of these rights, contact our Data Protection Officer at dpo@rtu.edu.ph. Some data cannot be deleted right away,
-            such as an open concern or records we must keep for legal reasons. We will explain this if it applies.
+            of these rights, contact Rizal Technological University – Pasig Campus at pasig_campus@rtu.edu.ph. Some data cannot
+            be deleted right away, such as an open concern or records we must keep for legal reasons. We will explain this if it applies.
           </p>
         </LegalSection>
 
@@ -205,8 +205,8 @@ export default function PrivacyPage() {
 
         <LegalSection n={11} title="Contact">
           <p>
-            Questions about your data? Reach the project team at <a href="mailto:RTUVoice@gmail.com">RTUVoice@gmail.com</a>. You can also reach our Data Protection
-            Officer at the Data Protection Office, Rizal Technological University, dpo@rtu.edu.ph, (02) 8534-8267 local 1608.
+            Questions about your data? Reach the project team at <a href="mailto:RTUVoice@gmail.com">RTUVoice@gmail.com</a>. For general inquiries or concerns,
+            you may contact Rizal Technological University – Pasig Campus at pasig_campus@rtu.edu.ph.
           </p>
         </LegalSection>
       </LegalBody>

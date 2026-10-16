@@ -59,7 +59,7 @@ export function buildAdminAccounts(now: number): AdminAccount[] {
 /** SRS §3: a single superadmin account. It isn't listed with the admins and can't be deactivated. */
 export const SUPERADMIN_ACCOUNT: Account = {
   firstName: "System",
-  lastName: "Superadmin",
+  lastName: "Super Admin",
   email: "superadmin@rtu.edu.ph",
   role: "superadmin",
 };

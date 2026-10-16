@@ -506,7 +506,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
   const deactivateStaffAccount = useCallback(
     (email: string) => {
       const e = email.trim().toLowerCase();
-      if (e === SUPERADMIN_ACCOUNT.email) return "The superadmin account can't be deactivated.";
+      if (e === SUPERADMIN_ACCOUNT.email) return "The Super Admin account can't be deactivated.";
       if (state.admins.some((a) => a.email === e)) {
         const othersActive = state.admins.filter((a) => a.email !== e && a.active !== false).length;
         if (othersActive === 0) return "At least one administrator must stay active.";

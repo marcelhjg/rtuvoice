@@ -66,7 +66,7 @@ export default function AccountsPage() {
             {rows.length}
           </span>
         </div>
-        <p className={s.subtitle}>Administrator accounts and one active, shared account per department. Only the superadmin can create, deactivate or reactivate them.</p>
+        <p className={s.subtitle}>Administrator accounts and one active, shared account per department. Only the Super Admin can create, deactivate or reactivate them.</p>
       </div>
 
       <section className={s.panel} aria-label="Accounts">

@@ -1,4 +1,4 @@
-# RTU Voice — Frontend (Student, Admin, Department and Superadmin portals)
+# RTU Voice — Frontend (Student, Admin, Department and Super Admin portals)
 
 Frontend for **RTU VOICE: An AI-Assisted Student Concern and Feedback Management System for
 Rizal Technological University – Pasig Campus**, built from the Group 4Voices Figma high-fidelity
@@ -135,7 +135,10 @@ change is written to the Activity Log under the department's name; status change
 messages appear right away on the student's tracker, the Public Dashboard status and the admin's
 Master Tracking Queue. Emails are simulated (a toast says who would be notified).
 
-### Superadmin Portal
+### Super Admin Portal
+
+Called "Superadmin" in the SRS; the app shows "Super Admin".
+
 
 A single superadmin account with a deliberately limited scope (SRS §3; **reactivate** was added at the
 group's request, the SRS lists only deactivate), kept small because of the
@@ -162,7 +165,7 @@ src/
     (portal)/                student pages inside PortalShell (header, side menu, guard)
     admin/                   Central Admin Console pages inside AdminShell
     department/              Department Portal pages inside DepartmentShell
-    superadmin/              Superadmin Portal pages inside SuperadminShell
+    superadmin/              Super Admin Portal pages inside SuperadminShell
     not-found.tsx
   components/                Logo, headers, Footer, Modal, Toast, Icon, StatusBadge, ProfileForm,
                              forms/ (fields, OTP), legal/, portal/ (student shell),
@@ -278,7 +281,7 @@ Filled in because the Figma had no content:
 Designed here because Figma only has the menu item, not the screen (built in the same style as
 the admin list pages, following the roadmap's description):
 
-- **Statistics** and **View Admin** pages (and the **Activity Log**, now in the Superadmin Portal).
+- **Statistics** and **View Admin** pages (and the **Activity Log**, now in the Super Admin Portal).
 - **Assign department confirmation.** Page 1 has no assign pop-up. Picking a department in the
   row dropdown now opens a confirmation (styled like the admin pop-ups, content from the App screens
   "Assign Department" frame), because assigning approves the complaint and triggers the AI step.
@@ -318,7 +321,7 @@ roadmap (Sprint 5) and SRS v3 in the style of the admin pages:
   even on a double click. Not available once Resolved.
 - **Total / Assigned / In progress / Resolved** pages keep the row actions so staff can work from any list.
 - **Statistics** — "Resolved rate" is resolved ÷ all complaints assigned to the department.
-- Departments and their accounts are managed in the **Superadmin Portal** (one shared account per
+- Departments and their accounts are managed in the **Super Admin Portal** (one shared account per
   department, used by its head and staff). The six offices in `DEPARTMENTS` (`src/lib/types.ts`) and
   `DEPARTMENT_ACCOUNTS` (`src/lib/demo-data.ts`) are only the demo's starting data; the final list is
   pending interviews with the offices.

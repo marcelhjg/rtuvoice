@@ -18,7 +18,7 @@ const NAV: ConsoleNavItem[] = [
 
 export function SuperadminShell({ children }: { children: ReactNode }) {
   return (
-    <ConsoleShell roles={SUPERADMIN_ROLES} nav={NAV} homeHref="/superadmin" profileHref="/superadmin/profile" consoleLabel="Superadmin Portal" menuLabel="Superadmin menu">
+    <ConsoleShell roles={SUPERADMIN_ROLES} nav={NAV} homeHref="/superadmin" profileHref="/superadmin/profile" consoleLabel="Super Admin Portal" menuLabel="Super Admin menu">
       {children}
     </ConsoleShell>
   );
