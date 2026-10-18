@@ -551,6 +551,11 @@ p {
   border: 1px solid #d5dbef;
   color: #3a3f51;
 }
+.alert-error {
+  background: #fdecec;
+  border: 1px solid #f3b4b4;
+  color: #8f1a1a;
+}
 .alert svg {
   flex: none;
   margin-top: 1px;
@@ -670,6 +675,55 @@ p {
   to {
     transform: rotate(360deg);
   }
+}
+.spinner-lg {
+  width: 28px;
+  height: 28px;
+  border-width: 3px;
+  color: var(--blue);
+}
+/* Route-level states (loading.tsx, error.tsx): centred in the page area, inside the section's layout. */
+.route-state {
+  min-height: 50vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 48px 16px;
+  text-align: center;
+  font-family: var(--font-inter);
+  font-size: 15px;
+  color: var(--text-body);
+}
+.route-state-compact {
+  min-height: 280px;
+  padding: 24px 0;
+}
+.route-state-error svg {
+  color: var(--gold);
+}
+.route-state-title {
+  margin: 4px 0 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--navy);
+}
+.route-state-text {
+  max-width: 34rem;
+  margin: 0;
+  color: var(--text-muted);
+}
+.route-state-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+.route-state-actions .btn {
+  min-height: 44px;
+  padding: 0 22px;
 }
 
 @media (prefers-reduced-motion: reduce) {

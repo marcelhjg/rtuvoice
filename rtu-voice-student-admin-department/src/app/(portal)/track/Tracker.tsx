@@ -1,12 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useEffectEvent, useState, type FormEvent } from "react";
+import { UpdateMessages } from "@/components/ComplaintDetailsDialog";
 import { ComplaintStatusDetails } from "@/components/ComplaintStatusDetails";
 import { Icon } from "@/components/Icon";
 import { Modal } from "@/components/Modal";
 import { useDemoStore } from "@/lib/demo-store";
-import { formatMonthDay, formatTime } from "@/lib/format";
 import type { Complaint } from "@/lib/types";
 import { normalizeTrackingId } from "@/lib/validation";
 import styles from "./track.module.css";
@@ -64,7 +65,6 @@ export function Tracker() {
     run(query);
   };
 
-  const latestUpdate = lookup.state === "found" ? lookup.complaint.updates[lookup.complaint.updates.length - 1] : undefined;
 
   return (
     <div className="container">
@@ -110,7 +110,10 @@ export function Tracker() {
           <section className={`${styles.resultCard} ${styles.empty}`}>
             <Icon name="search" size={34} strokeWidth={1.6} />
             <h2>No concern found for {lookup.id}</h2>
-            <p>Check the ID on your receipt or open your History page. You can only look up concerns submitted from your account.</p>
+            <p>Check the ID on your receipt. You can only look up concerns submitted from your account.</p>
+            <Link href="/history" className="btn btn-outline" style={{ marginTop: 14, minHeight: 44, padding: "0 22px" }}>
+              Open your History
+            </Link>
           </section>
         ) : null}
 
@@ -125,7 +128,7 @@ export function Tracker() {
         {lookup.state === "found" ? <ComplaintStatusDetails complaint={lookup.complaint} onViewUpdate={() => setShowUpdate(true)} /> : null}
       </div>
 
-      {lookup.state === "found" && latestUpdate ? (
+      {lookup.state === "found" ? (
         <Modal
           open={showUpdate}
           onClose={() => setShowUpdate(false)}
@@ -137,20 +140,14 @@ export function Tracker() {
             </button>
           }
         >
-          <div className={styles.updateList}>
-            {[...lookup.complaint.updates].reverse().map((update, index) => (
-              <article className={styles.updateEntry} key={`${update.at}-${index}`}>
-                <p className={styles.updateMeta}>
-                  {update.department} · {formatMonthDay(update.at)}, {formatTime(update.at)}
-                </p>
-                <div className={styles.updateMsg}>{update.message}</div>
-              </article>
-            ))}
-          </div>
-          <div className={styles.updateNote}>
-            <Icon name="info" size={20} />
-            This message is visible only to you and the administrators. It is never shown on the public dashboard.
-          </div>
+          {/* Shared with History's details: newest first, or an empty state when there's no update yet. */}
+          <UpdateMessages complaint={lookup.complaint} />
+          {lookup.complaint.updates.length ? (
+            <div className={styles.updateNote}>
+              <Icon name="info" size={20} />
+              This message is visible only to you and the administrators. It is never shown on the public dashboard.
+            </div>
+          ) : null}
         </Modal>
       ) : null}
     </div>

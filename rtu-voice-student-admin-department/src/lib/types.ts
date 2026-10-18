@@ -78,8 +78,11 @@ export interface Complaint {
   description: string;
   submittedAt: string;
   status: Status;
-  /** True when submitted by the signed-in demo student (shown on History / Status Tracker). */
+  /** True when submitted by a student account (shown on that student's History / Status Tracker). */
   mine: boolean;
+  /** Which student submitted it (demo only; seed complaints belong to the demo student). Never shown to
+   *  staff: the real system keeps this link internally (pseudonymous, SRS §1). */
+  ownerEmail?: string;
   department?: Department;
   priority?: Priority;
   assignedAt?: string;

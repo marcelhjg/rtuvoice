@@ -181,6 +181,10 @@
   flex: none;
   color: var(--navy);
 }
+.submitError {
+  margin: 0;
+  font-size: 14px;
+}
 .buttons {
   display: flex;
   justify-content: flex-end;

@@ -45,13 +45,21 @@ export function ConsoleShell({ roles, nav, homeHref, profileHref, consoleLabel, 
   const [confirmLogout, setConfirmLogout] = useState(false);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const loggingOut = useRef(false);
+  const roleToastShown = useRef(false);
 
   // Simulated role guard: the real system enforces this server-side (row-level security).
   useEffect(() => {
     if (!ready || loggingOut.current) return;
     if (!session) router.replace(`/login?next=${encodeURIComponent(pathname)}`);
-    else if (!roles.includes(session.role)) router.replace(homeFor(session.role));
-  }, [ready, session, router, pathname, roles]);
+    else if (!roles.includes(session.role)) {
+      // Role guard: e.g. a student opening an admin or department page. Say so instead of switching silently.
+      if (!roleToastShown.current) {
+        roleToastShown.current = true;
+        toast("You don't have access to that page, so you were taken to your own portal.", "info");
+      }
+      router.replace(homeFor(session.role));
+    }
+  }, [ready, session, router, pathname, roles, toast]);
 
   useEffect(() => {
     setMenuOpen(false);

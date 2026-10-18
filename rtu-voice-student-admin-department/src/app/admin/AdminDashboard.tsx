@@ -3,7 +3,7 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { Icon } from "@/components/Icon";
-import { LockedChip, Pager, PriorityDot, SearchBox, StatusPill, adminStyles as s } from "@/components/admin/bits";
+import { EmptyState, LockedChip, Pager, PriorityDot, SearchBox, StatusPill, adminStyles as s } from "@/components/admin/bits";
 import { StatCards } from "@/components/admin/StatCards";
 import { useComplaintModals } from "@/components/admin/useComplaintModals";
 import { useDemoStore } from "@/lib/demo-store";
@@ -175,7 +175,14 @@ function PendingQueue({ modals }: { modals: Modals }) {
           </tbody>
         </table>
         {rows.length === 0 ? (
-          <p className={s.empty}>{q ? `No pending complaint matches “${query.trim()}”.` : "All caught up — no complaints are waiting for validation."}</p>
+          q ? (
+            <EmptyState message={`No pending complaint matches “${query.trim()}”.`} action={{ label: "Clear search", onClick: () => setQuery("") }} />
+          ) : (
+            <EmptyState
+              message="All caught up — no complaints are waiting for validation."
+              action={{ label: "View all complaints", href: "/admin/complaints" }}
+            />
+          )
         ) : null}
       </div>
     </div>
@@ -310,7 +317,20 @@ function MasterQueue({ modals }: { modals: Modals }) {
             })}
           </tbody>
         </table>
-        {rows.length === 0 ? <p className={s.empty}>No complaints match these filters.</p> : null}
+        {rows.length === 0 ? (
+          <EmptyState
+            message="No complaints match these filters."
+            action={{
+              label: "Clear filters",
+              onClick: () => {
+                setQuery("");
+                setStatus("");
+                setDept("");
+                setPage(1);
+              },
+            }}
+          />
+        ) : null}
       </div>
       <Pager page={current} pageSize={PAGE_SIZE} total={rows.length} onPage={setPage} />
     </div>

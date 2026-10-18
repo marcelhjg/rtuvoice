@@ -101,9 +101,9 @@ export default function ResetPasswordPage() {
           labelClassName={styles.label}
           inputClassName={styles.input}
         />
-        <button type="submit" className={styles.submit} disabled={busy}>
-          {busy ? <span className="spinner" /> : null}
-          Reset Password
+        <button type="submit" className={styles.submit} disabled={busy} aria-busy={busy}>
+          {busy ? <span className="spinner" aria-hidden="true" /> : null}
+          {busy ? "Saving…" : "Reset Password"}
         </button>
         <p className={`${styles.switch} ${styles.caption}`}>
           Remember your password? <Link href="/login">Login</Link>

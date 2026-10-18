@@ -247,6 +247,19 @@
   color: #4a5470;
   font-size: 15px;
 }
+.emptyMessage {
+  margin: 0;
+}
+.emptyHint {
+  margin: 6px 0 0;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+.emptyAction {
+  margin-top: 16px;
+  min-height: 44px;
+  padding: 0 22px;
+}
 
 /* ---------- Pills & priority ---------- */
 .pill {

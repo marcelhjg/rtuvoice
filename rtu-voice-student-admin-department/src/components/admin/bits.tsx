@@ -67,6 +67,40 @@ export function colType(label: string): ColType | undefined {
   return COL_BY_LABEL[label];
 }
 
+/**
+ * Empty table/list state: a short message plus one clear next step (clear the filters, or go
+ * somewhere useful). `className` lets a page keep its own spacing (defaults to the shared .empty).
+ */
+export function EmptyState({
+  message,
+  hint,
+  action,
+  className = s.empty,
+}: {
+  message: string;
+  hint?: string;
+  action?: { label: string; onClick: () => void } | { label: string; href: string };
+  className?: string;
+}) {
+  return (
+    <div className={className} role="status">
+      <p className={s.emptyMessage}>{message}</p>
+      {hint ? <p className={s.emptyHint}>{hint}</p> : null}
+      {action ? (
+        "href" in action ? (
+          <Link href={action.href} className={`btn btn-outline ${s.emptyAction}`}>
+            {action.label}
+          </Link>
+        ) : (
+          <button type="button" className={`btn btn-outline ${s.emptyAction}`} onClick={action.onClick}>
+            {action.label}
+          </button>
+        )
+      ) : null}
+    </div>
+  );
+}
+
 export function BackToDashboard({ href = "/admin" }: { href?: string }) {
   return (
     <Link href={href} className={s.back}>

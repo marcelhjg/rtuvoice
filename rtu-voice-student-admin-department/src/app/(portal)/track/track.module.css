@@ -524,6 +524,30 @@
   line-height: 1.4;
   color: #3a3f51;
 }
+/* "View updates" with no update yet. */
+.updateEmpty {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 20px 16px;
+  text-align: center;
+  font-family: var(--font-inter);
+}
+.updateEmpty svg {
+  color: var(--blue);
+}
+.updateEmptyTitle {
+  margin: 4px 0 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--navy);
+}
+.updateEmptyText {
+  margin: 0;
+  max-width: 28rem;
+  font-size: 14px;
+  color: var(--text-muted);
+}
 .updateNote {
   display: flex;
   gap: 16px;
