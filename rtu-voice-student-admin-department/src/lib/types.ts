@@ -3,7 +3,11 @@ export const CATEGORIES = [
   "Facilities & Infrastructure",
   "Administrative",
   "Student Life",
-  "Other",
+  "Safety and Security",
+  "Technology & Online Systems",
+  "Food, Health & Sanitation",
+  "Library & Learning Resources",
+  "Others",
 ] as const;
 export type Category = (typeof CATEGORIES)[number];
 

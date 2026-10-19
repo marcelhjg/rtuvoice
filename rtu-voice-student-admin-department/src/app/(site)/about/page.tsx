@@ -8,7 +8,7 @@ import styles from "./about.module.css";
 export const metadata: Metadata = { title: "About" };
 
 const STATS = [
-  { n: "5", label: "categories" },
+  { n: "9", label: "categories" },
   { n: "4", label: "simple steps" },
   { n: "1", label: "tracking ID per concern" },
 ];

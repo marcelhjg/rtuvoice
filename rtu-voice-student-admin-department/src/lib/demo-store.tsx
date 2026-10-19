@@ -152,7 +152,9 @@ function load(): { state: PersistedState; problem: StorageProblem } {
     if (Array.isArray(parsed.complaints) && Array.isArray(parsed.activity)) {
       // Older demo data logged "Update posted"; the Activity Log only keeps the SRS actions now.
       const activity = parsed.activity.filter((a) => (ACTIVITY_ACTIONS as readonly string[]).includes(a.action));
-      return { state: { ...fresh(), ...parsed, activity }, problem: null };
+      // The "Other" category was renamed "Others" when the category list grew to nine.
+      const complaints = parsed.complaints.map((c) => ((c.category as string) === "Other" ? { ...c, category: "Others" as const } : c));
+      return { state: { ...fresh(), ...parsed, complaints, activity }, problem: null };
     }
   } catch {
     /* corrupted JSON: reported below */

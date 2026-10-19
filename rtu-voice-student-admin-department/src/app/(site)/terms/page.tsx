@@ -36,7 +36,10 @@ export default function TermsPage() {
         </LegalSection>
 
         <LegalSection n={3} title="What you can submit">
-          <p>Concerns in five categories: Academic, Facilities &amp; Infrastructure, Administrative, Student Life, and Other.</p>
+          <p>
+            Concerns in nine categories: Academic, Facilities &amp; Infrastructure, Administrative, Student Life, Safety and Security,
+            Technology &amp; Online Systems, Food, Health &amp; Sanitation, Library &amp; Learning Resources, and Others.
+          </p>
           <Callout tone="warning">
             Personal matters are best handled elsewhere. Harassment, bullying, and discrimination are best brought to the
             Guidance Office or OSA, not to this system.

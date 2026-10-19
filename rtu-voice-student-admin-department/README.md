@@ -109,7 +109,7 @@ the site in a private window.
 | `/dashboard` | HOME | Student dashboard, recent resolved complaints |
 | *(side menu)* | SIDEBAR + 4 variants | Opens from the ☰ button; Esc or clicking outside closes it |
 | *(profile menu)* | HOME with dropdown | Manage Profile, Logout (with confirmation) |
-| `/report` | REPORT A CONCERN | Validation, 5 categories, evidence drag-and-drop (JPG/PNG/PDF/MP3/WAV/MP4, 5 MB total), **opt-in** "Share a summary on the public dashboard" checkbox (unticked by default) |
+| `/report` | REPORT A CONCERN | Validation, 9 categories (Academic, Facilities & Infrastructure, Administrative, Student Life, Safety and Security, Technology & Online Systems, Food, Health & Sanitation, Library & Learning Resources, Others — the SRS lists 5), evidence drag-and-drop (JPG/PNG/PDF/MP3/WAV/MP4, 5 MB total), **opt-in** "Share a summary on the public dashboard" checkbox (unticked by default) |
 | `/report/submitted?id=` | Frame (receipt) | Copy-to-clipboard tracking ID |
 | `/track?id=` | STATUS TRACKER + update pop-up | Format check, not-found state, timeline, View Update dialog; only your own complaints |
 | `/history` | History | Table on desktop, cards on mobile; IDs link to the tracker |
