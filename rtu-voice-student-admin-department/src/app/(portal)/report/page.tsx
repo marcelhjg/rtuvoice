@@ -26,6 +26,8 @@ export default function ReportPage() {
   const [errors, setErrors] = useState<Errors>({});
   const [dragging, setDragging] = useState(false);
   const [busy, setBusy] = useState(false);
+  // Failed submit: shown above the buttons; everything the student typed stays in the form.
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [confirmCancel, setConfirmCancel] = useState(false);
 
   const usedBytes = files.reduce((sum, f) => sum + f.size, 0);
@@ -82,16 +84,24 @@ export default function ReportPage() {
       return;
     }
     setBusy(true);
+    setSubmitError(null);
     // SIMULATED submission: saved in this browser only. Files are not uploaded; only their names and sizes are kept.
+    // With the backend this becomes a request that can fail; the catch below is the failed-submit state.
     window.setTimeout(() => {
-      const created = submitComplaint({
-        title,
-        category: category as Category,
-        description,
-        files: files.map((f) => ({ name: f.name, size: f.size, type: f.type })),
-        optOutOfPublic: !share,
-      });
-      router.push(`/report/submitted?id=${encodeURIComponent(created.trackingId)}`);
+      try {
+        const created = submitComplaint({
+          title,
+          category: category as Category,
+          description,
+          files: files.map((f) => ({ name: f.name, size: f.size, type: f.type })),
+          optOutOfPublic: !share,
+        });
+        router.push(`/report/submitted?id=${encodeURIComponent(created.trackingId)}`);
+      } catch (err) {
+        console.error(err);
+        setBusy(false);
+        setSubmitError("We couldn't submit your concern. Nothing was sent, and your entries are still here. Please try again.");
+      }
     }, 700);
   };
 
@@ -311,13 +321,19 @@ export default function ReportPage() {
           Your concern is identity-shielded. Only authorized administrators can link it to your account.
         </p>
 
+        {submitError ? (
+          <p className={`alert alert-error ${styles.submitError}`} role="alert">
+            <Icon name="alert-triangle" size={18} /> {submitError}
+          </p>
+        ) : null}
+
         <div className={styles.buttons}>
           <button type="button" className={`btn btn-soft ${styles.btn}`} onClick={() => (dirty ? setConfirmCancel(true) : router.push("/dashboard"))}>
             Cancel
           </button>
-          <button type="submit" className={`btn btn-primary ${styles.btn}`} disabled={busy}>
-            {busy ? <span className="spinner" /> : null}
-            {busy ? "Submitting…" : "Submit Concern"}
+          <button type="submit" className={`btn btn-primary ${styles.btn}`} disabled={busy} aria-busy={busy}>
+            {busy ? <span className="spinner" aria-hidden="true" /> : null}
+            {busy ? "Submitting…" : submitError ? "Try again" : "Submit Concern"}
           </button>
         </div>
       </form>

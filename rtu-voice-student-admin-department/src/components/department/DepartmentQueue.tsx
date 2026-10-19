@@ -9,7 +9,7 @@ import { normalizeTrackingId } from "@/lib/validation";
 import { Icon } from "../Icon";
 import { Modal } from "../Modal";
 import { useToast } from "../Toast";
-import { BackToDashboard, LockedChip, Pager, PriorityDot, SearchBox, StatusPill, adminStyles as s } from "../admin/bits";
+import { BackToDashboard, EmptyState, LockedChip, Pager, PriorityDot, SearchBox, StatusPill, adminStyles as s } from "../admin/bits";
 import { StatCards } from "../admin/StatCards";
 import { useComplaintModals } from "../admin/useComplaintModals";
 import m from "../admin/modals.module.css";
@@ -264,7 +264,23 @@ export function DepartmentDashboard() {
         </div>
         <div className={s.tableWrap}>
           <Table caption="Complaints assigned to your department" rows={visible} actions={actions} />
-          {rows.length === 0 ? <p className={s.empty}>{all.length === 0 ? "No complaints are assigned to your department yet." : "No complaints match these filters."}</p> : null}
+          {rows.length === 0 ? (
+            all.length === 0 ? (
+              <EmptyState message="No complaints are assigned to your department yet." hint="New complaints appear here as soon as an admin assigns them to you." />
+            ) : (
+              <EmptyState
+                message="No complaints match these filters."
+                action={{
+                  label: "Clear filters",
+                  onClick: () => {
+                    setQuery("");
+                    setStatus("");
+                    setPage(1);
+                  },
+                }}
+              />
+            )
+          ) : null}
         </div>
         <Pager page={current} pageSize={PAGE_SIZE} total={rows.length} onPage={setPage} />
         <p className={d.footnote}>Assigned isn’t selectable — it’s set automatically on assignment. Departments cannot reject or reassign complaints.</p>
@@ -329,7 +345,22 @@ export function DepartmentList({ kind }: { kind: DepartmentListKind }) {
         </div>
         <div className={s.tableWrap}>
           <Table caption={cfg.title} rows={visible} actions={actions} />
-          {rows.length === 0 ? <p className={s.empty}>{all.length === 0 ? "No complaints in this list yet." : "No complaints match these filters."}</p> : null}
+          {rows.length === 0 ? (
+            all.length === 0 ? (
+              <EmptyState message="No complaints in this list yet." action={{ label: "Back to dashboard", href: "/department" }} />
+            ) : (
+              <EmptyState
+                message="No complaints match your search."
+                action={{
+                  label: "Clear search",
+                  onClick: () => {
+                    setQuery("");
+                    setPage(1);
+                  },
+                }}
+              />
+            )
+          ) : null}
         </div>
         <Pager page={current} pageSize={PAGE_SIZE} total={rows.length} onPage={setPage} />
       </section>
@@ -399,7 +430,27 @@ export function NeedsAttention() {
         </div>
         <div className={s.tableWrap}>
           <Table caption="Complaints that need attention" rows={visible} actions={actions} mode="attention" />
-          {rows.length === 0 ? <p className={s.empty}>{flagged.length === 0 ? "Nothing needs attention right now. Well done!" : "No complaints match these filters."}</p> : null}
+          {rows.length === 0 ? (
+            flagged.length === 0 ? (
+              <EmptyState
+                message="Nothing needs attention right now. Well done!"
+                hint="Overdue complaints and ones still waiting to be acknowledged show up here."
+                action={{ label: "View all complaints", href: "/department/complaints" }}
+              />
+            ) : (
+              <EmptyState
+                message="No complaints match these filters."
+                action={{
+                  label: "Clear filters",
+                  onClick: () => {
+                    setQuery("");
+                    setPriority("");
+                    setPage(1);
+                  },
+                }}
+              />
+            )
+          ) : null}
         </div>
         <Pager page={current} pageSize={PAGE_SIZE} total={rows.length} onPage={setPage} />
       </section>

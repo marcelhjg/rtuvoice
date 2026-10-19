@@ -51,9 +51,9 @@ export default function ForgotPasswordPage() {
           labelClassName={styles.label}
           inputClassName={styles.input}
         />
-        <button type="submit" className={styles.submit} disabled={busy}>
-          {busy ? <span className="spinner" /> : null}
-          Send Code
+        <button type="submit" className={styles.submit} disabled={busy} aria-busy={busy}>
+          {busy ? <span className="spinner" aria-hidden="true" /> : null}
+          {busy ? "Sending code…" : "Send Code"}
         </button>
         <p className={`${styles.switch} ${styles.caption}`}>
           Remember your password? <Link href="/login">Login</Link>

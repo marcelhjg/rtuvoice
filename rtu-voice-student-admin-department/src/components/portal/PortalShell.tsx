@@ -31,15 +31,21 @@ export function PortalShell({ children }: { children: ReactNode }) {
   const [confirmLogout, setConfirmLogout] = useState(false);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const loggingOut = useRef(false);
+  const roleToastShown = useRef(false);
 
   // Simulated auth guard: the real system protects these routes server-side.
   useEffect(() => {
     if (ready && !session && !loggingOut.current) {
       router.replace(`/login?next=${encodeURIComponent(pathname)}`);
     } else if (ready && session && session.role !== "student") {
+      // Role guard: staff accounts can't open student pages; say so instead of switching silently.
+      if (!roleToastShown.current) {
+        roleToastShown.current = true;
+        toast("That page is for student accounts, so you were taken to your own portal.", "info");
+      }
       router.replace(homeFor(session.role));
     }
-  }, [ready, session, router, pathname]);
+  }, [ready, session, router, pathname, toast]);
 
   // Close menus on navigation.
   useEffect(() => {

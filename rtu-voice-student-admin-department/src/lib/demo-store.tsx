@@ -39,7 +39,15 @@ interface PersistedState {
   pendingSignup: Account | null;
   resetEmail: string | null;
   resetVerified: boolean;
+  /** When the current OTP was "sent" (ms). Codes expire after OTP_VALID_MS (SRS: 10 minutes). */
+  otpIssuedAt: number | null;
 }
+
+/** SRS: each verification code is valid for 10 minutes. */
+export const OTP_VALID_MS = 10 * 60 * 1000;
+
+/** Why saved demo data couldn't be used: "unreadable" (corrupted) or "unavailable" (storage blocked or full). */
+export type StorageProblem = "unreadable" | "unavailable" | null;
 
 export interface NewStaffAccountInput {
   kind: "admin" | "department";
@@ -62,6 +70,8 @@ export interface NewComplaintInput {
 
 interface DemoStore extends PersistedState {
   ready: boolean;
+  /** Set when this browser's saved demo data couldn't be read or saved (shown once as a notice). */
+  storageProblem: StorageProblem;
   /** Complaints submitted by the signed-in student. */
   myComplaints: Complaint[];
   /** Released, depersonalized entries for the Public Dashboard. */
@@ -72,6 +82,8 @@ interface DemoStore extends PersistedState {
   startSignup(account: Omit<Account, "role">): void;
   verifyCode(code: string): boolean;
   completeSignup(): Account | null;
+  /** "Resend code": a new code with a fresh 10-minute window. */
+  reissueOtp(): void;
   startReset(email: string): void;
   markResetVerified(): void;
   finishReset(): void;
@@ -121,24 +133,33 @@ function fresh(): PersistedState {
     pendingSignup: null,
     resetEmail: null,
     resetVerified: false,
+    otpIssuedAt: null,
   };
 }
 
-function load(): PersistedState {
+/** Reads the saved demo data. Falls back to a fresh seed, and says why when saved data couldn't be used. */
+function load(): { state: PersistedState; problem: StorageProblem } {
+  let raw: string | null;
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw) as Partial<PersistedState>;
-      if (Array.isArray(parsed.complaints) && Array.isArray(parsed.activity)) {
-        // Older demo data logged "Update posted"; the Activity Log only keeps the SRS actions now.
-        const activity = parsed.activity.filter((a) => (ACTIVITY_ACTIONS as readonly string[]).includes(a.action));
-        return { ...fresh(), ...parsed, activity };
-      }
+    raw = window.localStorage.getItem(STORAGE_KEY);
+  } catch {
+    // Storage blocked (e.g. site data disabled): the demo still works, but only until the tab closes.
+    return { state: fresh(), problem: "unavailable" };
+  }
+  if (!raw) return { state: fresh(), problem: null };
+  try {
+    const parsed = JSON.parse(raw) as Partial<PersistedState>;
+    if (Array.isArray(parsed.complaints) && Array.isArray(parsed.activity)) {
+      // Older demo data logged "Update posted"; the Activity Log only keeps the SRS actions now.
+      const activity = parsed.activity.filter((a) => (ACTIVITY_ACTIONS as readonly string[]).includes(a.action));
+      // The "Other" category was renamed "Others" when the category list grew to nine.
+      const complaints = parsed.complaints.map((c) => ((c.category as string) === "Other" ? { ...c, category: "Others" as const } : c));
+      return { state: { ...fresh(), ...parsed, complaints, activity }, problem: null };
     }
   } catch {
-    /* fall through to a fresh seed */
+    /* corrupted JSON: reported below */
   }
-  return fresh();
+  return { state: fresh(), problem: "unreadable" };
 }
 
 const EMPTY: PersistedState = {
@@ -152,14 +173,18 @@ const EMPTY: PersistedState = {
   pendingSignup: null,
   resetEmail: null,
   resetVerified: false,
+  otpIssuedAt: null,
 };
 
 export function DemoStoreProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<PersistedState>(EMPTY);
   const [ready, setReady] = useState(false);
+  const [storageProblem, setStorageProblem] = useState<StorageProblem>(null);
 
   useEffect(() => {
-    setState(load());
+    const loaded = load();
+    setState(loaded.state);
+    setStorageProblem(loaded.problem);
     setReady(true);
   }, []);
 
@@ -168,7 +193,8 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     } catch {
-      /* storage unavailable (private mode): state still works for this tab */
+      // Storage blocked or full: state still works for this tab, but won't survive a reload.
+      setStorageProblem((p) => p ?? "unavailable");
     }
   }, [state, ready]);
 
@@ -240,7 +266,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
   );
 
   const startSignup = useCallback((account: Omit<Account, "role">) => {
-    setState((s) => ({ ...s, pendingSignup: { ...account, email: account.email.trim().toLowerCase(), role: "student" } }));
+    setState((s) => ({ ...s, pendingSignup: { ...account, email: account.email.trim().toLowerCase(), role: "student" }, otpIssuedAt: Date.now() }));
   }, []);
 
   const verifyCode = useCallback((code: string) => code === DEMO_OTP, []);
@@ -248,15 +274,16 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
   const completeSignup = useCallback(() => {
     const created = state.pendingSignup;
     if (!created) return null;
-    setState((s) => ({ ...s, student: created, session: created, pendingSignup: null }));
+    setState((s) => ({ ...s, student: created, session: created, pendingSignup: null, otpIssuedAt: null }));
     return created;
   }, [state.pendingSignup]);
 
   const startReset = useCallback((email: string) => {
-    setState((s) => ({ ...s, resetEmail: email.trim().toLowerCase(), resetVerified: false }));
+    setState((s) => ({ ...s, resetEmail: email.trim().toLowerCase(), resetVerified: false, otpIssuedAt: Date.now() }));
   }, []);
+  const reissueOtp = useCallback(() => setState((s) => ({ ...s, otpIssuedAt: Date.now() })), []);
   const markResetVerified = useCallback(() => setState((s) => ({ ...s, resetVerified: true })), []);
-  const finishReset = useCallback(() => setState((s) => ({ ...s, resetEmail: null, resetVerified: false })), []);
+  const finishReset = useCallback(() => setState((s) => ({ ...s, resetEmail: null, resetVerified: false, otpIssuedAt: null })), []);
 
   const updateProfile = useCallback((firstName: string, lastName: string) => {
     setState((s) => {
@@ -288,6 +315,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
         submittedAt: now,
         status: "Pending",
         mine: true,
+        ownerEmail: state.session?.email,
         optOutOfPublic: input.optOutOfPublic,
         files: input.files,
         timeline: [{ status: "Pending", label: "Submitted", at: now }],
@@ -296,7 +324,14 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       setState((s) => ({ ...s, complaints: [complaint, ...s.complaints] }));
       return complaint;
     },
-    [state.complaints],
+    [state.complaints, state.session?.email],
+  );
+
+  // Each student sees only their own complaints (seed complaints belong to the demo student), so a
+  // newly registered student starts with an empty History.
+  const isMine = useCallback(
+    (c: Complaint) => c.mine && !!state.session && (c.ownerEmail ?? DEMO_STUDENT.email) === state.session.email,
+    [state.session],
   );
 
   const findComplaint = useCallback(
@@ -309,9 +344,9 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
   const findMyComplaint = useCallback(
     (trackingId: string) => {
       const c = findComplaint(trackingId);
-      return c?.mine ? c : undefined;
+      return c && isMine(c) ? c : undefined;
     },
-    [findComplaint],
+    [findComplaint, isMine],
   );
 
   const actorName = state.session ? `${state.session.firstName} ${state.session.lastName}`.trim() : "Admin";
@@ -615,7 +650,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
 
   const resetDemo = useCallback(() => setState(fresh()), []);
 
-  const myComplaints = useMemo(() => state.complaints.filter((c) => c.mine), [state.complaints]);
+  const myComplaints = useMemo(() => state.complaints.filter(isMine), [state.complaints, isMine]);
   // Public Dashboard (SRS §2 step 4, §3): only complaints an admin has approved (Assigned or later)
   // and the student agreed to share, with the AI title/summary. Never the priority or department
   // update messages. SIMULATED: there is no AI, so the "AI" title is the student's own title and the
@@ -641,6 +676,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
     () => ({
       ...state,
       ready,
+      storageProblem,
       myComplaints,
       publicConcerns,
       login,
@@ -649,6 +685,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       startSignup,
       verifyCode,
       completeSignup,
+      reissueOtp,
       startReset,
       markResetVerified,
       finishReset,
@@ -673,7 +710,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       reactivateDepartment,
       resetDemo,
     }),
-    [state, ready, myComplaints, publicConcerns, login, logout, isAdminEmail, startSignup, verifyCode, completeSignup, startReset, markResetVerified, finishReset, updateProfile, submitComplaint, findMyComplaint, findComplaint, assignComplaint, rejectComplaint, reassignComplaint, departmentComplaints, updateDepartmentStatus, addDepartmentUpdate, activeDepartments, loginBlockedReason, createStaffAccount, deactivateStaffAccount, reactivateStaffAccount, addDepartment, renameDepartment, deactivateDepartment, reactivateDepartment, resetDemo],
+    [state, ready, storageProblem, myComplaints, publicConcerns, login, logout, isAdminEmail, startSignup, verifyCode, completeSignup, reissueOtp, startReset, markResetVerified, finishReset, updateProfile, submitComplaint, findMyComplaint, findComplaint, assignComplaint, rejectComplaint, reassignComplaint, departmentComplaints, updateDepartmentStatus, addDepartmentUpdate, activeDepartments, loginBlockedReason, createStaffAccount, deactivateStaffAccount, reactivateStaffAccount, addDepartment, renameDepartment, deactivateDepartment, reactivateDepartment, resetDemo],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

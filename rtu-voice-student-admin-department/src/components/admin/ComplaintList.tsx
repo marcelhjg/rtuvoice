@@ -6,7 +6,7 @@ import { formatShortDate } from "@/lib/format";
 import { daysBetween, slaInfo } from "@/lib/sla";
 import type { Complaint } from "@/lib/types";
 import { normalizeTrackingId } from "@/lib/validation";
-import { BackToDashboard, Pager, PriorityPill, SearchBox, StatusPill, adminStyles as s, colType } from "./bits";
+import { BackToDashboard, EmptyState, Pager, PriorityPill, SearchBox, StatusPill, adminStyles as s, colType } from "./bits";
 import { useComplaintModals } from "./useComplaintModals";
 
 const PAGE_SIZE = 8;
@@ -176,7 +176,23 @@ export function ComplaintList({ kind }: { kind: ListKind }) {
               ))}
             </tbody>
           </table>
-          {rows.length === 0 ? <p className={s.empty}>{all.length === 0 ? "No complaints in this list yet." : "No complaints match these filters."}</p> : null}
+          {rows.length === 0 ? (
+            all.length === 0 ? (
+              <EmptyState message="No complaints in this list yet." action={{ label: "Back to dashboard", href: "/admin" }} />
+            ) : (
+              <EmptyState
+                message="No complaints match these filters."
+                action={{
+                  label: "Clear filters",
+                  onClick: () => {
+                    setQuery("");
+                    setDept("");
+                    setPage(1);
+                  },
+                }}
+              />
+            )
+          ) : null}
         </div>
         <Pager page={current} pageSize={PAGE_SIZE} total={rows.length} onPage={setPage} />
       </section>

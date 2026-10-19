@@ -113,9 +113,9 @@ export default function RegisterPage() {
           inputClassName={styles.input}
         />
 
-        <button type="submit" className={styles.submit} disabled={busy}>
-          {busy ? <span className="spinner" /> : null}
-          Register
+        <button type="submit" className={styles.submit} disabled={busy} aria-busy={busy}>
+          {busy ? <span className="spinner" aria-hidden="true" /> : null}
+          {busy ? "Sending code…" : "Register"}
         </button>
         <p className={`${styles.switch} ${styles.caption}`}>
           Already have an account? <Link href="/login">Login</Link>
