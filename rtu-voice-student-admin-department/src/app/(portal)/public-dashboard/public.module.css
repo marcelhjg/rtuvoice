@@ -181,9 +181,14 @@
   .filterLabel {
     width: 100%;
   }
+  /* Phones: each filter gets its own full-width line so long category names
+     ("Library & Learning Resources") aren't cut off; Clear sits on the right below them. */
   .filter {
-    flex: 1;
+    flex: 1 1 100%;
     min-width: 0;
+  }
+  .clear {
+    margin-left: auto;
   }
   .item {
     padding: 16px 14px 16px 18px;

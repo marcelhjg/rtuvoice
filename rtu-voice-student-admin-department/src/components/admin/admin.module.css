@@ -453,7 +453,7 @@
   }
   .table th[data-col="date"] { width: 100px; }
   .table th[data-col="id"] { width: 116px; }
-  .table th[data-col="category"] { width: 210px; }
+  .table th[data-col="category"] { width: 224px; } /* fits "Technology & Online Systems" on one line */
   .table th[data-col="dept"] { width: 172px; }
   .table th[data-col="priority"] { width: 100px; }
   .table th[data-col="status"] { width: 120px; }
