@@ -13,12 +13,17 @@ const STEPS: { icon: IconName; title: string; text: string }[] = [
   { icon: "search", title: "TRACK", text: "Follow the status anytime and view public dashboard." },
 ];
 
+/** The nine complaint categories, in the same order as CATEGORIES (src/lib/types.ts). Accents alternate. */
 const RAISE: { label: string; icon: IconName; accent: "yellow" | "navy" }[] = [
   { label: "ACADEMIC", icon: "notebook", accent: "yellow" },
   { label: "FACILITIES & INFRASTRUCTURE", icon: "building", accent: "navy" },
   { label: "ADMINISTRATIVE", icon: "users-cog", accent: "yellow" },
   { label: "STUDENT LIFE", icon: "user", accent: "navy" },
-  { label: "OTHER", icon: "more", accent: "yellow" },
+  { label: "SAFETY AND SECURITY", icon: "shield-lock", accent: "yellow" },
+  { label: "TECHNOLOGY & ONLINE SYSTEMS", icon: "laptop", accent: "navy" },
+  { label: "FOOD, HEALTH & SANITATION", icon: "apple", accent: "yellow" },
+  { label: "LIBRARY & LEARNING RESOURCES", icon: "book-open", accent: "navy" },
+  { label: "OTHERS", icon: "more", accent: "yellow" },
 ];
 
 const AUDIENCES = [

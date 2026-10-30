@@ -53,11 +53,11 @@ land (student `/dashboard`, admin `/admin`, department `/department`, superadmin
 
 | What | Value |
 | --- | --- |
-| **Student** | Any `@rtu.edu.ph` email with the demo password **`rtuvoice123`**. `juan.cruz@rtu.edu.ph` is the Figma sample student "Juan Dela Cruz" and owns the sample complaints below. |
+| **Student** | Any `@rtu.edu.ph` email with the demo password **`rtuvoice123`**. `juan.cruz@rtu.edu.ph` is the Figma sample student "Juan Dela Cruz" and owns the sample complaints below. Every other student account sees only its own complaints (a newly registered student starts with an empty History). |
 | **Admin** | `admin@rtu.edu.ph`, `ics.admin@rtu.edu.ph`, `osa.admin@rtu.edu.ph` — use demo password **`rtuvoice123`**. Admin accounts cannot register; the Super Admin creates them. |
 | **Superadmin** | `superadmin@rtu.edu.ph` — demo password **`rtuvoice123`**. A separate, deliberately small portal at `/superadmin`: **Accounts** (create and deactivate admin and department accounts — one active, shared account per department, used by its head and staff), **Departments** (add, rename, deactivate) and the superadmin-only **Activity Log**. It has none of the admin console's complaint pages. |
 | **Department** | One shared account per department: `facilities@rtu.edu.ph` (Facilities Office), `registrar@rtu.edu.ph`, `academic@rtu.edu.ph`, `osa@rtu.edu.ph` (Student Affairs), `cashier@rtu.edu.ph`, `ict@rtu.edu.ph` — use demo password **`rtuvoice123`**. Each account only sees its own department's complaints. Cannot register; the superadmin creates them. |
-| One-time code (register, forgot password) | **`123456`** — no email is sent |
+| One-time code (register, forgot password) | **`123456`** — no email is sent. A code expires 10 minutes after it was "sent" (3 wrong tries, 5 resends), as in the SRS |
 | Student's sample tracking IDs | `STU-A3F1B` (In Progress, has a department update), `STU-K92QD` (Resolved), `STU-77MZP` (Assigned, overdue), `STU-B04XR` (Rejected), `STU-M5T8C` (Resolved) |
 
 All portals share one complaint list. Try this: log in as the student and submit a concern →
@@ -71,6 +71,26 @@ Sample dates are generated relative to the day you first open the site, so SLA t
 ("Acknowledge in 1 day", "Overdue by 4 days") stay realistic. To reset all demo data, clear the
 site's local storage (DevTools → Application → Local Storage → delete `rtu-voice-demo-v3`), or open
 the site in a private window.
+
+### Loading, empty, error and 404 states
+
+- **Loading:** `loading.tsx` in each section (`(site)`, `(auth)`, `(portal)`, `admin`, `department`, `superadmin`)
+  shows a spinner inside that section's layout while the next page's code loads (rarely visible: pages
+  are static and prefetched). Submit buttons show what they are doing ("Logging in…", "Sending code…",
+  "Verifying…", "Submitting…", "Saving…").
+- **Empty:** every list says why it is empty and offers one next step (Clear filters, View all complaints,
+  Report an incident, Open your History). "View updates" with no update yet says what to expect.
+- **Errors:** wrong password, wrong / expired OTP, failed complaint submit (draft kept, "Try again"),
+  unreadable saved demo data (a notice, then the demo data loads again). `error.tsx` in each portal
+  (header stays) and at the root, plus `global-error.tsx`, show "Something went wrong" with **Try again**.
+- **404:** `not-found.tsx` links to the signed-in role's home (`/dashboard`, `/admin`, `/department`,
+  `/superadmin`) or the landing page when logged out.
+- **Auth:** portal pages send logged-out visitors to `/login?next=…` (with a "log in to continue" notice
+  and a return to that page after login); opening another role's page sends you to your own portal with
+  a message. These are browser-side checks only — the backend must enforce them.
+- **Favicon:** `src/app/favicon.ico` (16/32/48), `icon1.png` (32), `icon2.png` (192) and `apple-icon.png`
+  (180, white background), made from `public/images/rtu-voice-logo.png`. The source logo is only 200px wide,
+  so there is no 512px icon; export a larger logo from Figma if a web-app manifest is added.
 
 ## 4. Pages
 
@@ -89,7 +109,7 @@ the site in a private window.
 | `/dashboard` | HOME | Student dashboard, recent resolved complaints |
 | *(side menu)* | SIDEBAR + 4 variants | Opens from the ☰ button; Esc or clicking outside closes it |
 | *(profile menu)* | HOME with dropdown | Manage Profile, Logout (with confirmation) |
-| `/report` | REPORT A CONCERN | Validation, 5 categories, evidence drag-and-drop (JPG/PNG/PDF/MP3/WAV/MP4, 5 MB total), **opt-in** "Share a summary on the public dashboard" checkbox (unticked by default) |
+| `/report` | REPORT A CONCERN | Validation, 9 categories (Academic, Facilities & Infrastructure, Administrative, Student Life, Safety and Security, Technology & Online Systems, Food, Health & Sanitation, Library & Learning Resources, Others — the SRS lists 5), evidence drag-and-drop (JPG/PNG/PDF/MP3/WAV/MP4, 5 MB total), **opt-in** "Share a summary on the public dashboard" checkbox (unticked by default) |
 | `/report/submitted?id=` | Frame (receipt) | Copy-to-clipboard tracking ID |
 | `/track?id=` | STATUS TRACKER + update pop-up | Format check, not-found state, timeline, View Update dialog; only your own complaints |
 | `/history` | History | Table on desktop, cards on mobile; IDs link to the tracker |

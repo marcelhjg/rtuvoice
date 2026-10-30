@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { NotFoundActions } from "@/components/NotFoundActions";
 import { PublicHeader } from "@/components/PublicHeader";
 
 export default function NotFound() {
@@ -16,14 +16,7 @@ export default function NotFound() {
             Page not found
           </h1>
           <p className="page-subtitle">The page you are looking for does not exist or has moved.</p>
-          <div style={{ display: "flex", gap: 12, justifyContent: "center", marginTop: 28, flexWrap: "wrap" }}>
-            <Link href="/" className="btn btn-outline" style={{ minHeight: 44 }}>
-              Go to home page
-            </Link>
-            <Link href="/dashboard" className="btn btn-primary" style={{ minHeight: 44 }}>
-              Go to dashboard
-            </Link>
-          </div>
+          <NotFoundActions />
         </div>
       </main>
     </>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Pager, SearchBox, adminStyles as s } from "@/components/admin/bits";
+import { EmptyState, Pager, SearchBox, adminStyles as s } from "@/components/admin/bits";
 import { useDemoStore } from "@/lib/demo-store";
 import { formatLongDate, formatTime } from "@/lib/format";
 import { ACTIVITY_ACTIONS, type ActivityAction } from "@/lib/types";
@@ -121,7 +121,20 @@ export default function ActivityLogPage() {
               ))}
             </tbody>
           </table>
-          {rows.length === 0 ? <p className={s.empty}>No activity matches these filters.</p> : null}
+          {rows.length === 0 ? (
+            <EmptyState
+              message="No activity matches these filters."
+              action={{
+                label: "Clear filters",
+                onClick: () => {
+                  setQuery("");
+                  setAction("");
+                  setRole("");
+                  setPage(1);
+                },
+              }}
+            />
+          ) : null}
         </div>
         <Pager page={current} pageSize={PAGE_SIZE} total={rows.length} onPage={setPage} />
       </section>

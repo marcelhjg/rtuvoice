@@ -60,6 +60,12 @@ export function LoginForm() {
       </p>
 
       <form className={styles.form} onSubmit={submit} noValidate>
+        {/* Protected-route state: sent here from a portal page while logged out (?next=…). */}
+        {requested && ready && !session ? (
+          <p className="alert alert-info" role="status" style={{ padding: "10px 12px", fontSize: 14, lineHeight: 1.45 }}>
+            Please log in to continue. You&apos;ll go back to the page you opened.
+          </p>
+        ) : null}
         <TextField
           label="University Email"
           type="email"
@@ -92,9 +98,9 @@ export function LoginForm() {
           Forgot password?
         </Link>
 
-        <button type="submit" className={styles.submit} disabled={busy}>
-          {busy ? <span className="spinner" /> : null}
-          Login
+        <button type="submit" className={styles.submit} disabled={busy} aria-busy={busy}>
+          {busy ? <span className="spinner" aria-hidden="true" /> : null}
+          {busy ? "Logging in…" : "Login"}
         </button>
 
         <p className={`${styles.switch} ${styles.caption}`}>

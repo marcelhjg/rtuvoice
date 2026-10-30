@@ -39,6 +39,10 @@ export type IconName =
   | "building"
   | "users-cog"
   | "more"
+  | "shield-lock"
+  | "laptop"
+  | "apple"
+  | "book-open"
   | "file"
   | "shield"
   | "graduation-cap"
@@ -215,6 +219,39 @@ const paths: Record<IconName, React.ReactNode> = {
       <circle cx="5.5" cy="12" r="1.3" fill="currentColor" />
       <circle cx="12" cy="12" r="1.3" fill="currentColor" />
       <circle cx="18.5" cy="12" r="1.3" fill="currentColor" />
+    </>
+  ),
+  // Category icons added for the nine-category list (same 24px grid and round line style).
+  // Safety and Security: a shield with a padlock.
+  "shield-lock": (
+    <>
+      <path d="M12 3 4.5 6v5.5c0 4.6 3.2 8.4 7.5 9.5 4.3-1.1 7.5-4.9 7.5-9.5V6z" />
+      <rect x="9" y="11" width="6" height="4.8" rx="1" />
+      <path d="M10.3 11V9.6a1.7 1.7 0 0 1 3.4 0V11" />
+    </>
+  ),
+  // Technology & Online Systems: a laptop showing a Wi-Fi signal.
+  laptop: (
+    <>
+      <rect x="4" y="4.5" width="16" height="11" rx="1.5" />
+      <path d="M2.5 19h19" />
+      <path d="M8.5 9.9a5 5 0 0 1 7 0M10.2 11.7a2.5 2.5 0 0 1 3.6 0" />
+      <circle cx="12" cy="13.5" r=".55" fill="currentColor" />
+    </>
+  ),
+  // Food, Health & Sanitation: an apple.
+  apple: (
+    <>
+      <path d="M12 8c-1.6-1.1-5.4-1.2-6.6 2.2-1.2 3.4.5 7.9 2.7 9.7 1.3 1 2.6.6 3.9.2 1.3.4 2.6.8 3.9-.2 2.2-1.8 3.9-6.3 2.7-9.7C17.4 6.8 13.6 6.9 12 8z" />
+      <path d="M12 8c0-1.7.5-3.1 1.6-4.2" />
+      <path d="M13.2 5.6c1.3-.4 2.6 0 3.3.9-1.3.5-2.5.3-3.3-.9z" />
+    </>
+  ),
+  // Library & Learning Resources: an open book.
+  "book-open": (
+    <>
+      <path d="M12 6.5C10.3 5.2 7.5 4.7 3.5 5v13.2c4-.3 6.8.2 8.5 1.5 1.7-1.3 4.5-1.8 8.5-1.5V5c-4-.3-6.8.2-8.5 1.5z" />
+      <path d="M12 6.5v13.2" />
     </>
   ),
   file: (

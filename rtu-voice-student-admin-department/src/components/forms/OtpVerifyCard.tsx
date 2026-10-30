@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { DEMO_OTP } from "@/lib/demo-data";
+import { OTP_VALID_MS, useDemoStore } from "@/lib/demo-store";
 import { Icon } from "../Icon";
 import { OtpInput } from "./OtpInput";
 import styles from "@/app/(auth)/auth.module.css";
@@ -21,8 +22,13 @@ interface Props {
  * SIMULATED: no email is sent; the demo accepts the fixed code shown on screen.
  */
 export function OtpVerifyCard({ email, purpose, onVerified }: Props) {
+  const { otpIssuedAt, reissueOtp } = useDemoStore();
   const [digits, setDigits] = useState<string[]>(Array(6).fill(""));
-  const [seconds, setSeconds] = useState(RESEND_SECONDS);
+  // The resend cooldown counts from when the code was sent, so a reload doesn't restart it (and an
+  // expired code can be replaced right away).
+  const [seconds, setSeconds] = useState(() =>
+    otpIssuedAt ? Math.max(0, RESEND_SECONDS - Math.floor((Date.now() - otpIssuedAt) / 1000)) : RESEND_SECONDS,
+  );
   const [attempts, setAttempts] = useState(0);
   const [resends, setResends] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -48,6 +54,12 @@ export function OtpVerifyCard({ email, purpose, onVerified }: Props) {
     }
     if (code.length < 6) {
       setError("Enter all 6 digits of the code.");
+      return;
+    }
+    // SRS: a code is valid for 10 minutes (the time is kept with the demo data, so a reload doesn't renew it).
+    if (otpIssuedAt && Date.now() - otpIssuedAt > OTP_VALID_MS) {
+      setDigits(Array(6).fill(""));
+      setError("This code has expired. Request a new code.");
       return;
     }
     setBusy(true);
@@ -76,6 +88,7 @@ export function OtpVerifyCard({ email, purpose, onVerified }: Props) {
     if (seconds > 0 || blocked) return;
     const n = resends + 1;
     setResends(n);
+    reissueOtp();
     setAttempts(0);
     setDigits(Array(6).fill(""));
     setError(null);
@@ -93,7 +106,7 @@ export function OtpVerifyCard({ email, purpose, onVerified }: Props) {
       <p className={styles.cardSubtitle}>
         We sent you a 6-digit code to <strong>{email}</strong>.
         <br />
-        {purpose === "activate" ? "Enter it to activate your account." : "Enter it to reset your password."}
+        {purpose === "activate" ? "Enter it to activate your account." : "Enter it to reset your password."} It expires in 10 minutes.
       </p>
 
       <form onSubmit={submit} noValidate>
@@ -128,9 +141,9 @@ export function OtpVerifyCard({ email, purpose, onVerified }: Props) {
             </button>
           </p>
 
-          <button type="submit" className={`${styles.submit} ${styles.submitWhite}`} disabled={busy || locked}>
-            {busy ? <span className="spinner" /> : null}
-            Verify Account
+          <button type="submit" className={`${styles.submit} ${styles.submitWhite}`} disabled={busy || locked} aria-busy={busy}>
+            {busy ? <span className="spinner" aria-hidden="true" /> : null}
+            {busy ? "Verifying…" : "Verify Account"}
           </button>
         </div>
       </form>

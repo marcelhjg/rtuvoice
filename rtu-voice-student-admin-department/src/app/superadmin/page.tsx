@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, type FormEvent, type ReactNode } from "react";
-import { SearchBox, adminStyles as s } from "@/components/admin/bits";
+import { EmptyState, SearchBox, adminStyles as s } from "@/components/admin/bits";
 import m from "@/components/admin/modals.module.css";
 import { ConfirmDialog } from "@/components/admin/superadmin";
 import x from "@/components/admin/superadmin.module.css";
@@ -139,7 +139,20 @@ export default function AccountsPage() {
               ))}
             </tbody>
           </table>
-          {rows.length === 0 ? <p className={x.empty}>No accounts match these filters.</p> : null}
+          {rows.length === 0 ? (
+            <EmptyState
+              className={x.empty}
+              message="No accounts match these filters."
+              action={{
+                label: "Clear filters",
+                onClick: () => {
+                  setQuery("");
+                  setKind("");
+                  setStatus("");
+                },
+              }}
+            />
+          ) : null}
         </div>
       </section>
 

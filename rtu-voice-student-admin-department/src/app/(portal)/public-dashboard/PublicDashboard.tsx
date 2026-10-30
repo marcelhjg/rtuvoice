@@ -16,7 +16,9 @@ export function PublicDashboard() {
   const pathname = usePathname();
 
   const status = (PUBLIC_STATUSES as readonly string[]).includes(params.get("status") ?? "") ? (params.get("status") as PublicStatus) : "";
-  const category = (CATEGORIES as readonly string[]).includes(params.get("category") ?? "") ? (params.get("category") as Category) : "";
+  // "Other" was renamed "Others"; old shared links (?category=Other) still filter correctly.
+  const rawCategory = params.get("category") === "Other" ? "Others" : (params.get("category") ?? "");
+  const category = (CATEGORIES as readonly string[]).includes(rawCategory) ? (rawCategory as Category) : "";
   const page = Math.max(1, Number.parseInt(params.get("page") ?? "1", 10) || 1);
 
   // Filters live in the URL so results can be bookmarked and the back button works.

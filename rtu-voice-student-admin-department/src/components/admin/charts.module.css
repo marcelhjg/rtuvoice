@@ -81,12 +81,12 @@
   border-radius: 6px;
   outline-offset: 3px;
 }
+/* Labels wrap instead of being cut ("Technology & Online Systems" on a phone). */
 .barLabel {
   font-size: 13.5px;
+  line-height: 1.25;
   color: #17213b;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: break-word;
 }
 .barTrack {
   position: relative;

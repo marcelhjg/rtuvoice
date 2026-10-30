@@ -188,18 +188,23 @@
 .raise .sectionTitle {
   margin-top: 0;
 }
+/* Nine cards: rows of 5 (desktop), 3 (tablet) or 2 (phone). Flex-wrap with centring keeps a short
+   last row in the middle instead of hanging on the left. max-width sets how many fit per row. */
 .raiseGrid {
   list-style: none;
   margin: 50px auto 0;
   padding: 0;
-  max-width: 1150px;
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 196px));
+  max-width: 1140px; /* 5 × 196px + 4 × 40px */
+  display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   gap: 40px;
 }
 .raiseCard {
   position: relative;
+  /* Five per row; cards shrink a little (like the old grid) before a row breaks early. */
+  flex: 0 1 calc((100% - 160px) / 5);
+  max-width: 196px;
   min-height: 106px;
   background: var(--white);
   border-radius: 10px;
@@ -509,8 +514,11 @@
 /* ---------- Responsive ---------- */
 @media (max-width: 1100px) {
   .raiseGrid {
-    grid-template-columns: repeat(3, minmax(0, 196px));
+    max-width: 668px; /* 3 × 196px + 2 × 40px */
     row-gap: 48px;
+  }
+  .raiseCard {
+    flex-basis: calc((100% - 80px) / 3);
   }
   .privacyInner,
   .resolvedInner {
@@ -579,8 +587,12 @@
     max-width: 280px;
   }
   .raiseGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-width: none;
     gap: 40px 14px;
+  }
+  .raiseCard {
+    flex-basis: calc((100% - 14px) / 2);
+    max-width: none;
   }
   .raiseLabel {
     font-size: 13px;
