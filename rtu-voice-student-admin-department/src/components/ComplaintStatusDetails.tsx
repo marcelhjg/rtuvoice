@@ -4,60 +4,92 @@ import { useState } from "react";
 import { Icon } from "@/components/Icon";
 import { StatusBadge } from "@/components/StatusBadge";
 import { useToast } from "@/components/Toast";
-import { useDemoStore } from "@/lib/demo-store";
-import { evidenceDisplayName, evidenceDownloadName, evidenceKind, getEvidenceUrl } from "@/lib/evidence";
+import { getEvidenceUrl } from "@/actions/studentActions";
 import { formatBytes, formatLongDate, formatMonthDay, formatTime } from "@/lib/format";
-import type { Complaint, EvidenceFile } from "@/lib/types";
+import type { Status } from "@/lib/types";
+import { EXTENSIONS, type TrackedComplaint } from "@/features/student/studentTypes";
 import styles from "@/app/(portal)/track/track.module.css";
 
-type StepState = "done" | "current" | "todo" | "rejected";
+// These ids match the statuses table.
+const PENDING = 1;
+const ASSIGNED = 2;
+const IN_PROGRESS = 3;
+const RESOLVED = 4;
+const REJECTED = 5;
 
-function buildSteps(c: Complaint): { label: string; at?: string; state: StepState; sub?: string }[] {
-  const at = (s: Complaint["status"]) => c.timeline.find((t) => t.status === s)?.at;
-  if (c.status === "Rejected") {
+// The database names are snake_case (in_progress), so show these labels instead of status_name.
+export const STATUS_LABELS: Record<number, Status> = {
+  [PENDING]: "Pending",
+  [ASSIGNED]: "Assigned",
+  [IN_PROGRESS]: "In Progress",
+  [RESOLVED]: "Resolved",
+  [REJECTED]: "Rejected",
+};
+
+type StepState = "done" | "current" | "todo" | "rejected";
+type Attachment = TrackedComplaint["attachments"][number];
+
+function buildSteps(c: TrackedComplaint): { label: string; at?: string; state: StepState; sub?: string }[] {
+  const reached = (id: number) => c.progress.filter((p) => p.entry_kind === "status" && p.entry_status_id === id).pop();
+  const submittedAt = c.progress.find((p) => p.entry_kind === "submitted")?.entry_at ?? c.created_at;
+
+  if (c.status_id === REJECTED) {
+    const r = reached(REJECTED);
     return [
-      { label: "Submitted", at: at("Pending"), state: "done" },
-      { label: "Rejected by an administrator", at: at("Rejected"), state: "rejected", sub: c.rejectionReason },
+      { label: "Submitted", at: submittedAt, state: "done" },
+      { label: "Rejected by an administrator", at: r?.entry_at, state: "rejected", sub: r?.entry_message ?? undefined },
     ];
   }
-  const order: Complaint["status"][] = ["Pending", "Assigned", "In Progress", "Resolved"];
-  const reached = order.indexOf(c.status);
-  const labels = ["Submitted", c.department ? `Approved and assigned to ${c.department}` : "Approved and assigned to a department", "In Progress", "Resolved"];
-  return order.map((s, i) => ({
+
+  const order = [PENDING, ASSIGNED, IN_PROGRESS, RESOLVED];
+  const current = order.indexOf(c.status_id);
+  const labels = [
+    "Submitted",
+    c.department_name ? `Approved and assigned to ${c.department_name}` : "Approved and assigned to a department",
+    "In Progress",
+    "Resolved",
+  ];
+  return order.map((id, i) => ({
     label: labels[i],
-    at: at(s),
-    state: i < reached || (i === reached && s === "Resolved") ? "done" : i === reached ? "current" : "todo",
+    at: id === PENDING ? submittedAt : reached(id)?.entry_at,
+    state: i < current || (i === current && id === RESOLVED) ? "done" : i === current ? "current" : "todo",
   }));
 }
+
+const fileKind = (type: string) =>
+  type.startsWith("image/") ? "Image" : type.startsWith("audio/") ? "Audio" : type.startsWith("video/") ? "Video" : type === "application/pdf" ? "PDF" : "File";
 
 export function ComplaintStatusDetails({
   complaint: c,
   onViewUpdate,
   compact = false,
+  forStaff = false,
 }: {
-  complaint: Complaint;
+  complaint: TrackedComplaint;
   onViewUpdate?: () => void;
   compact?: boolean;
+  forStaff?: boolean; // staff see neutral names ("Evidence 1"); the student sees their own file names
 }) {
   const steps = buildSteps(c);
-  const { session } = useDemoStore();
   const toast = useToast();
-  // Admins and departments see neutral file names; the student sees their own.
-  const forStaff = session?.role !== "student";
   const [busyFile, setBusyFile] = useState<number | null>(null);
 
-  const openEvidence = async (f: EvidenceFile, index: number, mode: "open" | "download") => {
-    if (!f.path) {
-      // SIMULATED: the demo keeps only the name, size and type, so there is no file to show.
-      toast("This demo doesn't store the files themselves. With the backend, this opens the file through a short-lived link.", "error");
-      return;
-    }
+  const labelFor = (a: Attachment, i: number) => (forStaff || !a.file_name ? `Evidence ${i + 1}` : a.file_name);
+
+  const openEvidence = async (a: Attachment, mode: "open" | "download") => {
     // Open the tab now, while still inside the click, so pop-up blockers allow it; load the link into it once signed.
     const tab = mode === "open" ? window.open("", "_blank") : null;
     if (tab) tab.opener = null;
-    setBusyFile(index);
-    const url = await getEvidenceUrl({ trackingId: c.trackingId, file: f, mode, downloadName: evidenceDownloadName(f, index, c.trackingId, forStaff) });
-    setBusyFile(null);
+    setBusyFile(a.id);
+    let url: string | null = null;
+    try {
+      const res = await getEvidenceUrl(a.id, mode === "download");
+      url = res.success && res.url ? res.url : null;
+    } catch {
+      url = null;
+    } finally {
+      setBusyFile(null);
+    }
     if (!url) {
       tab?.close();
       toast("The file couldn't be opened. Try again in a moment.", "error");
@@ -67,60 +99,57 @@ export function ComplaintStatusDetails({
       tab.location.href = url;
     } else {
       // The signed link is created with a download name, so the storage server sends it as an attachment.
-      const a = document.createElement("a");
-      a.href = url;
-      a.rel = "noopener";
-      document.body.append(a);
-      a.click();
-      a.remove();
+      const link = document.createElement("a");
+      link.href = url;
+      link.rel = "noopener";
+      document.body.append(link);
+      link.click();
+      link.remove();
     }
   };
 
   return (
-    <section className={`${styles.resultCard} ${compact ? styles.modalResultCard : ""}`} aria-label={`Status details for ${c.trackingId}`}>
+    <section className={`${styles.resultCard} ${compact ? styles.modalResultCard : ""}`} aria-label={`Status details for ${c.tracking_id}`}>
       <div className={`${styles.resultTop} ${compact ? styles.modalResultTop : ""}`}>
         {!compact ? (
           <div>
             <p className={styles.idLabel}>TRACKING ID</p>
-            <p className={styles.idValue}>{c.trackingId}</p>
+            <p className={styles.idValue}>{c.tracking_id}</p>
           </div>
         ) : null}
-        <StatusBadge status={c.status} />
+        <StatusBadge status={STATUS_LABELS[c.status_id]} />
       </div>
 
       <dl className={styles.meta}>
         {compact ? (
           <>
             <dt>Tracking ID</dt>
-            <dd>{c.trackingId}</dd>
+            <dd>{c.tracking_id}</dd>
           </>
         ) : null}
         <dt>Title</dt>
         <dd>{c.title}</dd>
         <dt>Category</dt>
-        <dd>{c.category}</dd>
+        <dd>{c.category_name}</dd>
         <dt>Submitted</dt>
-        <dd>{formatLongDate(c.submittedAt)}</dd>
+        <dd>{formatLongDate(c.created_at)}</dd>
         <dt>Assigned to</dt>
-        <dd>{c.department ?? (c.status === "Rejected" ? "—" : "Waiting for an administrator")}</dd>
+        <dd>{c.department_name ?? (c.status_id === REJECTED ? "—" : "Waiting for an administrator")}</dd>
       </dl>
 
-      {/* The student's own words and files, shown in every portal. Rendered as plain text (React escapes it),
-          keeping the line breaks they typed. Never the student's identity, and never the priority. */}
+      {/* The student's own words and files. Rendered as plain text (React escapes it), keeping the line breaks they typed. */}
       <div className={styles.detailBlock}>
         <h3 className={styles.detailHeading}>Description</h3>
         <p className={styles.description}>{c.description}</p>
       </div>
       <div className={styles.detailBlock}>
         <h3 className={styles.detailHeading}>Evidence</h3>
-        {c.files.length ? (
-          // Open/Download ask getEvidenceUrl (src/lib/evidence.ts) for a short-lived signed link. In this
-          // frontend-only demo no file contents are stored, so they explain that instead of opening anything.
+        {c.attachments.length ? (
           <ul className={styles.evidenceList} aria-label="Attached files">
-            {c.files.map((f, i) => {
-              const label = evidenceDisplayName(f, i, forStaff);
+            {c.attachments.map((a, i) => {
+              const label = labelFor(a, i);
               return (
-                <li key={`${f.name}-${i}`} className={styles.evidenceChip}>
+                <li key={a.id} className={styles.evidenceChip}>
                   <span className={styles.evidenceInfo}>
                     <Icon name="file" size={15} strokeWidth={1.8} />
                     <span className={styles.evidenceText}>
@@ -129,16 +158,16 @@ export function ComplaintStatusDetails({
                         {label}
                       </span>
                       <span className={styles.evidenceSize}>
-                        {forStaff ? `${evidenceKind(f)} · ` : ""}
-                        {formatBytes(f.size)}
+                        {forStaff ? `${fileKind(a.file_type)} · ` : ""}
+                        {a.file_size != null ? formatBytes(a.file_size) : ""}
                       </span>
                     </span>
                   </span>
                   <span className={styles.evidenceActions}>
-                    <button type="button" className={styles.evidenceBtn} onClick={() => openEvidence(f, i, "open")} disabled={busyFile === i} aria-label={`Open ${label}`}>
+                    <button type="button" className={styles.evidenceBtn} onClick={() => openEvidence(a, "open")} disabled={busyFile === a.id} aria-label={`Open ${label}`}>
                       <Icon name="eye" size={15} strokeWidth={1.9} /> <span className={styles.evidenceBtnLabel}>Open</span>
                     </button>
-                    <button type="button" className={styles.evidenceBtn} onClick={() => openEvidence(f, i, "download")} disabled={busyFile === i} aria-label={`Download ${label}`}>
+                    <button type="button" className={styles.evidenceBtn} onClick={() => openEvidence(a, "download")} disabled={busyFile === a.id} aria-label={`Download ${label}`}>
                       <Icon name="download" size={15} strokeWidth={1.9} /> <span className={styles.evidenceBtnLabel}>Download</span>
                     </button>
                   </span>
@@ -174,7 +203,7 @@ export function ComplaintStatusDetails({
         <button type="button" className={styles.viewUpdate} onClick={onViewUpdate}>
           <Icon name="mail" size={18} strokeWidth={1.8} /> View updates
         </button>
-      ) : c.updates.length === 0 && c.status !== "Rejected" ? (
+      ) : c.updates.length === 0 && c.status_id !== REJECTED ? (
         <p className={styles.noUpdate}>
           <Icon name="mail" size={16} /> No update from the department yet.
         </p>

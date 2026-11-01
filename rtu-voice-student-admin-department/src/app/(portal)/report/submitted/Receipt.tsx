@@ -1,23 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { Icon } from "@/components/Icon";
 import { StatusBadge } from "@/components/StatusBadge";
 import { useToast } from "@/components/Toast";
-import { useDemoStore } from "@/lib/demo-store";
 import styles from "./receipt.module.css";
 
-export function Receipt() {
-  const params = useSearchParams();
-  const { findMyComplaint } = useDemoStore();
+export function Receipt({ trackingId }: { trackingId: string | null }) {
   const toast = useToast();
   const [copied, setCopied] = useState(false);
-  const id = params.get("id") ?? "";
-  const complaint = id ? findMyComplaint(id) : undefined;
 
-  if (!complaint) {
+  if (!trackingId) {
     return (
       <div className="container">
         <div className={`card ${styles.card}`}>
@@ -25,7 +19,9 @@ export function Receipt() {
             <Icon name="info" size={40} strokeWidth={1.8} />
           </span>
           <h1 className={styles.title}>Receipt not found</h1>
-          <p className={styles.status}>We could not find a concern with that tracking ID in this browser.</p>
+          <p className={styles.status}>
+            We couldn&apos;t find that tracking ID in your account. Open History to see the concerns you&apos;ve submitted.
+          </p>
           <div className={styles.buttons}>
             <Link href="/dashboard" className={`btn btn-outline ${styles.btn}`}>
               Go to dashboard
@@ -41,18 +37,18 @@ export function Receipt() {
 
   const copy = async () => {
     try {
-      await navigator.clipboard.writeText(complaint.trackingId);
+      await navigator.clipboard.writeText(trackingId);
     } catch {
       // Clipboard API can be blocked (e.g. non-HTTPS); fall back to a hidden textarea.
       const t = document.createElement("textarea");
-      t.value = complaint.trackingId;
+      t.value = trackingId;
       document.body.appendChild(t);
       t.select();
       document.execCommand("copy");
       t.remove();
     }
     setCopied(true);
-    toast(`Tracking ID ${complaint.trackingId} copied.`, "success");
+    toast(`Tracking ID ${trackingId} copied.`, "success");
     window.setTimeout(() => setCopied(false), 2000);
   };
 
@@ -66,14 +62,14 @@ export function Receipt() {
           Your concern was submitted
         </h1>
         <p className={styles.status}>
-          Status: <StatusBadge status={complaint.status} className={styles.badge} /> — an administrator will review it soon.
+          Status: <StatusBadge status="Pending" className={styles.badge} /> — an administrator will review it soon.
         </p>
 
         <div className={styles.idBox}>
           <div>
             <p className={styles.idLabel}>YOUR TRACKING ID</p>
             <p className={styles.idValue} aria-live="polite">
-              {complaint.trackingId}
+              {trackingId}
             </p>
           </div>
           <button type="button" className={styles.copy} onClick={copy}>
@@ -93,17 +89,12 @@ export function Receipt() {
           <Link href="/dashboard" className={`btn btn-outline ${styles.btn}`}>
             Go to dashboard
           </Link>
-          <Link href={`/track?id=${encodeURIComponent(complaint.trackingId)}`} className={`btn btn-primary ${styles.btn}`}>
+          <Link href={`/track?id=${encodeURIComponent(trackingId)}`} className={`btn btn-primary ${styles.btn}`}>
             Track this concern
           </Link>
         </div>
 
         <p className={styles.footnote}>We&apos;ll email you whenever the status changes or the department posts an update.</p>
-        <p className={styles.demo}>
-          <span className="demo-note">
-            <Icon name="info" size={14} /> Demo build: saved in this browser only. No email is sent and no file was uploaded.
-          </span>
-        </p>
       </section>
     </div>
   );

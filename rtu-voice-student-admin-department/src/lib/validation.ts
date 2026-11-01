@@ -1,22 +1,7 @@
 /** Client-side validation rules taken from the RTU Voice SRS v3 / roadmap. */
-
 export const RTU_EMAIL_DOMAIN = "@rtu.edu.ph";
 export const PASSWORD_MIN = 8;
-export const MAX_EVIDENCE_BYTES = 5 * 1024 * 1024; // 5 MB total per submission
-export const TITLE_MAX = 100;
-export const DESCRIPTION_MAX = 2000;
 
-export const ALLOWED_EVIDENCE: Record<string, string[]> = {
-  "image/jpeg": [".jpg", ".jpeg"],
-  "image/png": [".png"],
-  "application/pdf": [".pdf"],
-  "audio/mpeg": [".mp3"],
-  "audio/wav": [".wav"],
-  "audio/x-wav": [".wav"],
-  "audio/wave": [".wav"],
-  "video/mp4": [".mp4"],
-};
-export const EVIDENCE_ACCEPT = ".jpg,.jpeg,.png,.pdf,.mp3,.wav,.mp4";
 
 /** SRS §1: only official @rtu.edu.ph addresses can register or log in. */
 export function validateEmail(value: string): string | null {
@@ -62,16 +47,6 @@ export function validateConfirm(password: string, confirm: string): string | nul
   if (!confirm) return "Re-enter the password.";
   if (password !== confirm) return "Passwords do not match.";
   return null;
-}
-
-export function isAllowedEvidence(file: File): boolean {
-  const name = file.name.toLowerCase();
-  const ext = name.slice(name.lastIndexOf("."));
-  if (file.type && ALLOWED_EVIDENCE[file.type]) {
-    return ALLOWED_EVIDENCE[file.type].includes(ext);
-  }
-  // Some browsers leave type empty; fall back to the extension.
-  return EVIDENCE_ACCEPT.split(",").includes(ext);
 }
 
 /** Random public tracking ID, e.g. STU-A3F1B. Ambiguous characters (0, O, 1, I) are excluded. */

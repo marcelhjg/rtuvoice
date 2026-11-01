@@ -1,0 +1,212 @@
+.
+├── AGENTS.md
+├── README.md
+├── next-env.d.ts
+├── next.config.ts
+├── package-lock.json
+├── package.json
+├── project-structure.txt
+├── public
+│   ├── fonts
+│   │   ├── README.txt
+│   │   ├── bricolage-grotesque-variable.woff2
+│   │   ├── inter-variable.woff2
+│   │   └── playfair-variable.woff2
+│   └── images
+│       ├── campus-auth.jpg
+│       ├── campus-hero.jpg
+│       └── rtu-voice-logo.png
+├── reference
+│   ├── Screenshot (404).png
+│   ├── Screenshot (405).png
+│   └── Screenshot (406).png
+├── src
+│   ├── app
+│   │   ├── (auth)
+│   │   │   ├── auth.module.css
+│   │   │   ├── forgot-password
+│   │   │   │   ├── page.tsx
+│   │   │   │   ├── reset
+│   │   │   │   │   └── page.tsx
+│   │   │   │   └── verify
+│   │   │   │       └── page.tsx
+│   │   │   ├── layout.tsx
+│   │   │   ├── loading.tsx
+│   │   │   ├── login
+│   │   │   │   ├── LoginForm.tsx
+│   │   │   │   └── page.tsx
+│   │   │   └── register
+│   │   │       ├── page.tsx
+│   │   │       └── verify
+│   │   │           └── page.tsx
+│   │   ├── (portal)
+│   │   │   ├── dashboard
+│   │   │   │   ├── dashboard.module.css
+│   │   │   │   └── page.tsx
+│   │   │   ├── error.tsx
+│   │   │   ├── history
+│   │   │   │   ├── history.module.css
+│   │   │   │   └── page.tsx
+│   │   │   ├── layout.tsx
+│   │   │   ├── loading.tsx
+│   │   │   ├── profile
+│   │   │   │   └── page.tsx
+│   │   │   ├── public-dashboard
+│   │   │   │   ├── PublicDashboard.tsx
+│   │   │   │   ├── page.tsx
+│   │   │   │   └── public.module.css
+│   │   │   ├── report
+│   │   │   │   ├── page.tsx
+│   │   │   │   ├── report.module.css
+│   │   │   │   └── submitted
+│   │   │   │       ├── Receipt.tsx
+│   │   │   │       ├── page.tsx
+│   │   │   │       └── receipt.module.css
+│   │   │   └── track
+│   │   │       ├── Tracker.tsx
+│   │   │       ├── page.tsx
+│   │   │       └── track.module.css
+│   │   ├── (site)
+│   │   │   ├── Faq.tsx
+│   │   │   ├── about
+│   │   │   │   ├── about.module.css
+│   │   │   │   └── page.tsx
+│   │   │   ├── landing.module.css
+│   │   │   ├── layout.tsx
+│   │   │   ├── loading.tsx
+│   │   │   ├── page.tsx
+│   │   │   ├── privacy
+│   │   │   │   └── page.tsx
+│   │   │   └── terms
+│   │   │       └── page.tsx
+│   │   ├── admin
+│   │   │   ├── AdminDashboard.tsx
+│   │   │   ├── admins
+│   │   │   │   ├── admins.module.css
+│   │   │   │   └── page.tsx
+│   │   │   ├── assigned
+│   │   │   │   └── page.tsx
+│   │   │   ├── complaints
+│   │   │   │   └── page.tsx
+│   │   │   ├── dashboard.module.css
+│   │   │   ├── error.tsx
+│   │   │   ├── in-progress
+│   │   │   │   └── page.tsx
+│   │   │   ├── layout.tsx
+│   │   │   ├── loading.tsx
+│   │   │   ├── page.tsx
+│   │   │   ├── profile
+│   │   │   │   └── page.tsx
+│   │   │   ├── resolved
+│   │   │   │   └── page.tsx
+│   │   │   └── statistics
+│   │   │       ├── page.tsx
+│   │   │       └── statistics.module.css
+│   │   ├── apple-icon.png
+│   │   ├── department
+│   │   │   ├── assigned
+│   │   │   │   └── page.tsx
+│   │   │   ├── complaints
+│   │   │   │   └── page.tsx
+│   │   │   ├── error.tsx
+│   │   │   ├── in-progress
+│   │   │   │   └── page.tsx
+│   │   │   ├── layout.tsx
+│   │   │   ├── loading.tsx
+│   │   │   ├── needs-attention
+│   │   │   │   └── page.tsx
+│   │   │   ├── page.tsx
+│   │   │   ├── profile
+│   │   │   │   └── page.tsx
+│   │   │   ├── resolved
+│   │   │   │   └── page.tsx
+│   │   │   └── statistics
+│   │   │       ├── page.tsx
+│   │   │       └── statistics.module.css
+│   │   ├── error.tsx
+│   │   ├── favicon.ico
+│   │   ├── global-error.tsx
+│   │   ├── icon1.png
+│   │   ├── icon2.png
+│   │   ├── layout.tsx
+│   │   ├── not-found.tsx
+│   │   └── superadmin
+│   │       ├── activity
+│   │       │   ├── activity.module.css
+│   │       │   └── page.tsx
+│   │       ├── departments
+│   │       │   └── page.tsx
+│   │       ├── error.tsx
+│   │       ├── layout.tsx
+│   │       ├── loading.tsx
+│   │       ├── page.tsx
+│   │       └── profile
+│   │           └── page.tsx
+│   ├── components
+│   │   ├── BackButton.module.css
+│   │   ├── BackButton.tsx
+│   │   ├── ComplaintDetailsDialog.tsx
+│   │   ├── ComplaintStatusDetails.tsx
+│   │   ├── Footer.module.css
+│   │   ├── Footer.tsx
+│   │   ├── Icon.tsx
+│   │   ├── Logo.module.css
+│   │   ├── Logo.tsx
+│   │   ├── Modal.module.css
+│   │   ├── Modal.tsx
+│   │   ├── NotFoundActions.tsx
+│   │   ├── ProfileForm.module.css
+│   │   ├── ProfileForm.tsx
+│   │   ├── PublicHeader.module.css
+│   │   ├── PublicHeader.tsx
+│   │   ├── RouteStates.tsx
+│   │   ├── StatusBadge.tsx
+│   │   ├── StorageNotice.tsx
+│   │   ├── Toast.tsx
+│   │   ├── admin
+│   │   │   ├── AdminShell.module.css
+│   │   │   ├── AdminShell.tsx
+│   │   │   ├── ComplaintList.tsx
+│   │   │   ├── ConsoleShell.tsx
+│   │   │   ├── StatCards.module.css
+│   │   │   ├── StatCards.tsx
+│   │   │   ├── SuperadminShell.tsx
+│   │   │   ├── admin.module.css
+│   │   │   ├── bits.tsx
+│   │   │   ├── charts.module.css
+│   │   │   ├── charts.tsx
+│   │   │   ├── modals.module.css
+│   │   │   ├── superadmin.module.css
+│   │   │   ├── superadmin.tsx
+│   │   │   └── useComplaintModals.tsx
+│   │   ├── department
+│   │   │   ├── DepartmentQueue.tsx
+│   │   │   ├── DepartmentShell.tsx
+│   │   │   └── department.module.css
+│   │   ├── forms
+│   │   │   ├── Fields.tsx
+│   │   │   ├── OtpInput.tsx
+│   │   │   └── OtpVerifyCard.tsx
+│   │   ├── legal
+│   │   │   ├── Legal.module.css
+│   │   │   └── Legal.tsx
+│   │   └── portal
+│   │       ├── LogoutDialog.tsx
+│   │       ├── PortalHeader.module.css
+│   │       ├── PortalHeader.tsx
+│   │       ├── PortalShell.module.css
+│   │       └── PortalShell.tsx
+│   ├── lib
+│   │   ├── demo-data.ts
+│   │   ├── demo-store.tsx
+│   │   ├── evidence.ts
+│   │   ├── format.ts
+│   │   ├── routes.ts
+│   │   ├── sla.ts
+│   │   ├── types.ts
+│   │   └── validation.ts
+│   └── styles
+│       └── globals.css
+└── tsconfig.json
+
+54 directories, 156 files 

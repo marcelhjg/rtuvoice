@@ -1,27 +1,37 @@
 {
-  "name": "rtu-voice-student-portal",
+  "name": "rtu-voice",
   "version": "1.0.0",
   "private": true,
-  "description": "RTU Voice Student Portal, Central Admin Console and Department Portal frontend (Next.js + TypeScript). Frontend only, demonstration data, no backend.",
+  "description": "RTU Voice Student Portal, Central Admin Console, Department Portal and Superadmin",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "lint": "eslint",
     "typecheck": "tsc --noEmit"
   },
   "engines": {
     "node": ">=20.9.0"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.117.2",
+    "bcrypt": "^6.0.0",
     "lucide-react": "^1.56.0",
     "next": "^16.4.0",
     "react": "^19.3.0",
-    "react-dom": "^19.3.0"
+    "react-dom": "^19.3.0",
+    "resend": "^6.32.0",
+    "server-only": "^0.0.1",
+    "zustand": "^5.0.15"
   },
   "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
     "@types/node": "^22.20.5",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
+    "eslint": "^9",
+    "eslint-config-next": "^16.4.0",
     "typescript": "~5.9"
   }
 }

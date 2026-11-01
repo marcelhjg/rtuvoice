@@ -4,34 +4,34 @@ import { useState } from "react";
 import { ComplaintStatusDetails } from "@/components/ComplaintStatusDetails";
 import { Icon } from "@/components/Icon";
 import { Modal } from "@/components/Modal";
-import { useDemoStore } from "@/lib/demo-store";
 import { formatMonthDay, formatTime } from "@/lib/format";
-import type { Complaint } from "@/lib/types";
+import type { TrackedComplaint } from "@/features/student/studentTypes";
 import trackStyles from "@/app/(portal)/track/track.module.css";
 
-/** Department update messages, newest first. Shared by the student (History, Status Tracker) and staff update views. */
-export function UpdateMessages({ complaint }: { complaint: Complaint }) {
-  const { session } = useDemoStore();
-  return complaint.updates.length ? (
+/** Department update messages, newest first. */
+export function UpdateMessages({ complaint, forStaff = false }: { complaint: TrackedComplaint; forStaff?: boolean }) {
+  const updates = [...complaint.updates].sort((a, b) => new Date(b.entry_at).getTime() - new Date(a.entry_at).getTime());
+
+  return updates.length ? (
     <div className={trackStyles.updateList}>
-      {[...complaint.updates].reverse().map((update, index) => (
-        <article className={trackStyles.updateEntry} key={`${update.at}-${index}`}>
+      {updates.map((update, index) => (
+        <article className={trackStyles.updateEntry} key={`${update.entry_at}-${index}`}>
           <p className={trackStyles.updateMeta}>
-            {update.department} · {formatMonthDay(update.at)}, {formatTime(update.at)}
+            {complaint.department_name ?? "Department"} · {formatMonthDay(update.entry_at)}, {formatTime(update.entry_at)}
           </p>
-          <div className={trackStyles.updateMsg}>{update.message}</div>
+          <div className={trackStyles.updateMsg}>{update.entry_message}</div>
         </article>
       ))}
     </div>
   ) : (
-    // Empty state: what to expect next (SRS: the student is emailed when the department posts an update).
+    // Empty state: what to expect next (the student is emailed when the department posts an update).
     <div className={trackStyles.updateEmpty} role="status">
       <Icon name="mail" size={26} strokeWidth={1.6} />
       <p className={trackStyles.updateEmptyTitle}>No update from the department yet.</p>
       <p className={trackStyles.updateEmptyText}>
-        {session?.role === "student"
-          ? "You'll get an email when the department posts one. You can also check back here anytime."
-          : "Messages appear here as soon as the department posts one."}
+        {forStaff
+          ? "Messages appear here as soon as the department posts one."
+          : "You'll get an email when the department posts one. You can also check back here anytime."}
       </p>
     </div>
   );
@@ -45,10 +45,12 @@ export function ComplaintDetailsDialog({
   complaint,
   onClose,
   showUpdatesButton = true,
+  forStaff = false,
 }: {
-  complaint: Complaint;
+  complaint: TrackedComplaint;
   onClose: () => void;
   showUpdatesButton?: boolean;
+  forStaff?: boolean;
 }) {
   const [showUpdates, setShowUpdates] = useState(false);
   const close = () => {
@@ -59,7 +61,12 @@ export function ComplaintDetailsDialog({
   return (
     <>
       <Modal open={!showUpdates} onClose={close} align="left" size="lg" variant="sheet" title="Complaint details">
-        <ComplaintStatusDetails complaint={complaint} onViewUpdate={showUpdatesButton ? () => setShowUpdates(true) : undefined} compact />
+        <ComplaintStatusDetails
+          complaint={complaint}
+          onViewUpdate={showUpdatesButton ? () => setShowUpdates(true) : undefined}
+          compact
+          forStaff={forStaff}
+        />
       </Modal>
       {showUpdatesButton ? (
         <Modal
@@ -74,7 +81,7 @@ export function ComplaintDetailsDialog({
             </button>
           }
         >
-          <UpdateMessages complaint={complaint} />
+          <UpdateMessages complaint={complaint} forStaff={forStaff} />
           {complaint.updates.length ? (
             <div className={trackStyles.updateNote}>
               <Icon name="info" size={20} />
@@ -91,7 +98,7 @@ export function ComplaintDetailsDialog({
  * Staff "View updates" (admin and department rows): opens straight to the department's
  * update messages, in the same pop-up students see, without opening the details first.
  */
-export function ComplaintUpdatesDialog({ complaint, onClose }: { complaint: Complaint; onClose: () => void }) {
+export function ComplaintUpdatesDialog({ complaint, onClose }: { complaint: TrackedComplaint; onClose: () => void }) {
   return (
     <Modal
       open
@@ -105,7 +112,7 @@ export function ComplaintUpdatesDialog({ complaint, onClose }: { complaint: Comp
         </button>
       }
     >
-      <UpdateMessages complaint={complaint} />
+      <UpdateMessages complaint={complaint} forStaff />
       {complaint.updates.length ? (
         <div className={trackStyles.updateNote}>
           <Icon name="info" size={20} />
