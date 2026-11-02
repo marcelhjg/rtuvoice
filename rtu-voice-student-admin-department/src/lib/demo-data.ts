@@ -99,12 +99,13 @@ interface Seed {
   rej?: string; // rejection reason
   re?: { from: Department; after: number; reason: string }; // reassignment, hours after first assignment
   by?: string; // admin who acted (default Central Admin)
+  returned?: { by: Department; at: string; reason: string };
 }
 
 const SEEDS: Seed[] = [
   // ---- Pending validation queue (Figma: admin dashboard) ----
   { id: "STU-C81QF", t: "Leaking ceiling near Room 305", c: "Facilities & Infrastructure", s: "Pending", d: 0.6, desc: "Water drips from the ceiling near Room 305 whenever it rains. The floor gets slippery and the seats near the window are always wet.", files: [{ name: "leak-photo.jpg", size: 1_887_437, type: "image/jpeg" }] },
-  { id: "STU-9PZ2A", t: "Delay in releasing a requested school document", c: "Administrative", s: "Pending", d: 0.9, desc: "A certificate of enrollment requested two weeks ago has not been released and the window could not give a release date." },
+  { id: "STU-9PZ2A", t: "Delay in releasing a requested school document", c: "Administrative", s: "Pending", d: 4.5, mine: true, desc: "A certificate of enrollment requested two weeks ago has not been released and the window could not give a release date.", returned: { by: "Facilities Office", at: new Date("2026-10-29T10:12:00+08:00").toISOString(), reason: "This is a registrar concern (document release), not a facilities matter." } },
   { id: "STU-T3D0K", t: "Unclear schedule changes for a major subject", c: "Academic", s: "Pending", d: 1.4, desc: "Class schedule changes for a major subject were announced only in a group chat the night before, and several students missed the class." },
   { id: "STU-H66LM", t: "Concern about an organization event process", c: "Student Life", s: "Pending", d: 1.8, desc: "The approval steps for organization events changed this semester but no updated guide was posted, so event requests are being returned." },
   { id: "STU-Q20WE", t: "Free ads posted on the campus page", c: "Others", s: "Pending", d: 2.6, desc: "Someone keeps posting advertisements for an online store in the comments of the campus page." },
@@ -193,6 +194,12 @@ export function buildSeed(now: number): { complaints: Complaint[]; activity: Act
       timeline.push({ status: "Rejected", label: "Rejected by an administrator", at });
       log({ at, actor, actorRole: "Admin", action: "Rejected", trackingId: s.id, detail: s.rej });
       return c;
+    }
+    if (s.returned) {
+      c.returnedBy = s.returned.by;
+      c.returnedAt = s.returned.at;
+      c.returnReason = s.returned.reason;
+      log({ at: s.returned.at, actor: s.returned.by, actorRole: "Department", action: "Returned", trackingId: s.id, department: s.returned.by, detail: s.returned.reason });
     }
     if (s.s === "Pending" || !s.dept || !s.p) return c;
 

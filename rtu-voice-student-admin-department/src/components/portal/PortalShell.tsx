@@ -10,6 +10,7 @@ import { Logo } from "../Logo";
 import { LogoutDialog } from "./LogoutDialog";
 import { PortalHeader } from "./PortalHeader";
 import { useToast } from "../Toast";
+import { ShellSkeleton, useMinimumSkeletonDisplay } from "../Skeletons";
 import styles from "./PortalShell.module.css";
 
 const NAV: { href: string; label: string; icon: IconName }[] = [
@@ -26,6 +27,7 @@ export function PortalShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const toast = useToast();
+  const minimumSkeletonElapsed = useMinimumSkeletonDisplay();
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmLogout, setConfirmLogout] = useState(false);
@@ -78,13 +80,7 @@ export function PortalShell({ children }: { children: ReactNode }) {
     router.replace("/login");
   }, [logout, router, toast]);
 
-  if (!ready || !session || session.role !== "student") {
-    return (
-      <div className={styles.loading} aria-busy="true">
-        <span className="spinner" /> Loading…
-      </div>
-    );
-  }
+  if (!minimumSkeletonElapsed || !ready || !session || session.role !== "student") return <ShellSkeleton variant="student" />;
 
   return (
     <>

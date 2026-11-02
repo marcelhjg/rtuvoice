@@ -2,8 +2,9 @@
 
 import { useState, type FormEvent, type ReactNode } from "react";
 import { ComplaintDetailsDialog, ComplaintUpdatesDialog } from "@/components/ComplaintDetailsDialog";
+import { toTrackedComplaint } from "@/features/student/demoComplaintAdapter";
 import { useDemoStore } from "@/lib/demo-store";
-import type { Complaint, Department } from "@/lib/types";
+import type { Complaint, Department, Status } from "@/lib/types";
 import { Icon } from "../Icon";
 import { Modal } from "../Modal";
 import { useToast } from "../Toast";
@@ -46,8 +47,20 @@ export function useComplaintModals() {
 
   let node: ReactNode = null;
   if (open && c) {
+    const trackedComplaint = toTrackedComplaint(c);
     // Tracking ID → details only (no "View updates" inside: that lives on the row).
-    if (open.kind === "details") node = <ComplaintDetailsDialog key={`details-${c.trackingId}`} complaint={c} onClose={close} showUpdatesButton={false} />;
+    if (open.kind === "details")
+      node = (
+        <ComplaintDetailsDialog
+          key={`details-${c.trackingId}`}
+          complaint={trackedComplaint}
+          onClose={close}
+          showUpdatesButton={false}
+          allowEvidenceActions={false}
+          forStaff
+          returnDetails={c.returnedBy && c.returnedAt && c.returnReason ? { department: c.returnedBy, at: c.returnedAt, reason: c.returnReason } : undefined}
+        />
+      );
     if (open.kind === "assign")
       node = (
         <AssignModal
@@ -92,7 +105,7 @@ export function useComplaintModals() {
         />
       );
     // Row "View updates" → the updates view directly, not the details first.
-    if (open.kind === "updates") node = <ComplaintUpdatesDialog key={`updates-${c.trackingId}`} complaint={c} onClose={close} />;
+    if (open.kind === "updates") node = <ComplaintUpdatesDialog key={`updates-${c.trackingId}`} complaint={trackedComplaint} onClose={close} />;
   }
 
   return { ...api, modals: node };

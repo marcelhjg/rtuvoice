@@ -11,6 +11,7 @@ import { Logo } from "../Logo";
 import { LogoutDialog } from "../portal/LogoutDialog";
 import { PortalHeader } from "../portal/PortalHeader";
 import { useToast } from "../Toast";
+import { ShellSkeleton, useMinimumSkeletonDisplay } from "../Skeletons";
 import styles from "./AdminShell.module.css";
 
 export interface ConsoleNavItem {
@@ -40,6 +41,7 @@ export function ConsoleShell({ roles, nav, homeHref, profileHref, consoleLabel, 
   const router = useRouter();
   const pathname = usePathname();
   const toast = useToast();
+  const minimumSkeletonElapsed = useMinimumSkeletonDisplay();
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmLogout, setConfirmLogout] = useState(false);
@@ -90,13 +92,7 @@ export function ConsoleShell({ roles, nav, homeHref, profileHref, consoleLabel, 
     router.replace("/login");
   }, [logout, router, toast]);
 
-  if (!ready || !session || !roles.includes(session.role)) {
-    return (
-      <div className={styles.loading} aria-busy="true">
-        <span className="spinner" /> Loading…
-      </div>
-    );
-  }
+  if (!minimumSkeletonElapsed || !ready || !session || !roles.includes(session.role)) return <ShellSkeleton variant="console" />;
 
   return (
     <>

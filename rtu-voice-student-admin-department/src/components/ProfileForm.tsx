@@ -8,6 +8,13 @@ import { useDemoStore } from "@/lib/demo-store";
 import { passwordChecks, validateConfirm, validateName, validateNewPassword } from "@/lib/validation";
 import styles from "./ProfileForm.module.css";
 
+const ROLE_LABELS = {
+  student: "Student Portal",
+  admin: "Central Admin Console",
+  department: "Department Portal",
+  superadmin: "Super Admin Console",
+} as const;
+
 /** Manage Profile (Figma: MANAGE PROFILE). Shared by the student and admin portals. */
 export function ProfileForm() {
   const { session, updateProfile } = useDemoStore();
@@ -28,6 +35,7 @@ export function ProfileForm() {
   }, [session]);
 
   const accountChanged = !!session && (firstName.trim() !== session.firstName || lastName.trim() !== session.lastName);
+  const fullName = [firstName, lastName].filter(Boolean).join(" ") || "Your profile";
 
   const saveAccount = (e: FormEvent) => {
     e.preventDefault();
@@ -94,159 +102,167 @@ export function ProfileForm() {
   };
 
   return (
-    <div className="container">
+    <div className={`container ${styles.page}`}>
       <div className="page-head">
         <h1 className="page-title">Manage Profile</h1>
-        <p className="page-subtitle" style={{ fontSize: 16 }}>
-          Your account details and password.
-        </p>
+        <p className="page-subtitle">Your account details and password.</p>
       </div>
 
-      <div className={styles.grid}>
-        <form className={styles.card} onSubmit={saveAccount} noValidate aria-labelledby="account-title">
-          <div className={styles.cardHeading}>
-            <h2 id="account-title" className={styles.cardTitle}>
-              Account
-            </h2>
+      <section className={styles.grid} aria-labelledby="profile-name">
+        <div className={styles.card}>
+          <header className={styles.profileHeader}>
+            <span className={styles.avatar} aria-hidden="true">
+              <Icon name="user" size={26} strokeWidth={1.7} />
+            </span>
+            <div className={styles.profileIdentity}>
+              <h2 id="profile-name" className={styles.profileName}>{fullName}</h2>
+              <p className={styles.profileRole}>{session ? ROLE_LABELS[session.role] : "RTU Voice"}</p>
+            </div>
             {!editingAccount ? (
               <button type="button" className={styles.editButton} onClick={() => setEditingAccount(true)}>
-                <Icon name="pencil" size={18} /> Edit Profile
+                <Icon name="pencil" size={16} /> Edit Profile
               </button>
             ) : null}
-          </div>
-          <div className={styles.fields}>
-            <div className={styles.row2}>
-              <TextField
-                label="First Name"
-                markRequired
-                autoComplete="given-name"
-                value={firstName}
-                disabled={!editingAccount || savingAccount}
-                onChange={(e) => {
-                  setFirstName(e.target.value);
-                  if (accErrors.firstName) setAccErrors((x) => ({ ...x, firstName: null }));
-                }}
-                error={accErrors.firstName}
-                inputClassName={styles.input}
-              />
-              <TextField
-                label="Last Name"
-                markRequired
-                autoComplete="family-name"
-                value={lastName}
-                disabled={!editingAccount || savingAccount}
-                onChange={(e) => {
-                  setLastName(e.target.value);
-                  if (accErrors.lastName) setAccErrors((x) => ({ ...x, lastName: null }));
-                }}
-                error={accErrors.lastName}
-                inputClassName={styles.input}
-              />
-            </div>
-            <div className="field">
-              <label htmlFor="profile-email" className="field-label">
-                RTU email
-              </label>
-              <div className="input-wrap">
-                <input id="profile-email" className={`input ${styles.locked}`} value={session?.email ?? ""} readOnly aria-describedby="email-hint" />
-                <Icon name="lock" size={20} className="input-lock" />
-              </div>
-              <span id="email-hint" className="field-hint">
-                Your email cannot be changed.
-              </span>
-            </div>
-          </div>
-          {editingAccount ? (
-            <div className={styles.actions}>
-              <button type="button" className={`btn btn-soft ${styles.cancel}`} onClick={cancelAccountEdit} disabled={savingAccount}>
-                Cancel
-              </button>
-              <button type="submit" className={`btn btn-primary ${styles.save}`} disabled={savingAccount}>
-                {savingAccount ? <span className="spinner" /> : null}
-                Save Changes
-              </button>
-            </div>
-          ) : null}
-        </form>
+          </header>
 
-        <form className={styles.card} onSubmit={savePassword} noValidate aria-labelledby="password-title">
-          <div className={styles.cardHeading}>
-            <h2 id="password-title" className={styles.cardTitle}>
-              Change Password
-            </h2>
-            {!editingPassword ? (
-              <button type="button" className={styles.editButton} onClick={() => setEditingPassword(true)}>
-                <Icon name="pencil" size={18} /> Edit Password
-              </button>
-            ) : null}
-          </div>
-          <div className={styles.fields}>
-            <PasswordField
-              label="Current Password"
-              markRequired
-              autoComplete="current-password"
-              placeholder="Enter current password"
-              value={current}
-              disabled={!editingPassword || savingPw}
-              onChange={(e) => {
-                setCurrent(e.target.value);
-                if (pwErrors.current) setPwErrors((x) => ({ ...x, current: null }));
-              }}
-              error={pwErrors.current}
-              inputClassName={styles.input}
-            />
-            <PasswordField
-              label="New Password"
-              markRequired
-              autoComplete="new-password"
-              placeholder="At least 8 characters"
-              value={nextPw}
-              disabled={!editingPassword || savingPw}
-              onChange={(e) => {
-                setNextPw(e.target.value);
-                if (pwErrors.next) setPwErrors((x) => ({ ...x, next: null }));
-              }}
-              error={pwErrors.next}
-              inputClassName={styles.input}
-            />
-            {nextPw ? (
-              <ul className={styles.reqs} aria-label="Password requirements">
-                {passwordChecks(nextPw).map((c) => (
-                  <li key={c.label} className={c.ok ? styles.reqOk : undefined}>
-                    <Icon name={c.ok ? "check" : "x"} size={12} strokeWidth={2.6} />
-                    {c.label}
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-            <PasswordField
-              label="Confirm New Password"
-              markRequired
-              autoComplete="new-password"
-              placeholder="Re-enter new password"
-              value={confirm}
-              disabled={!editingPassword || savingPw}
-              onChange={(e) => {
-                setConfirm(e.target.value);
-                if (pwErrors.confirm) setPwErrors((x) => ({ ...x, confirm: null }));
-              }}
-              error={pwErrors.confirm}
-              inputClassName={styles.input}
-            />
-          </div>
-          {editingPassword ? (
-            <div className={styles.actions}>
-              <button type="button" className={`btn btn-soft ${styles.cancel}`} onClick={cancelPasswordEdit} disabled={savingPw}>
-                Cancel
-              </button>
-              <button type="submit" className={`btn btn-outline ${styles.save}`} disabled={savingPw}>
-                {savingPw ? <span className="spinner" /> : null}
-                Save Changes
-              </button>
+          <form className={styles.accountForm} onSubmit={saveAccount} noValidate aria-label="Account details">
+            <div className={styles.fields}>
+              <div className={styles.row2}>
+                <TextField
+                  label="First Name"
+                  markRequired
+                  autoComplete="given-name"
+                  value={firstName}
+                  disabled={!editingAccount || savingAccount}
+                  onChange={(e) => {
+                    setFirstName(e.target.value);
+                    if (accErrors.firstName) setAccErrors((x) => ({ ...x, firstName: null }));
+                  }}
+                  error={accErrors.firstName}
+                  inputClassName={styles.input}
+                />
+                <TextField
+                  label="Last Name"
+                  markRequired
+                  autoComplete="family-name"
+                  value={lastName}
+                  disabled={!editingAccount || savingAccount}
+                  onChange={(e) => {
+                    setLastName(e.target.value);
+                    if (accErrors.lastName) setAccErrors((x) => ({ ...x, lastName: null }));
+                  }}
+                  error={accErrors.lastName}
+                  inputClassName={styles.input}
+                />
+              </div>
+              <div className="field">
+                <label htmlFor="profile-email" className="field-label">
+                  RTU email
+                </label>
+                <div className="input-wrap">
+                  <input id="profile-email" className={`input ${styles.locked}`} value={session?.email ?? ""} readOnly aria-describedby="email-hint" />
+                  <Icon name="lock" size={18} className="input-lock" />
+                </div>
+                <span id="email-hint" className="field-hint">
+                  Your email cannot be changed.
+                </span>
+              </div>
             </div>
-          ) : null}
-        </form>
-      </div>
+            {editingAccount ? (
+              <div className={styles.actions}>
+                <button type="button" className={`btn btn-soft ${styles.cancel}`} onClick={cancelAccountEdit} disabled={savingAccount}>
+                  Cancel
+                </button>
+                <button type="submit" className={`btn btn-primary ${styles.save}`} disabled={savingAccount}>
+                  {savingAccount ? <span className="spinner" /> : null}
+                  Save Changes
+                </button>
+              </div>
+            ) : null}
+          </form>
+
+          <form className={styles.passwordForm} onSubmit={savePassword} noValidate aria-labelledby="password-title">
+            <div className={styles.passwordSummary}>
+              <div className={styles.passwordIntro}>
+                <h3 id="password-title" className={styles.passwordTitle}>Password</h3>
+                <p className={styles.passwordHint}>Keep your account secure by updating your password.</p>
+              </div>
+              {!editingPassword ? (
+                <button type="button" className={styles.changeButton} onClick={() => setEditingPassword(true)}>
+                  Change password
+                </button>
+              ) : null}
+            </div>
+            {editingPassword ? (
+              <>
+                <div className={styles.passwordFields}>
+                  <PasswordField
+                    label="Current Password"
+                    markRequired
+                    autoComplete="current-password"
+                    placeholder="Enter current password"
+                    value={current}
+                    disabled={!editingPassword || savingPw}
+                    onChange={(e) => {
+                      setCurrent(e.target.value);
+                      if (pwErrors.current) setPwErrors((x) => ({ ...x, current: null }));
+                    }}
+                    error={pwErrors.current}
+                    inputClassName={styles.input}
+                  />
+                  <PasswordField
+                    label="New Password"
+                    markRequired
+                    autoComplete="new-password"
+                    placeholder="At least 8 characters"
+                    value={nextPw}
+                    disabled={!editingPassword || savingPw}
+                    onChange={(e) => {
+                      setNextPw(e.target.value);
+                      if (pwErrors.next) setPwErrors((x) => ({ ...x, next: null }));
+                    }}
+                    error={pwErrors.next}
+                    inputClassName={styles.input}
+                  />
+                  {nextPw ? (
+                    <ul className={styles.reqs} aria-label="Password requirements">
+                      {passwordChecks(nextPw).map((c) => (
+                        <li key={c.label} className={c.ok ? styles.reqOk : undefined}>
+                          <Icon name={c.ok ? "check" : "x"} size={12} strokeWidth={2.6} />
+                          {c.label}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                  <PasswordField
+                    label="Confirm New Password"
+                    markRequired
+                    autoComplete="new-password"
+                    placeholder="Re-enter new password"
+                    value={confirm}
+                    disabled={!editingPassword || savingPw}
+                    onChange={(e) => {
+                      setConfirm(e.target.value);
+                      if (pwErrors.confirm) setPwErrors((x) => ({ ...x, confirm: null }));
+                    }}
+                    error={pwErrors.confirm}
+                    inputClassName={styles.input}
+                  />
+                </div>
+                <div className={styles.actions}>
+                  <button type="button" className={`btn btn-soft ${styles.cancel}`} onClick={cancelPasswordEdit} disabled={savingPw}>
+                    Cancel
+                  </button>
+                  <button type="submit" className={`btn btn-outline ${styles.save}`} disabled={savingPw}>
+                    {savingPw ? <span className="spinner" /> : null}
+                    Save Changes
+                  </button>
+                </div>
+              </>
+            ) : null}
+          </form>
+        </div>
+      </section>
     </div>
   );
 }

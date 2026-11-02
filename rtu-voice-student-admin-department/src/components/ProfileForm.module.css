@@ -1,40 +1,77 @@
-/* Manage Profile — Figma frame "MANAGE PROFILE" (261:405) */
+.page :global(.page-head) {
+  padding-top: 24px;
+  padding-bottom: 12px;
+}
+.page :global(.page-title) {
+  font-size: 32px;
+  line-height: 1.15;
+}
+.page :global(.page-subtitle) {
+  margin-top: 5px;
+  font-size: 15px;
+}
 .grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 30px;
-  margin: 0 -8px 72px;
-  align-items: stretch;
+  width: min(100%, 920px);
+  margin: 0 0 8px;
 }
 .card {
   display: flex;
   flex-direction: column;
-  min-height: 527px;
-  padding: 52px 38px 38px;
+  padding: 20px 36px 0;
   background: var(--white);
-  border: 3px solid #d8d4c6;
-  border-radius: 30px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+  border: 1px solid #d8dce6;
+  border-radius: 20px;
+  box-shadow: 0 4px 16px rgba(15, 31, 74, 0.08);
 }
-.cardTitle {
-  font-family: var(--font-inter);
-  font-weight: 700;
-  font-size: 36px;
-  line-height: 1.2;
-}
-.cardHeading {
+.profileHeader {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  gap: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e8ebf1;
 }
-.editButton {
+.avatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border: 1px solid var(--gold);
+  border-radius: 50%;
+  background: var(--navy);
+  color: var(--white);
+}
+.profileIdentity {
+  min-width: 0;
+  margin-right: auto;
+}
+.profileName {
+  overflow: hidden;
+  margin: 0;
+  color: var(--navy);
+  font-family: var(--font-inter);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.profileRole {
+  margin: 3px 0 0;
+  color: var(--text-muted);
+  font-family: var(--font-inter);
+  font-size: 13px;
+  line-height: 1.35;
+}
+.editButton,
+.changeButton {
   display: inline-flex;
+  flex: none;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 7px;
   min-height: 42px;
-  padding: 0 12px;
+  padding: 0 14px;
   border: 1px solid var(--blue);
   border-radius: 8px;
   background: var(--white);
@@ -45,72 +82,114 @@
   white-space: nowrap;
   cursor: pointer;
 }
-.editButton:hover {
+.editButton:hover,
+.changeButton:hover {
   background: var(--surface-soft);
 }
-.editButton:focus-visible {
+.editButton:focus-visible,
+.changeButton:focus-visible {
   outline: 2px solid var(--blue);
   outline-offset: 2px;
 }
+.accountForm {
+  padding: 10px 0 12px;
+}
 .fields {
-  margin-top: 40px;
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: 8px;
 }
 .row2 {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
 }
 .input {
-  min-height: 52px;
+  min-height: 44px;
+  height: 44px;
   background: var(--input-bg);
-  border-color: #c6c6c6;
-  font-size: 16px;
+  border-color: #c6cbd6;
+  font-size: 15px;
 }
 .input:disabled {
   cursor: not-allowed;
-  opacity: 0.75;
+  opacity: 1;
+  background: #f7f8fb;
+  border-color: #dce1ea;
+  color: #4b5563;
 }
 .locked {
-  background: var(--surface-soft);
-  border-color: #7c84a3;
-  color: #555;
-  font-size: 16px;
-  min-height: 52px;
+  min-height: 44px;
+  background: #f5f6f9;
+  border-color: #dce1ea;
+  color: #4b5563;
+  font-size: 15px;
   cursor: not-allowed;
 }
 .locked:focus {
   box-shadow: none;
-  border-color: #7c84a3;
+  border-color: #dce1ea;
+}
+.passwordForm {
+  margin: 0 -36px;
+  padding: 0 36px;
+  border-top: 1px solid #e8ebf1;
+  background: #f8f9fc;
+  border-radius: 0 0 19px 19px;
+}
+.passwordSummary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  min-height: 62px;
+}
+.passwordIntro {
+  min-width: 0;
+}
+.passwordTitle {
+  margin: 0;
+  color: var(--navy);
+  font-family: var(--font-inter);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+.passwordHint {
+  margin: 3px 0 0;
+  color: var(--text-muted);
+  font-family: var(--font-inter);
+  font-size: 13px;
+  line-height: 1.4;
+}
+.passwordFields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 14px;
+  padding: 0 0 12px;
+}
+.passwordFields > :last-child {
+  grid-column: 1 / -1;
 }
 .actions {
-  margin-top: auto;
-  padding-top: 36px;
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
+  gap: 10px;
+  margin-top: 12px;
 }
-.save {
-  min-width: 212px;
-  min-height: 52px;
-  border-radius: 8px;
-  font-family: var(--font-inter);
-  font-weight: 700;
-  font-size: 18px;
-}
+.save,
 .cancel {
-  min-width: 120px;
-  min-height: 52px;
+  min-width: 132px;
+  min-height: 44px;
   border-radius: 8px;
   font-family: var(--font-inter);
+  font-size: 14px;
   font-weight: 600;
-  font-size: 16px;
 }
 .reqs {
+  grid-column: 1 / -1;
   list-style: none;
-  margin: -10px 0 0;
+  margin: -5px 0 0;
   padding: 0;
   display: flex;
   flex-wrap: wrap;
@@ -127,38 +206,79 @@
   color: var(--resolved-fg);
 }
 
-@media (max-width: 1000px) {
+@media (max-width: 640px) {
+  .page :global(.page-head) {
+    padding-top: 24px;
+    padding-bottom: 16px;
+  }
+  .page :global(.page-title) {
+    font-size: 28px;
+    line-height: 32px;
+  }
+  .page :global(.page-subtitle) {
+    font-size: 14px;
+  }
   .grid {
-    grid-template-columns: 1fr;
-    margin: 0 0 56px;
+    margin-bottom: 8px;
   }
   .card {
-    min-height: 0;
+    padding: 18px 20px 0;
+    border-radius: 16px;
   }
-}
-@media (max-width: 560px) {
-  .card {
-    padding: 30px 18px 24px;
-    border-radius: 22px;
+  .profileHeader {
+    flex-wrap: wrap;
+    gap: 12px;
+    padding-bottom: 18px;
   }
-  .cardTitle {
-    font-size: 30px;
+  .avatar {
+    width: 46px;
+    height: 46px;
   }
-  .cardHeading {
-    align-items: flex-start;
+  .profileIdentity {
+    flex: 1;
+  }
+  .profileName {
+    font-size: 18px;
+  }
+  .profileRole {
+    font-size: 12px;
+  }
+  .editButton {
+    width: 100%;
+  }
+  .accountForm {
+    padding: 18px 0;
+  }
+  .row2,
+  .passwordFields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .passwordFields > :last-child,
+  .reqs {
+    grid-column: auto;
+  }
+  .passwordForm {
+    margin: 0 -20px;
+    padding: 0 20px;
+    border-radius: 0 0 15px 15px;
+  }
+  .passwordSummary {
+    align-items: stretch;
     flex-direction: column;
+    justify-content: center;
+    gap: 12px;
+    padding: 16px 0;
   }
-  .fields {
-    margin-top: 26px;
+  .changeButton {
+    width: 100%;
   }
-  .row2 {
-    grid-template-columns: 1fr;
+  .passwordFields {
+    gap: 14px;
+  }
+  .actions {
+    flex-direction: column-reverse;
   }
   .actions > button {
-    flex: 1;
-    min-width: 0;
-  }
-  .save {
-    width: auto;
+    width: 100%;
   }
 }

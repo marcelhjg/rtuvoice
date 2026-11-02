@@ -26,6 +26,10 @@
   background: var(--rejected-bg);
   color: var(--rejected-fg);
 }
+.aReturned {
+  background: #fff4d6;
+  color: #79550a;
+}
 .aStatus {
   background: var(--progress-bg);
   color: var(--progress-fg);

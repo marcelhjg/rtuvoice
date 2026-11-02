@@ -95,6 +95,7 @@ interface DemoStore extends PersistedState {
   assignComplaint(trackingId: string, department: Department): Priority;
   rejectComplaint(trackingId: string, reason: string): void;
   reassignComplaint(trackingId: string, department: Department, reason: string): boolean;
+  returnToAdmin(complaintId: string, departmentId: Department, reason: string): boolean;
   // Department-head actions (only for complaints assigned to the signed-in department)
   /** Complaints assigned to the signed-in department (approved ones only; empty for other roles). */
   departmentComplaints: Complaint[];
@@ -151,9 +152,49 @@ function load(): { state: PersistedState; problem: StorageProblem } {
     const parsed = JSON.parse(raw) as Partial<PersistedState>;
     if (Array.isArray(parsed.complaints) && Array.isArray(parsed.activity)) {
       // Older demo data logged "Update posted"; the Activity Log only keeps the SRS actions now.
-      const activity = parsed.activity.filter((a) => (ACTIVITY_ACTIONS as readonly string[]).includes(a.action));
+      const seenActivityIds = new Set<string>();
+      const activity = parsed.activity
+        .filter((a) => (ACTIVITY_ACTIONS as readonly string[]).includes(a.action))
+        .map((entry, index) => {
+          let id = entry.id;
+          if (seenActivityIds.has(id)) {
+            id = `${id}-legacy-${index}`;
+            while (seenActivityIds.has(id)) id += "-";
+          }
+          seenActivityIds.add(id);
+          return id === entry.id ? entry : { ...entry, id };
+        });
       // The "Other" category was renamed "Others" when the category list grew to nine.
-      const complaints = parsed.complaints.map((c) => ((c.category as string) === "Other" ? { ...c, category: "Others" as const } : c));
+      let complaints = parsed.complaints.map((c) => ((c.category as string) === "Other" ? { ...c, category: "Others" as const } : c));
+      const seededReturn = fresh();
+      const returnedExample = seededReturn.complaints.find((c) => c.trackingId === "STU-9PZ2A");
+      if (returnedExample) {
+        const existing = complaints.find((c) => c.trackingId === returnedExample.trackingId);
+        if (!existing) {
+          complaints = [...complaints, returnedExample];
+        } else if (existing.status === "Pending" && (!existing.returnedAt || existing.returnedAt === returnedExample.returnedAt)) {
+          const returnedAt = existing.returnedAt ?? returnedExample.returnedAt;
+          const submittedAt = returnedAt === returnedExample.returnedAt && returnedAt && Date.parse(existing.submittedAt) >= Date.parse(returnedAt)
+            ? new Date(Date.parse(returnedAt) - 86_400_000).toISOString()
+            : existing.submittedAt;
+          complaints = complaints.map((c) => c.trackingId === returnedExample.trackingId
+            ? {
+              ...c,
+              mine: true,
+              ownerEmail: DEMO_STUDENT.email,
+              submittedAt,
+              returnedBy: c.returnedBy ?? returnedExample.returnedBy,
+              returnedAt,
+              returnReason: c.returnReason ?? returnedExample.returnReason,
+              timeline: c.timeline.map((event, index) => index === 0 && event.status === "Pending" ? { ...event, at: submittedAt } : event),
+            }
+            : c);
+        }
+        const returnedActivity = seededReturn.activity.find((a) => a.trackingId === returnedExample.trackingId && a.action === "Returned");
+        if (returnedActivity && !activity.some((a) => a.trackingId === returnedExample.trackingId && a.action === "Returned")) {
+          activity.unshift({ ...returnedActivity, id: `seed-return-${returnedExample.trackingId}` });
+        }
+      }
       return { state: { ...fresh(), ...parsed, complaints, activity }, problem: null };
     }
   } catch {
@@ -457,6 +498,35 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
     [state.complaints, sessionDept],
   );
 
+  const returnToAdmin = useCallback(
+    (complaintId: string, departmentId: Department, reason: string) => {
+      const target = departmentComplaints.find((c) => c.trackingId === complaintId);
+      const text = reason.trim();
+      if (!sessionDept || sessionDept !== departmentId || !target || target.status === "Resolved" || !text) return false;
+      const at = new Date().toISOString();
+      patch(
+        complaintId,
+        (c) => ({
+          ...c,
+          status: "Pending",
+          department: undefined,
+          priority: undefined,
+          assignedAt: undefined,
+          acknowledgedAt: undefined,
+          resolvedAt: undefined,
+          returnedBy: departmentId,
+          returnedAt: at,
+          returnReason: text,
+          timeline: [...c.timeline, { status: "Pending", label: "Returned to admin for reassignment", at }],
+        }),
+        { action: "Returned", trackingId: complaintId, department: departmentId, detail: text },
+        { actor: departmentId, actorRole: "Department" },
+      );
+      return true;
+    },
+    [departmentComplaints, patch, sessionDept],
+  );
+
   const updateDepartmentStatus = useCallback(
     (trackingId: string, status: DepartmentStatus) => {
       const target = departmentComplaints.find((c) => c.trackingId === trackingId);
@@ -696,6 +766,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       assignComplaint,
       rejectComplaint,
       reassignComplaint,
+      returnToAdmin,
       departmentComplaints,
       updateDepartmentStatus,
       addDepartmentUpdate,
@@ -710,7 +781,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       reactivateDepartment,
       resetDemo,
     }),
-    [state, ready, storageProblem, myComplaints, publicConcerns, login, logout, isAdminEmail, startSignup, verifyCode, completeSignup, reissueOtp, startReset, markResetVerified, finishReset, updateProfile, submitComplaint, findMyComplaint, findComplaint, assignComplaint, rejectComplaint, reassignComplaint, departmentComplaints, updateDepartmentStatus, addDepartmentUpdate, activeDepartments, loginBlockedReason, createStaffAccount, deactivateStaffAccount, reactivateStaffAccount, addDepartment, renameDepartment, deactivateDepartment, reactivateDepartment, resetDemo],
+    [state, ready, storageProblem, myComplaints, publicConcerns, login, logout, isAdminEmail, startSignup, verifyCode, completeSignup, reissueOtp, startReset, markResetVerified, finishReset, updateProfile, submitComplaint, findMyComplaint, findComplaint, assignComplaint, rejectComplaint, reassignComplaint, departmentComplaints, returnToAdmin, updateDepartmentStatus, addDepartmentUpdate, activeDepartments, loginBlockedReason, createStaffAccount, deactivateStaffAccount, reactivateStaffAccount, addDepartment, renameDepartment, deactivateDepartment, reactivateDepartment, resetDemo],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

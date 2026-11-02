@@ -4,6 +4,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { LANDING_PREVIEW } from "@/lib/demo-data";
 import type { PublicConcern } from "@/lib/types";
 import { Faq } from "./Faq";
+import { EVIDENCE_GUIDANCE, HowToSubmitSection } from "./HowToSubmitSection";
 import styles from "./landing.module.css";
 
 const STEPS: { icon: IconName; title: string; text: string }[] = [
@@ -88,6 +89,8 @@ export default function LandingPage() {
         </ol>
       </section>
 
+      <HowToSubmitSection />
+
       {/* What can you raise */}
       <section className={styles.raise} aria-labelledby="raise-title">
         <h2 id="raise-title" className={`${styles.sectionTitle} ${styles.navyTitle}`}>
@@ -103,7 +106,7 @@ export default function LandingPage() {
             </li>
           ))}
         </ul>
-        <p className={styles.raiseNote}>Add evidence as JPG/PNG, PDF, MP3/WAV, or MP4, up to 5 MB per submission.</p>
+        <p className={styles.raiseNote}>Add evidence as {EVIDENCE_GUIDANCE}</p>
       </section>
 
       {/* Privacy */}

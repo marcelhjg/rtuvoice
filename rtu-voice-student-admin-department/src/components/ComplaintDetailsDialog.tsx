@@ -7,6 +7,7 @@ import { Modal } from "@/components/Modal";
 import { formatMonthDay, formatTime } from "@/lib/format";
 import type { TrackedComplaint } from "@/features/student/studentTypes";
 import trackStyles from "@/app/(portal)/track/track.module.css";
+import type { ReturnedDetails } from "@/components/admin/ReturnedInfo";
 
 /** Department update messages, newest first. */
 export function UpdateMessages({ complaint, forStaff = false }: { complaint: TrackedComplaint; forStaff?: boolean }) {
@@ -46,11 +47,15 @@ export function ComplaintDetailsDialog({
   onClose,
   showUpdatesButton = true,
   forStaff = false,
+  allowEvidenceActions = true,
+  returnDetails,
 }: {
   complaint: TrackedComplaint;
   onClose: () => void;
   showUpdatesButton?: boolean;
   forStaff?: boolean;
+  allowEvidenceActions?: boolean;
+  returnDetails?: ReturnedDetails;
 }) {
   const [showUpdates, setShowUpdates] = useState(false);
   const close = () => {
@@ -66,6 +71,8 @@ export function ComplaintDetailsDialog({
           onViewUpdate={showUpdatesButton ? () => setShowUpdates(true) : undefined}
           compact
           forStaff={forStaff}
+          allowEvidenceActions={allowEvidenceActions}
+          returnDetails={returnDetails}
         />
       </Modal>
       {showUpdatesButton ? (

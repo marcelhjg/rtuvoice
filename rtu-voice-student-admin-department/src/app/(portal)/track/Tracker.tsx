@@ -8,6 +8,8 @@ import { ComplaintStatusDetails } from "@/components/ComplaintStatusDetails";
 import { Icon } from "@/components/Icon";
 import { Modal } from "@/components/Modal";
 import { trackComplaint } from "@/actions/studentActions";
+import { toTrackedComplaint } from "@/features/student/demoComplaintAdapter";
+import { useDemoStore } from "@/lib/demo-store";
 import type { TrackedComplaint } from "@/features/student/studentTypes";
 import styles from "./track.module.css";
 
@@ -22,6 +24,7 @@ type Lookup =
   | { state: "found"; complaint: TrackedComplaint };
 
 export function Tracker() {
+  const { findMyComplaint } = useDemoStore();
   const params = useSearchParams();
   const pathname = usePathname();
 
@@ -47,6 +50,12 @@ export function Tracker() {
     setBusy(true);
     setQuery(id);
     try {
+      const localComplaint = findMyComplaint(id);
+      if (localComplaint) {
+        setLookup({ state: "found", complaint: toTrackedComplaint(localComplaint) });
+        if (params.get("id") !== id) window.history.replaceState(null, "", `${pathname}?id=${encodeURIComponent(id)}`);
+        return;
+      }
       const fd = new FormData();
       fd.append("trackingId", id);
       const res = await trackComplaint(fd);

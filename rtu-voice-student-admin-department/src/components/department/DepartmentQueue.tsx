@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useDemoStore } from "@/lib/demo-store";
 import { formatMonthDay, formatShortDate, formatTime } from "@/lib/format";
 import { attentionInfo, slaInfo } from "@/lib/sla";
@@ -9,9 +9,10 @@ import { normalizeTrackingId } from "@/lib/validation";
 import { Icon } from "../Icon";
 import { Modal } from "../Modal";
 import { useToast } from "../Toast";
-import { BackToDashboard, EmptyState, LockedChip, Pager, PriorityDot, SearchBox, StatusPill, adminStyles as s } from "../admin/bits";
+import { BackToDashboard, EmptyState, Pager, PriorityDot, SearchBox, StatusPill, adminStyles as s } from "../admin/bits";
 import { StatCards } from "../admin/StatCards";
 import { useComplaintModals } from "../admin/useComplaintModals";
+import { ReturnToAdminModal } from "./ReturnToAdminModal";
 import m from "../admin/modals.module.css";
 import d from "./department.module.css";
 
@@ -26,11 +27,12 @@ const matches = (c: Complaint, query: string) => {
 
 /** Rows of the department's own queue. Student identity is never part of a complaint row (pseudonymous). */
 function useQueueActions() {
-  const { updateDepartmentStatus } = useDemoStore();
+  const { updateDepartmentStatus, returnToAdmin } = useDemoStore();
   const toast = useToast();
   const [updating, setUpdating] = useState<string | null>(null);
   // A status change waits here until the department head confirms it; nothing changes before that.
   const [pending, setPending] = useState<{ c: Complaint; status: DepartmentStatus } | null>(null);
+  const [returning, setReturning] = useState<Complaint | null>(null);
   const modals = useComplaintModals();
 
   const confirmStatus = () => {
@@ -44,73 +46,161 @@ function useQueueActions() {
     }
   };
 
+  const confirmReturn = (reason: string) => {
+    if (!returning) return;
+    if (returnToAdmin(returning.trackingId, returning.department ?? "", reason)) {
+      toast(`${returning.trackingId} returned to Admin for reassignment.`, "success");
+      setReturning(null);
+    } else {
+      toast(`${returning.trackingId} could not be returned. Refresh the queue and try again.`, "error");
+    }
+  };
+
   return {
     modals,
     setStatus: (c: Complaint, status: DepartmentStatus) => setPending({ c, status }),
     openUpdate: (id: string) => setUpdating(id),
+    openReturn: (complaint: Complaint) => setReturning(complaint),
     updateModal: (
       <>
         {updating ? <AddUpdateModal key={updating} id={updating} onClose={() => setUpdating(null)} /> : null}
         {pending ? <ConfirmStatusModal key={pending.c.trackingId} c={pending.c} status={pending.status} onCancel={() => setPending(null)} onConfirm={confirmStatus} /> : null}
+        {returning ? <ReturnToAdminModal key={returning.trackingId} complaint={returning} onClose={() => setReturning(null)} onConfirm={confirmReturn} /> : null}
       </>
     ),
   };
 }
 
-/** One row's "Update status" dropdown and "Add Update" button (Figma: end of every row). */
+/** One row's status control and the actions menu. */
 function RowActions({
   c,
   onStatus,
   onAdd,
   onView,
+  onReturn,
 }: {
   c: Complaint;
   onStatus: (c: Complaint, s: DepartmentStatus) => void;
   onAdd: (id: string) => void;
   onView: (id: string) => void;
+  onReturn: (c: Complaint) => void;
 }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
   const next = nextDepartmentStatus(c.status);
-  // Every row can open its updates directly (the details pop-up no longer has this button).
-  const viewButton = (
-    <button type="button" className={d.viewIconBtn} onClick={() => onView(c.trackingId)} aria-label={`View updates for ${c.trackingId}`} title="View updates">
-      <Icon name="history" size={18} strokeWidth={2} />
-      <span className={d.viewIconText}>View updates</span>
-    </button>
-  );
-  if (c.status === "Resolved" || !next) {
-    return (
-      <div className={`${d.rowActions} ${d.rowLocked}`}>
-        {viewButton}
-        <LockedChip reason="This complaint is resolved, so its status can't change and no more updates can be added." />
-      </div>
-    );
-  }
+  const locked = c.status === "Resolved" || !next;
+  const menuId = `department-actions-${c.trackingId.toLowerCase()}`;
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setMenuOpen(false);
+        menuButtonRef.current?.focus();
+      }
+    };
+    const onPointerDown = (event: PointerEvent) => {
+      if (event.target instanceof Node && !menuRef.current?.contains(event.target)) setMenuOpen(false);
+    };
+    document.addEventListener("keydown", onKeyDown);
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.removeEventListener("pointerdown", onPointerDown);
+    };
+  }, [menuOpen]);
+
+  useEffect(() => {
+    if (menuOpen) menuRef.current?.querySelector<HTMLButtonElement>('[role="menuitem"]')?.focus();
+  }, [menuOpen]);
 
   return (
     <div className={d.rowActions}>
-      {viewButton}
-      <select
-        aria-label={`Update status of ${c.trackingId}`}
-        className={`select ${d.updateSelect} ${d.slotFirst}`}
-        value=""
-        onChange={(e) => {
-          const st = e.target.value as DepartmentStatus;
-          // value stays "" (controlled), so the row shows no change until the head confirms
-          if (st === next) onStatus(c, st);
-        }}
-      >
-        <option value="" disabled>
-          Update status
-        </option>
-        {/* Only the next step is offered (Assigned → In Progress → Resolved). "Assigned" is set by the administrator. */}
-        <option value="" disabled>
-          {c.status === "In Progress" ? "In progress" : c.status} (current)
-        </option>
-        {next ? <option value={next}>{next === "In Progress" ? "In progress" : next}</option> : null}
-      </select>
-      <button type="button" className={`${d.addBtn} ${d.slotSecond}`} onClick={() => onAdd(c.trackingId)} aria-label={`Add update to ${c.trackingId}`}>
-        <Icon name="plus" size={15} strokeWidth={2.6} /> Add Update
-      </button>
+      {locked ? (
+        <button type="button" className={`${s.lockedChip} ${d.lockedButton}`} disabled title="Resolved complaints are locked and cannot be changed." aria-label={`Locked: ${c.trackingId} is resolved`}>
+          <Icon name="lock" size={14} strokeWidth={2.2} />
+          Locked
+        </button>
+      ) : (
+        <select
+          aria-label={`Update status of ${c.trackingId}`}
+          className={`select ${d.updateSelect}`}
+          value=""
+          onChange={(e) => {
+            const st = e.target.value as DepartmentStatus;
+            if (st === next) onStatus(c, st);
+          }}
+        >
+          <option value="" disabled>Update status</option>
+          <option value="" disabled>{c.status === "In Progress" ? "In progress" : c.status} (current)</option>
+          {next ? <option value={next}>{next === "In Progress" ? "In progress" : next}</option> : null}
+        </select>
+      )}
+      <div className={d.menuWrap} ref={menuRef}>
+        <button
+          ref={menuButtonRef}
+          type="button"
+          className={d.kebab}
+          aria-label={`More actions for ${c.trackingId}`}
+          aria-haspopup="menu"
+          aria-expanded={menuOpen}
+          aria-controls={menuId}
+          onClick={() => setMenuOpen((open) => !open)}
+        >
+          <span aria-hidden="true">⋯</span>
+        </button>
+        {menuOpen ? (
+          <div
+            className={d.actionMenu}
+            id={menuId}
+            role="menu"
+            aria-label={`Actions for ${c.trackingId}`}
+            onKeyDown={(event) => {
+              const items = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="menuitem"]'));
+              const index = items.indexOf(document.activeElement as HTMLButtonElement);
+              if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+                event.preventDefault();
+                items[(index + (event.key === "ArrowDown" ? 1 : items.length - 1)) % items.length]?.focus();
+              } else if (event.key === "Home" || event.key === "End") {
+                event.preventDefault();
+                items[event.key === "Home" ? 0 : items.length - 1]?.focus();
+              }
+            }}
+          >
+            <button type="button" role="menuitem" onClick={() => { setMenuOpen(false); onView(c.trackingId); }}>View updates</button>
+            <button
+              type="button"
+              role="menuitem"
+              aria-disabled={locked}
+              className={locked ? d.menuItemDisabled : ""}
+              onClick={() => {
+                if (locked) return;
+                setMenuOpen(false);
+                onAdd(c.trackingId);
+              }}
+            >
+              <span>Add update</span>
+              {locked ? <small>Resolved — locked</small> : null}
+            </button>
+            <span className={d.menuDivider} role="separator" />
+            <button
+              type="button"
+              role="menuitem"
+              aria-disabled={locked}
+              className={`${d.menuReturn} ${locked ? d.menuItemDisabled : ""}`}
+              onClick={() => {
+                if (locked) return;
+                setMenuOpen(false);
+                onReturn(c);
+              }}
+            >
+              <span><Icon name="undo" size={15} strokeWidth={2} /> Return to Admin</span>
+              {locked ? <small>Resolved — locked</small> : null}
+            </button>
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }
@@ -159,7 +249,7 @@ function Table({
           const slaTone = c.status === "Resolved" ? "neutral" : slaCell.tone;
           const attentionOverdue = attention?.reason === "overdue" || (attention?.reason === "unacknowledged" && attention.days > 0);
           return (
-            <tr key={c.trackingId}>
+            <tr key={c.trackingId} className={d.departmentRow}>
               <td data-label="Date" className={s.date}>
                 {formatShortDate(c.submittedAt)}
               </td>
@@ -192,7 +282,7 @@ function Table({
                 </td>
               )}
               <td data-label="Actions">
-                <RowActions c={c} onStatus={actions.setStatus} onAdd={actions.openUpdate} onView={actions.modals.openUpdates} />
+                <RowActions c={c} onStatus={actions.setStatus} onAdd={actions.openUpdate} onView={actions.modals.openUpdates} onReturn={actions.openReturn} />
               </td>
             </tr>
           );
@@ -283,7 +373,7 @@ export function DepartmentDashboard() {
           ) : null}
         </div>
         <Pager page={current} pageSize={PAGE_SIZE} total={rows.length} onPage={setPage} />
-        <p className={d.footnote}>Assigned isn’t selectable — it’s set automatically on assignment. Departments cannot reject or reassign complaints.</p>
+        <p className={d.footnote}>Status changes follow the review process. Resolved complaints are locked; other complaints may be returned to Admin for reassignment.</p>
       </section>
       {actions.modals.modals}
       {actions.updateModal}

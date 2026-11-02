@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { Icon } from "@/components/Icon";
 import { EmptyState, LockedChip, Pager, PriorityDot, SearchBox, StatusPill, adminStyles as s } from "@/components/admin/bits";
 import { StatCards } from "@/components/admin/StatCards";
+import { ReturnedPill } from "@/components/admin/ReturnedInfo";
 import { useComplaintModals } from "@/components/admin/useComplaintModals";
 import { useDemoStore } from "@/lib/demo-store";
 import { formatShortDate } from "@/lib/format";
@@ -143,7 +144,12 @@ function PendingQueue({ modals }: { modals: Modals }) {
                   </button>
                 </td>
                 <td data-label="Title" className={s.strong}>
-                  {c.title}
+                  <span className={styles.returnedTitle}>
+                    <span>{c.title}</span>
+                    {c.returnedBy && c.returnedAt && c.returnReason ? (
+                      <ReturnedPill details={{ department: c.returnedBy, at: c.returnedAt, reason: c.returnReason }} />
+                    ) : null}
+                  </span>
                 </td>
                 <td data-label="Category">{c.category}</td>
                 <td data-label="Assign">

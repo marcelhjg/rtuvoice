@@ -7,6 +7,7 @@ import { useToast } from "@/components/Toast";
 import { getEvidenceUrl } from "@/actions/studentActions";
 import { formatBytes, formatLongDate, formatMonthDay, formatTime } from "@/lib/format";
 import type { Status } from "@/lib/types";
+import { ReturnedNote, type ReturnedDetails } from "@/components/admin/ReturnedInfo";
 import { EXTENSIONS, type TrackedComplaint } from "@/features/student/studentTypes";
 import styles from "@/app/(portal)/track/track.module.css";
 
@@ -64,11 +65,15 @@ export function ComplaintStatusDetails({
   onViewUpdate,
   compact = false,
   forStaff = false,
+  allowEvidenceActions = true,
+  returnDetails,
 }: {
   complaint: TrackedComplaint;
   onViewUpdate?: () => void;
   compact?: boolean;
   forStaff?: boolean; // staff see neutral names ("Evidence 1"); the student sees their own file names
+  allowEvidenceActions?: boolean;
+  returnDetails?: ReturnedDetails;
 }) {
   const steps = buildSteps(c);
   const toast = useToast();
@@ -163,14 +168,16 @@ export function ComplaintStatusDetails({
                       </span>
                     </span>
                   </span>
-                  <span className={styles.evidenceActions}>
-                    <button type="button" className={styles.evidenceBtn} onClick={() => openEvidence(a, "open")} disabled={busyFile === a.id} aria-label={`Open ${label}`}>
-                      <Icon name="eye" size={15} strokeWidth={1.9} /> <span className={styles.evidenceBtnLabel}>Open</span>
-                    </button>
-                    <button type="button" className={styles.evidenceBtn} onClick={() => openEvidence(a, "download")} disabled={busyFile === a.id} aria-label={`Download ${label}`}>
-                      <Icon name="download" size={15} strokeWidth={1.9} /> <span className={styles.evidenceBtnLabel}>Download</span>
-                    </button>
-                  </span>
+                  {allowEvidenceActions ? (
+                    <span className={styles.evidenceActions}>
+                      <button type="button" className={styles.evidenceBtn} onClick={() => openEvidence(a, "open")} disabled={busyFile === a.id} aria-label={`Open ${label}`}>
+                        <Icon name="eye" size={15} strokeWidth={1.9} /> <span className={styles.evidenceBtnLabel}>Open</span>
+                      </button>
+                      <button type="button" className={styles.evidenceBtn} onClick={() => openEvidence(a, "download")} disabled={busyFile === a.id} aria-label={`Download ${label}`}>
+                        <Icon name="download" size={15} strokeWidth={1.9} /> <span className={styles.evidenceBtnLabel}>Download</span>
+                      </button>
+                    </span>
+                  ) : null}
                 </li>
               );
             })}
@@ -182,6 +189,7 @@ export function ComplaintStatusDetails({
 
       <hr className={styles.rule} />
 
+      {forStaff && returnDetails ? <ReturnedNote details={returnDetails} /> : null}
       <h2 className={styles.progressTitle}>Progress</h2>
       <ol className={styles.timeline}>
         {steps.map((s) => (

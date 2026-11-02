@@ -5,9 +5,7 @@ import { Icon } from "@/components/Icon";
 import styles from "./landing.module.css";
 
 /*
- * Only the first answer is written in the Figma file; the other four are collapsed there.
- * Their answers below are drafted from the RTU Voice SRS v3 / roadmap so the accordion
- * works. The project team should review the wording.
+ * facts question and answer.
  */
 const ITEMS = [
   {

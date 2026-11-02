@@ -94,6 +94,9 @@ export interface Complaint {
   resolvedAt?: string;
   rejectedAt?: string;
   rejectionReason?: string;
+  returnedBy?: Department;
+  returnedAt?: string;
+  returnReason?: string;
   optOutOfPublic: boolean;
   /** AI-written, depersonalized text for the public dashboard (simulated in this build). */
   aiTitle?: string;
@@ -160,7 +163,7 @@ export interface AdminAccount {
 }
 
 /** SRS §3/§4: the Activity Log records assignments, reassignments and status changes (a rejection is a status change). */
-export const ACTIVITY_ACTIONS = ["Assigned", "Reassigned", "Rejected", "Status changed"] as const;
+export const ACTIVITY_ACTIONS = ["Assigned", "Reassigned", "Rejected", "Returned", "Status changed"] as const;
 export type ActivityAction = (typeof ACTIVITY_ACTIONS)[number];
 
 export interface ActivityEntry {

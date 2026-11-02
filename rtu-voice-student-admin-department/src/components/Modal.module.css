@@ -35,20 +35,30 @@
 }
 .square {
   position: relative;
-  width: min(100%, 420px);
+  width: min(100%, 360px);
   height: auto;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  padding: 32px 34px;
+  padding: 26px 26px 24px;
 }
 .square .footer {
   justify-content: center;
-  margin-top: 24px;
-  gap: 16px;
+  margin-top: 18px;
+  gap: 12px;
 }
 .square .icon {
-  margin: 0 auto 16px;
+  width: 58px;
+  height: 58px;
+  margin: 0 auto 12px;
+}
+.square .title {
+  font-size: 24px;
+}
+.square .subtitle {
+  margin-top: 6px;
+  font-size: 14px;
+  line-height: 1.5;
 }
 .lg {
   width: min(100%, 768px);
@@ -498,5 +508,31 @@
 @media (min-width: 768px) {
   .mobileClose {
     display: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .smallDialog.square {
+    padding: 1.5rem 1.25rem 1.25rem;
+  }
+  .smallDialog.square .title {
+    font-size: 1.25rem;
+  }
+  .smallDialog.square .icon {
+    width: 3.25rem;
+    height: 3.25rem;
+    margin-bottom: 0.75rem;
+  }
+  .smallDialog.square .subtitle {
+    margin: 0.5rem auto 1rem;
+    font-size: 0.875rem;
+  }
+  .smallDialog.square .footer > :only-child {
+    gap: 0.625rem;
+  }
+  .smallDialog.square .footer > :only-child > button {
+    min-height: 2.75rem;
+    height: 2.75rem;
+    font-size: 0.9375rem;
   }
 }

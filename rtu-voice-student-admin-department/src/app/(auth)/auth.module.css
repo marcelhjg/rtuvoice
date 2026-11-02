@@ -68,8 +68,8 @@
   width: 100%;
   background: var(--white);
   color: var(--black);
-  border: 2px solid var(--border);
-  border-radius: 28px;
+  border: 1px solid var(--border);
+  border-radius: 24px;
   box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.45);
   padding: 46px 36px 40px;
 }
@@ -921,5 +921,71 @@
   }
   .resendBtn {
     min-height: 36px;
+  }
+}
+
+.registerCard {
+  height: auto;
+  min-height: 0;
+  align-self: center;
+  padding: 34px 32px 28px;
+  border-radius: 20px;
+}
+.registerCard .cardTitle {
+  font-size: 32px;
+  line-height: 1.15;
+}
+.registerCard .cardSubtitle {
+  margin: 6px 0 0;
+  font-size: 14px;
+  line-height: 1.45;
+}
+.registerCard .form.registerForm {
+  margin-top: 16px;
+  gap: 12px;
+}
+.registerCard .row2 {
+  gap: 12px;
+}
+.registerCard :global(.field) {
+  gap: 5px;
+}
+.registerCard .label {
+  font-size: 14px;
+}
+.registerCard .input {
+  min-height: 46px;
+  height: 46px;
+  border-radius: 7px;
+  font-size: 15px;
+}
+.registerCard .submit {
+  min-height: 46px;
+  height: 46px;
+  margin-top: 2px;
+  border-radius: 7px;
+  font-size: 16px;
+}
+.registerCard .switch {
+  margin-top: 0;
+  font-size: 14px;
+}
+
+@media (max-width: 767px) {
+  .registerCard.card {
+    padding: 24px 22px;
+  }
+  .registerCard.card .cardTitle {
+    font-size: 1.625rem !important;
+    line-height: 1.2 !important;
+  }
+  .registerCard .form.registerForm {
+    margin-top: 14px;
+    gap: 12px;
+  }
+  .registerCard .input,
+  .registerCard .submit {
+    min-height: 46px;
+    height: 46px;
   }
 }

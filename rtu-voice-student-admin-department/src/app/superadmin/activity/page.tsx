@@ -13,6 +13,7 @@ const ACTION_CLASS: Record<ActivityAction, string> = {
   Assigned: styles.aAssigned,
   Reassigned: styles.aReassigned,
   Rejected: styles.aRejected,
+  Returned: styles.aReturned,
   "Status changed": styles.aStatus,
 };
 
@@ -40,7 +41,7 @@ export default function ActivityLogPage() {
           <h1 className={s.listTitle}>Activity Log</h1>
           <span className={`${s.countPill} ${s.pillTotal}`}>{activity.length}</span>
         </div>
-        <p className={s.subtitle}>Assignments, reassignments, rejections and status changes made by administrators and departments.</p>
+        <p className={s.subtitle}>Assignments, reassignments, returns, rejections and status changes made by administrators and departments.</p>
       </div>
 
       <section className={s.panel} aria-label="Activity log">

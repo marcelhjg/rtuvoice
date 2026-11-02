@@ -43,6 +43,13 @@
 .titleCell {
   min-width: 200px;
 }
+.returnedTitle {
+  display: grid;
+  justify-items: start;
+  gap: 5px;
+  min-width: 0;
+  font-weight: 600;
+}
 .deptCell {
   white-space: nowrap;
 }

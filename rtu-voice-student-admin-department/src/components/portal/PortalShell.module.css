@@ -28,11 +28,11 @@
   left: 0;
   bottom: 0;
   z-index: 90;
-  width: 408px;
-  max-width: 86vw;
+  width: 320px;
+  max-width: 80vw;
   background: var(--navy);
   color: var(--white);
-  padding: 15px 28px 28px;
+  padding: 14px 20px 10px;
   display: flex;
   flex-direction: column;
   transform: translateX(-100%);
@@ -47,9 +47,35 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
-  padding: 0 0 15px 22px;
+  gap: 8px;
+  padding: 0 0 12px 12px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.45);
+}
+.sidebarHead > a {
+  flex: 1;
+  gap: 12px;
+}
+.sidebarHead > a > span:first-child {
+  width: 52px;
+  height: 52px;
+}
+.sidebarHead > a > span:first-child img {
+  width: 40px;
+}
+.sidebarHead > a > span:last-child {
+  gap: 3px;
+}
+.sidebarHead > a > span:last-child > span:first-child {
+  font-size: 22px;
+  letter-spacing: -0.3px;
+}
+.sidebarHead > a > span:last-child > span:last-child {
+  font-size: 8px;
+  line-height: 1.15;
+}
+.sidebarHead > a > span:last-child > span:last-child > span {
+  display: block;
+  white-space: nowrap;
 }
 .closeButton {
   display: grid;
@@ -71,18 +97,18 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  margin-top: 21px;
+  margin-top: 14px;
 }
 .navItem {
   display: flex;
   align-items: center;
-  gap: 26px;
-  height: 58px;
-  padding: 0 18px;
+  gap: 18px;
+  height: 48px;
+  padding: 0 14px;
   border-radius: 8px;
   font-family: var(--font-inter);
   font-weight: 500;
-  font-size: 20px;
+  font-size: 16px;
   color: var(--white);
   text-decoration: none;
   transition: background-color 0.15s ease;
@@ -95,23 +121,28 @@
   background: var(--blue);
 }
 .sidebarFoot {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  flex: none;
   margin-top: auto;
-  padding-top: 14px;
+  padding-top: 10px;
+  background: var(--navy);
   border-top: 1px solid rgba(255, 255, 255, 0.45);
 }
 .logoutLink {
   display: flex;
   align-items: center;
-  gap: 26px;
+  gap: 18px;
   width: 100%;
-  height: 54px;
-  padding: 0 18px;
+  height: 46px;
+  padding: 0 14px;
   border: 0;
   border-radius: 8px;
   background: transparent;
   font-family: var(--font-inter);
   font-weight: 500;
-  font-size: 20px;
+  font-size: 16px;
   color: #ff8a8a;
   text-align: left;
 }
@@ -132,15 +163,36 @@
 
 @media (max-width: 640px) {
   .sidebar {
-    padding: 12px 16px 24px;
+    padding: 12px 14px 10px;
   }
   .sidebarHead {
     padding-left: 6px;
   }
   .navItem {
-    height: 52px;
-    gap: 18px;
-    font-size: 17px;
+    height: 46px;
+    gap: 14px;
+    font-size: 15px;
+  }
+  .logoutLink {
+    height: 44px;
+    gap: 14px;
+    font-size: 15px;
+  }
+  .sidebarHead > a {
+    gap: 8px;
+  }
+  .sidebarHead > a > span:first-child {
+    width: 46px;
+    height: 46px;
+  }
+  .sidebarHead > a > span:first-child img {
+    width: 36px;
+  }
+  .sidebarHead > a > span:last-child > span:first-child {
+    font-size: 20px;
+  }
+  .sidebarHead > a > span:last-child > span:last-child {
+    font-size: 7.5px;
   }
   .logoutButtons {
     gap: 12px;

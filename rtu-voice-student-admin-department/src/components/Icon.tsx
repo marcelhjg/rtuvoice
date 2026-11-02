@@ -54,7 +54,8 @@ export type IconName =
   | "bar-chart"
   | "history"
   | "swap"
-  | "arrow-left";
+  | "arrow-left"
+  | "undo";
 
 const paths: Record<IconName, React.ReactNode> = {
   home: (
@@ -305,6 +306,7 @@ const paths: Record<IconName, React.ReactNode> = {
   ),
   swap: <path d="M4 8h14l-3.5-3.5M20 16H6l3.5 3.5" />,
   "arrow-left": <path d="M19 12H5M11 6l-6 6 6 6" />,
+  undo: <path d="M9 14 4 9l5-5M4 9h9a6 6 0 0 1 0 12h-2" />,
 };
 
 interface IconProps extends Omit<SVGProps<SVGSVGElement>, "name"> {
