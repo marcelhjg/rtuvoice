@@ -165,3 +165,11 @@ export const EVIDENCE_ACCEPT_EXTENSIONS = ".jpg,.jpeg,.png,.webp,.mp3,.m4a,.wav,
 export function isAllowedEvidenceType(type: string) {
     return Object.prototype.hasOwnProperty.call(EXTENSIONS, type);
 }
+
+export type RecentResolvedRow = {
+  id: string;
+  ai_title: string;
+  category_id: number;
+  status_id: number;
+  created_at: string;
+};

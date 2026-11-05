@@ -1,16 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
-import { useDemoStore } from "@/lib/demo-store";
-import { homeFor } from "@/lib/routes";
-import type { Role } from "@/lib/types";
+import { usePathname } from "next/navigation";
+import { useEffect, useRef, useState, useTransition, type ReactNode } from "react";
+import { logoutUser } from "@/actions/authActions"; // same file the student shell imports from
 import { Icon, type IconName } from "../Icon";
 import { Logo } from "../Logo";
 import { LogoutDialog } from "../portal/LogoutDialog";
-import { PortalHeader } from "../portal/PortalHeader";
-import { useToast } from "../Toast";
+import { PortalHeader, type PortalUser } from "../portal/PortalHeader";
 import styles from "./AdminShell.module.css";
 
 export interface ConsoleNavItem {
@@ -20,8 +17,7 @@ export interface ConsoleNavItem {
 }
 
 export interface ConsoleShellProps {
-  /** Roles allowed on these pages (the console is shared by admin and superadmin); everyone else is sent to their own portal. */
-  roles: Role[];
+  user: PortalUser;
   nav: ConsoleNavItem[];
   /** Home route (logo link). */
   homeHref: string;
@@ -35,36 +31,20 @@ export interface ConsoleShellProps {
 }
 
 /** Shared layout for the Central Admin Console and the Department Portal. */
-export function ConsoleShell({ roles, nav, homeHref, profileHref, consoleLabel, consoleSub, menuLabel, children }: ConsoleShellProps) {
-  const { ready, session, logout } = useDemoStore();
-  const router = useRouter();
+export function ConsoleShell({ user, nav, homeHref, profileHref, consoleLabel, consoleSub, menuLabel, children }: ConsoleShellProps) {
   const pathname = usePathname();
-  const toast = useToast();
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmLogout, setConfirmLogout] = useState(false);
+  const [loggingOut, startLogout] = useTransition();
   const menuButtonRef = useRef<HTMLButtonElement>(null);
-  const loggingOut = useRef(false);
-  const roleToastShown = useRef(false);
 
-  // Simulated role guard: the real system enforces this server-side (row-level security).
-  useEffect(() => {
-    if (!ready || loggingOut.current) return;
-    if (!session) router.replace(`/login?next=${encodeURIComponent(pathname)}`);
-    else if (!roles.includes(session.role)) {
-      // Role guard: e.g. a student opening an admin or department page. Say so instead of switching silently.
-      if (!roleToastShown.current) {
-        roleToastShown.current = true;
-        toast("You don't have access to that page, so you were taken to your own portal.", "info");
-      }
-      router.replace(homeFor(session.role));
-    }
-  }, [ready, session, router, pathname, roles, toast]);
-
+  // Close menus on navigation.
   useEffect(() => {
     setMenuOpen(false);
   }, [pathname]);
 
+  // Sidebar: Escape closes it, body does not scroll behind it.
   useEffect(() => {
     if (!menuOpen) return;
     const onKey = (e: KeyboardEvent) => {
@@ -82,25 +62,19 @@ export function ConsoleShell({ roles, nav, homeHref, profileHref, consoleLabel, 
     };
   }, [menuOpen]);
 
-  const doLogout = useCallback(() => {
-    loggingOut.current = true;
+  // The server action signs out and redirects to /login, so nothing needs to happen after it.
+  const doLogout = () => {
+    if (loggingOut) return;
     setConfirmLogout(false);
-    logout();
-    toast("You have been logged out.", "success");
-    router.replace("/login");
-  }, [logout, router, toast]);
-
-  if (!ready || !session || !roles.includes(session.role)) {
-    return (
-      <div className={styles.loading} aria-busy="true">
-        <span className="spinner" /> Loading…
-      </div>
-    );
-  }
+    startLogout(async () => {
+      await logoutUser();
+    });
+  };
 
   return (
     <>
       <PortalHeader
+        user={user}
         homeHref={homeHref}
         profileHref={profileHref}
         menuLabel={menuLabel}

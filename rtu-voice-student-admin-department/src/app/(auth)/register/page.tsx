@@ -3,19 +3,34 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import { OtpVerifyCard } from "@/components/forms/OtpVerifyCard";
 import { PasswordField, TextField } from "@/components/forms/Fields";
-import { useDemoStore } from "@/lib/demo-store";
+import { resendOtp, validateAndSendOtp, verifyAndRegisterUser } from "@/actions/authActions"; // use the file where your actions live
 import { passwordChecks, validateConfirm, validateEmail, validateName, validateNewPassword } from "@/lib/validation";
 import styles from "../auth.module.css";
 
 type Errors = Partial<Record<"firstName" | "lastName" | "email" | "password" | "confirm", string | null>>;
 const PASSWORD_REQUIREMENTS_MESSAGE = "Password must be at least 8 characters and include an uppercase letter, a lowercase letter, and a number.";
+const GENERIC_ERROR = "Something went wrong. Please try again.";
+const EMPTY = { firstName: "", lastName: "", email: "", password: "", confirm: "" };
+
+// These keys must match what validateAndSendOtp reads.
+const toFormData = (f: typeof EMPTY) => {
+  const fd = new FormData();
+  fd.append("firstName", f.firstName.trim());
+  fd.append("lastName", f.lastName.trim());
+  fd.append("email", f.email.trim().toLowerCase());
+  fd.append("password", f.password); // not trimmed
+  fd.append("confirmPassword", f.confirm);
+  return fd;
+};
 
 export default function RegisterPage() {
-  const { startSignup, isAdminEmail } = useDemoStore();
   const router = useRouter();
-  const [form, setForm] = useState({ firstName: "", lastName: "", email: "", password: "", confirm: "" });
+  const [step, setStep] = useState<"form" | "otp">("form");
+  const [form, setForm] = useState(EMPTY);
   const [errors, setErrors] = useState<Errors>({});
+  const [formError, setFormError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   const set = (key: keyof typeof form) => (value: string) => {
@@ -26,23 +41,64 @@ export default function RegisterPage() {
   const validate = (): Errors => ({
     firstName: validateName(form.firstName, "First name"),
     lastName: validateName(form.lastName, "Last name"),
-    email: validateEmail(form.email) ?? (isAdminEmail(form.email) ? "This email belongs to a staff account. Log in instead." : null),
+    email: validateEmail(form.email),
     password: form.password && validateNewPassword(form.password) ? PASSWORD_REQUIREMENTS_MESSAGE : validateNewPassword(form.password),
     confirm: validateConfirm(form.password, form.confirm),
   });
 
-  const submit = (e: FormEvent) => {
+  const submit = async (e: FormEvent) => {
     e.preventDefault();
+    if (busy) return;
+
     const next = validate();
     setErrors(next);
+    setFormError(null);
     if (Object.values(next).some(Boolean)) return;
+
     setBusy(true);
-    // SIMULATED: the real system emails an OTP to the RTU inbox and only creates the account after verification.
-    window.setTimeout(() => {
-      startSignup({ firstName: form.firstName.trim(), lastName: form.lastName.trim(), email: form.email });
-      router.push("/register/verify");
-    }, 500);
+    try {
+      const res = await validateAndSendOtp(toFormData(form));
+      if (res.success) {
+        setStep("otp"); // swap to the code step; the data stays in state
+        return;
+      }
+      // Field errors from the server's own validation (each is an array; show the first).
+      const fe = res.errors ?? {};
+      const mapped: Errors = {
+        firstName: fe.firstName?.[0] ?? null,
+        lastName: fe.lastName?.[0] ?? null,
+        email: fe.email?.[0] ?? null,
+        password: fe.password?.[0] ?? null,
+        confirm: fe.confirmPassword?.[0] ?? null,
+      };
+      if (Object.values(mapped).some(Boolean)) setErrors(mapped);
+      else setFormError(res.message || GENERIC_ERROR);
+    } catch (err) {
+      console.error(err);
+      setFormError(GENERIC_ERROR);
+    } finally {
+      setBusy(false);
+    }
   };
+
+  if (step === "otp") {
+    const pending = {
+      firstName: form.firstName.trim(),
+      lastName: form.lastName.trim(),
+      email: form.email.trim().toLowerCase(),
+      password: form.password, // not trimmed
+    };
+    return (
+      <OtpVerifyCard
+        email={pending.email}
+        purpose="activate"
+        onVerify={(fd) => verifyAndRegisterUser(fd, pending)}
+        onResend={() => resendOtp("registration", pending.email, pending.firstName)}
+        onVerified={() => router.replace("/login?registered=1")}
+        onBack={() => setStep("form")}
+      />
+    );
+  }
 
   const checks = passwordChecks(form.password);
   const passwordRequirementsMissing = Boolean(form.password) && checks.some((check) => !check.ok);
@@ -112,6 +168,12 @@ export default function RegisterPage() {
           labelClassName={styles.label}
           inputClassName={styles.input}
         />
+
+        {formError ? (
+          <p className="alert alert-error" role="alert" style={{ padding: "10px 12px", fontSize: 14, lineHeight: 1.45 }}>
+            {formError}
+          </p>
+        ) : null}
 
         <button type="submit" className={styles.submit} disabled={busy} aria-busy={busy}>
           {busy ? <span className="spinner" aria-hidden="true" /> : null}

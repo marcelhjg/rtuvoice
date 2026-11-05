@@ -14,7 +14,8 @@ import type {
     HistoryRow,
     PublicRow,
     Category,
-    PublicStatus
+    PublicStatus,
+    RecentResolvedRow
 } from "@/features/student/studentTypes";
 import {
     EVIDENCE_BUCKET,
@@ -206,4 +207,19 @@ export async function getPublicComplaints(offset: number, status: string, catego
             date: r.created_at,
             })),
     };
+}
+
+export async function getRecentResolvedPublic(): Promise<{ success: boolean; message: string; data?: RecentResolvedRow[] }> {
+  const me = await getCurrentUser();
+  if (!me || me.role !== "student") return { success: false, message: "Not allowed." };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("get_recent_resolved_public");
+
+  if (error) {
+    console.error("[getRecentResolvedPublic] rpc failed:", error);
+    return { success: false, message: "Couldn't load recent resolved complaints. Please try again." };
+  }
+
+  return { success: true, message: "", data: (data ?? []) as RecentResolvedRow[] };
 }

@@ -15,7 +15,7 @@ export const ROLE_BY_ID: Record<number, Role> = {
 
 // where each role lands after login
 export const ROLE_HOME: Record<Role, string> = {
-    student: "/student/",
+    student: "/dashboard",
     admin: "/admin/",
     department: "/department/",
     superAdmin: "/superAdmin/"
@@ -26,6 +26,8 @@ export type CurrentUser = {
     email: string | undefined;
     role: Role;
     departmentId: number | null; // only meaningful for the department role
+    firstName: string | null;
+    lastName: string | null;
 };
 
 // Logged-in user + role, or null. cache() means it runs once per request,
@@ -38,12 +40,12 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
 
     // normal client (not admin), so RLS applies: users need a policy to read their own row
     const { data: profile, error: profileError } = await supabase
-        .from("users")
-        .select("role_id, department_id")
-        .eq("id", user.id)
-        .maybeSingle();
+    .from("users")
+    .select("role_id, department_id, first_name, last_name, is_active")
+    .eq("id", user.id)
+    .maybeSingle();
 
-    if (profileError || !profile) return null;
+    if (profileError || !profile || !profile.is_active) return null;
 
     const role = ROLE_BY_ID[profile.role_id];
     if (!role) return null;
@@ -53,6 +55,8 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
         email: user.email,
         role,
         departmentId: profile.department_id ?? null,
+        firstName: profile.first_name ?? null,
+        lastName: profile.last_name ?? null,
     };
 });
 
@@ -76,3 +80,13 @@ export async function redirectIfAuthenticated() {
 // For server actions that return { success, message } instead of redirecting:
 //   const me = await getCurrentUser();
 //   if (!me || me.role !== "admin") return { success: false, message: "Not allowed." };
+
+export function destinationFor(role: keyof typeof ROLE_HOME, next: string | null): string {
+  const home = ROLE_HOME[role];
+  // Internal paths only. The backslash check matters because browsers read "/\evil.com" as "//evil.com".
+  if (!next || !next.startsWith("/") || next.startsWith("//") || next.includes("\\")) return home;
+
+  const belongsTo = (prefix: string) => next === prefix || next.startsWith(`${prefix}/`);
+  const target = belongsTo("/admin") ? "admin" : belongsTo("/superadmin") ? "superadmin" : belongsTo("/department") ? "department" : "student";
+  return target === role ? next : home;
+}

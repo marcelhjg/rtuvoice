@@ -12,8 +12,6 @@ import { PURPOSE, type Purpose, type verifyState } from "./authTypes";
 /* Constants & small helpers (not exported -> not public endpoints)    */
 /* ------------------------------------------------------------------ */
 
-
-
 const RTU_DOMAIN = "rtu.edu.ph";
 const RESEND_COOLDOWN_MS = 60_000;          // 60 seconds between codes
 const MAX_OTPS_PER_DAY = 5;                 // per email + purpose, rolling 24h
@@ -264,4 +262,21 @@ export async function hashOtp(otp: string, round: number = 10){
     const hashedOtp = bcrypt.hash(otp, round);
 
     return hashedOtp;
+}
+
+export function friendlyAuthError(error: { code?: string; status?: number; message?: string }): string {
+    switch (error.code) {
+        case "invalid_credentials":
+            return "Incorrect email or password."; // same message for a wrong email or a wrong password, on purpose
+        case "email_not_confirmed":
+            return "Please verify your email before logging in.";
+        case "user_banned":
+            return "This account has been deactivated. Please contact the administrator.";
+        case "over_request_rate_limit":
+            return "Too many attempts. Please wait a moment and try again.";
+        default:
+            if (error.status === 429) return "Too many attempts. Please wait a moment and try again.";
+            console.error("[validateAndloginUser] sign-in failed:", error);
+            return "We couldn't log you in. Please try again.";
+    }
 }

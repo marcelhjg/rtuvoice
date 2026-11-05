@@ -1,39 +1,34 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
-import { DEMO_OTP } from "@/lib/demo-data";
-import { OTP_VALID_MS, useDemoStore } from "@/lib/demo-store";
 import { Icon } from "../Icon";
 import { OtpInput } from "./OtpInput";
 import styles from "@/app/(auth)/auth.module.css";
 
 const RESEND_SECONDS = 60;
-const MAX_ATTEMPTS = 3; // wrong tries per code (Terms of Use §2)
-const MAX_RESENDS = 5; // then blocked for 1 day (SRS v3)
+const GENERIC_ERROR = "Something went wrong. Please try again.";
+// checkOtp on the server reads the code from these six keys, one per box.
+const DIGIT_KEYS = ["first_digit", "second_digit", "third_digit", "fourth_digit", "fifth_digit", "sixth_digit"];
+
+type Result = { success: boolean; message?: string };
 
 interface Props {
   email: string;
   purpose: "activate" | "reset";
-  onVerified: () => void;
+  onVerify: (formData: FormData) => Promise<Result>; // calls the server action with the six digits
+  onResend: () => Promise<Result>;                   // asks the server for a new code
+  onVerified: () => void;                            // runs after a correct code (navigate here)
+  onBack?: () => void;                               // optional "wrong email?" link
 }
 
-/**
- * OTP step shared by registration and password recovery.
- * SIMULATED: no email is sent; the demo accepts the fixed code shown on screen.
- */
-export function OtpVerifyCard({ email, purpose, onVerified }: Props) {
-  const { otpIssuedAt, reissueOtp } = useDemoStore();
+/** OTP step shared by registration and password recovery. The server checks the code. */
+export function OtpVerifyCard({ email, purpose, onVerify, onResend, onVerified, onBack }: Props) {
   const [digits, setDigits] = useState<string[]>(Array(6).fill(""));
-  // The resend cooldown counts from when the code was sent, so a reload doesn't restart it (and an
-  // expired code can be replaced right away).
-  const [seconds, setSeconds] = useState(() =>
-    otpIssuedAt ? Math.max(0, RESEND_SECONDS - Math.floor((Date.now() - otpIssuedAt) / 1000)) : RESEND_SECONDS,
-  );
-  const [attempts, setAttempts] = useState(0);
-  const [resends, setResends] = useState(0);
+  const [seconds, setSeconds] = useState(RESEND_SECONDS); // a code was just sent when this card appears
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [resending, setResending] = useState(false);
 
   useEffect(() => {
     if (seconds <= 0) return;
@@ -41,63 +36,56 @@ export function OtpVerifyCard({ email, purpose, onVerified }: Props) {
     return () => window.clearTimeout(t);
   }, [seconds]);
 
-  const locked = attempts >= MAX_ATTEMPTS;
-  const blocked = resends >= MAX_RESENDS;
   const code = digits.join("");
 
-  const submit = (e: FormEvent) => {
+  const submit = async (e: FormEvent) => {
     e.preventDefault();
+    if (busy) return;
     setInfo(null);
-    if (locked) {
-      setError("Too many wrong tries. Request a new code.");
-      return;
-    }
     if (code.length < 6) {
       setError("Enter all 6 digits of the code.");
       return;
     }
-    // SRS: a code is valid for 10 minutes (the time is kept with the demo data, so a reload doesn't renew it).
-    if (otpIssuedAt && Date.now() - otpIssuedAt > OTP_VALID_MS) {
-      setDigits(Array(6).fill(""));
-      setError("This code has expired. Request a new code.");
-      return;
-    }
+
     setBusy(true);
-    window.setTimeout(() => {
-      if (code === DEMO_OTP) {
-        // Stay busy: the page navigates away next, so the button keeps its spinner until it does.
-        setError(null);
-        onVerified();
+    setError(null);
+    try {
+      const fd = new FormData();
+      DIGIT_KEYS.forEach((key, i) => fd.append(key, digits[i]));
+      const res = await onVerify(fd);
+      if (res.success) {
+        onVerified(); // stay busy: the page navigates away next
         return;
       }
-      setBusy(false);
-      {
-        const used = attempts + 1;
-        setAttempts(used);
-        setDigits(Array(6).fill(""));
-        setError(
-          used >= MAX_ATTEMPTS
-            ? "Too many wrong tries. This code no longer works. Request a new code."
-            : `That code is incorrect. ${MAX_ATTEMPTS - used} ${MAX_ATTEMPTS - used === 1 ? "try" : "tries"} left.`,
-        );
-      }
-    }, 500);
+      setDigits(Array(6).fill(""));
+      setError(res.message || GENERIC_ERROR);
+    } catch (err) {
+      console.error(err);
+      setError(GENERIC_ERROR);
+    }
+    setBusy(false);
   };
 
-  const resend = () => {
-    if (seconds > 0 || blocked) return;
-    const n = resends + 1;
-    setResends(n);
-    reissueOtp();
-    setAttempts(0);
-    setDigits(Array(6).fill(""));
+  const resend = async () => {
+    if (seconds > 0 || resending || busy) return;
+    setResending(true);
     setError(null);
-    setSeconds(RESEND_SECONDS);
-    setInfo(
-      n >= MAX_RESENDS
-        ? "Code resent (simulated). You have reached the resend limit; further requests are blocked for 1 day."
-        : `A new code was "sent" (simulated). ${MAX_RESENDS - n} resend${MAX_RESENDS - n === 1 ? "" : "s"} left.`,
-    );
+    setInfo(null);
+    try {
+      const res = await onResend();
+      if (res.success) {
+        setDigits(Array(6).fill(""));
+        setSeconds(RESEND_SECONDS);
+        setInfo("We sent you a new code.");
+      } else {
+        setError(res.message || GENERIC_ERROR);
+      }
+    } catch (err) {
+      console.error(err);
+      setError(GENERIC_ERROR);
+    } finally {
+      setResending(false);
+    }
   };
 
   return (
@@ -114,12 +102,12 @@ export function OtpVerifyCard({ email, purpose, onVerified }: Props) {
           value={digits}
           onChange={(v) => {
             setDigits(v);
-            if (error && !locked) setError(null);
+            if (error) setError(null);
           }}
           className={`${styles.otp} ${error ? styles.otpError : ""}`}
           boxClassName={styles.otpBox}
           invalid={!!error}
-          disabled={locked}
+          disabled={busy}
         />
 
         <div className={styles.form} style={{ marginTop: 26 }}>
@@ -136,15 +124,24 @@ export function OtpVerifyCard({ email, purpose, onVerified }: Props) {
 
           <p className={styles.resend}>
             Didn&apos;t get it?{" "}
-            <button type="button" className={styles.resendBtn} onClick={resend} disabled={seconds > 0 || blocked}>
-              {blocked ? "Resend limit reached" : seconds > 0 ? `Resend code (${seconds}s)` : "Resend code"}
+            <button type="button" className={styles.resendBtn} onClick={resend} disabled={seconds > 0 || resending || busy}>
+              {resending ? "Sending…" : seconds > 0 ? `Resend code (${seconds}s)` : "Resend code"}
             </button>
           </p>
 
-          <button type="submit" className={`${styles.submit} ${styles.submitWhite}`} disabled={busy || locked} aria-busy={busy}>
+          <button type="submit" className={`${styles.submit} ${styles.submitWhite}`} disabled={busy} aria-busy={busy}>
             {busy ? <span className="spinner" aria-hidden="true" /> : null}
             {busy ? "Verifying…" : "Verify Account"}
           </button>
+
+          {onBack ? (
+            <p className={styles.resend}>
+              Wrong email?{" "}
+              <button type="button" className={styles.resendBtn} onClick={onBack} disabled={busy}>
+                Go back
+              </button>
+            </p>
+          ) : null}
         </div>
       </form>
     </div>

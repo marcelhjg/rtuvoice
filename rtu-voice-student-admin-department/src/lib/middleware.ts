@@ -8,7 +8,7 @@ const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
 // Replace these with your real URLs (route groups like (student) are NOT part of the URL).
 // Nested pages count too: "/register" also covers "/register/verify",
 // and "/forgot-password" covers "/forgot-password/verify" and ".../new-password".
-const PUBLIC_ROUTES = ["/", "/login", "/register", "/forgot-password"];
+const PUBLIC_ROUTES = ["/", "/login", "/register", "/forgot-password", "/about", "/privacy", "/terms"];
 
 export async function middleware(request: NextRequest) {
   // `let` + created in THIS function, so when setAll replaces it,

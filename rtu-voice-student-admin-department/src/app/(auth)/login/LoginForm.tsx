@@ -1,55 +1,57 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { PasswordField, TextField } from "@/components/forms/Fields";
-import { useToast } from "@/components/Toast";
-import { DEMO_PASSWORD } from "@/lib/demo-data";
-import { useDemoStore } from "@/lib/demo-store";
-import { homeFor } from "@/lib/routes";
-import type { Role } from "@/lib/types";
 import { validateEmail } from "@/lib/validation";
+import { validateAndloginUser } from "@/actions/authActions"; // use the file where the action lives
 import styles from "../auth.module.css";
+import { useRouter } from "next/navigation";
 
-export function LoginForm() {
-  const { login, session, ready, loginBlockedReason } = useDemoStore();
-  const router = useRouter();
-  const params = useSearchParams();
-  const toast = useToast();
-  const requested = params.get("next");
+const GENERIC_ERROR = "We couldn't log you in. Please try again.";
+type Notice = "registered" | "reset" | null;
 
+export function LoginForm({ next, notice }: { next: string | null; notice: Notice }) {  
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<{ email?: string | null; password?: string | null }>({});
+  const [formError, setFormError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-
-  // Already signed in (demo session): go straight to the portal.
-  useEffect(() => {
-    if (ready && session && !busy) router.replace(destination(session.role, requested));
-  }, [ready, session, busy, requested, router]);
-
-  const submit = (e: FormEvent) => {
+  const router = useRouter();
+  
+  const submit = async (e: FormEvent) => {
     e.preventDefault();
+    if (busy) return;
+
     const nextErrors = {
       email: validateEmail(email),
-      password: !password
-        ? "Enter your password."
-        : password !== DEMO_PASSWORD
-          ? "Incorrect password. Please try again."
-          : null,
+      password: password ? null : "Enter your password.",
     };
-    // SIMULATED: deactivated accounts (Superadmin › Accounts / Departments) can't sign in.
-    if (!nextErrors.email && !nextErrors.password) nextErrors.email = loginBlockedReason(email);
     setErrors(nextErrors);
+    setFormError(null);
     if (nextErrors.email || nextErrors.password) return;
+
     setBusy(true);
-    // SIMULATED sign-in: no credentials are checked against a server.
-    window.setTimeout(() => {
-      const account = login(email);
-      toast(`Welcome back, ${account.firstName}!`, "success");
-      router.replace(destination(account.role, requested));
-    }, 500);
+    try {
+      const fd = new FormData();
+      fd.append("email", email);
+      fd.append("password", password);
+      if (next) fd.append("next", next);
+
+      const res = await validateAndloginUser(fd);
+
+      if (res.success) {
+        router.replace(res.redirectTo); // stay busy until the page changes
+        return;
+      }
+
+      setFormError(res.message || GENERIC_ERROR);
+      setBusy(false);
+    } catch (err) {
+      console.error(err);
+      setFormError(GENERIC_ERROR);
+      setBusy(false);
+    }
   };
 
   return (
@@ -61,11 +63,19 @@ export function LoginForm() {
 
       <form className={styles.form} onSubmit={submit} noValidate>
         {/* Protected-route state: sent here from a portal page while logged out (?next=…). */}
-        {requested && ready && !session ? (
-          <p className="alert alert-info" role="status" style={{ padding: "10px 12px", fontSize: 14, lineHeight: 1.45 }}>
-            Please log in to continue. You&apos;ll go back to the page you opened.
-          </p>
-        ) : null}
+       
+      {notice ? (
+        <p className="alert alert-info" role="status" style={{ padding: "10px 12px", fontSize: 14, lineHeight: 1.45 }}>
+          {notice === "registered"
+            ? "Your account was created. Please log in."
+            : "Your password was updated. Please log in with your new password."}
+        </p>
+      ) : next ? (
+        <p className="alert alert-info" role="status" style={{ padding: "10px 12px", fontSize: 14, lineHeight: 1.45 }}>
+          Please log in to continue. You&apos;ll go back to the page you opened.
+        </p>
+      ) : null}
+      
         <TextField
           label="University Email"
           type="email"
@@ -98,6 +108,12 @@ export function LoginForm() {
           Forgot password?
         </Link>
 
+        {formError ? (
+          <p className="alert alert-error" role="alert" style={{ padding: "10px 12px", fontSize: 14, lineHeight: 1.45 }}>
+            {formError}
+          </p>
+        ) : null}
+
         <button type="submit" className={styles.submit} disabled={busy} aria-busy={busy}>
           {busy ? <span className="spinner" aria-hidden="true" /> : null}
           {busy ? "Logging in…" : "Login"}
@@ -109,16 +125,4 @@ export function LoginForm() {
       </form>
     </div>
   );
-}
-
-/**
- * Unified login (SRS v3): the account's role decides the portal. A ?next= target is honoured only
- * when it is an internal path that belongs to that role's portal.
- */
-function destination(role: Role, next: string | null): string {
-  const home = homeFor(role);
-  if (!next || !next.startsWith("/") || next.startsWith("//")) return home;
-  const belongsTo = (prefix: string) => next === prefix || next.startsWith(`${prefix}/`);
-  const target: Role = belongsTo("/admin") ? "admin" : belongsTo("/superadmin") ? "superadmin" : belongsTo("/department") ? "department" : "student";
-  return target === role ? next : home;
 }

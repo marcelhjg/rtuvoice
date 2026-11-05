@@ -3,12 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type RefObject } from "react";
-import { useDemoStore } from "@/lib/demo-store";
 import { Icon } from "../Icon";
 import { Logo } from "../Logo";
 import styles from "./PortalHeader.module.css";
 
+export type PortalUser = { firstName: string | null; lastName: string | null; email: string };
+
 interface PortalHeaderProps {
+  user: PortalUser;
   homeHref: string;
   profileHref: string;
   menuLabel: string;
@@ -23,6 +25,7 @@ interface PortalHeaderProps {
 
 /** The single header used by student, admin, and department portals. */
 export function PortalHeader({
+  user,
   homeHref,
   profileHref,
   menuLabel,
@@ -34,7 +37,6 @@ export function PortalHeader({
   consoleLabel,
   consoleSub,
 }: PortalHeaderProps) {
-  const { session } = useDemoStore();
   const pathname = usePathname();
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -57,9 +59,8 @@ export function PortalHeader({
     };
   }, [profileOpen]);
 
-  if (!session) return null;
-  const fullName = `${session.firstName} ${session.lastName}`.trim();
-  const initial = (session.lastName || session.firstName || "S").charAt(0).toUpperCase();
+  const fullName = `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim();
+  const initial = (user.lastName || user.firstName || "S").charAt(0).toUpperCase();
 
   return (
     <header className={styles.header}>
@@ -84,7 +85,7 @@ export function PortalHeader({
             open={profileOpen}
             onToggle={() => setProfileOpen((value) => !value)}
             fullName={fullName}
-            email={session.email}
+            email={user.email}
             initial={initial}
             profileHref={profileHref}
             consoleSub={consoleSub}
@@ -100,7 +101,7 @@ export function PortalHeader({
           open={profileOpen}
           onToggle={() => setProfileOpen((value) => !value)}
           fullName={fullName}
-          email={session.email}
+          email={user.email}
           initial={initial}
           profileHref={profileHref}
           onRequestLogout={() => {

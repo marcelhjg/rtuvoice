@@ -1,36 +1,39 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import { PasswordField, TextField } from "./forms/Fields";
 import { Icon } from "./Icon";
 import { useToast } from "./Toast";
-import { useDemoStore } from "@/lib/demo-store";
+import { ChangePassword, UpdateProfile } from "@/actions/authActions"; // use the file where these actions live
 import { passwordChecks, validateConfirm, validateName, validateNewPassword } from "@/lib/validation";
 import styles from "./ProfileForm.module.css";
 
-/** Manage Profile (Figma: MANAGE PROFILE). Shared by the student and admin portals. */
-export function ProfileForm() {
-  const { session, updateProfile } = useDemoStore();
+const GENERIC_ERROR = "Something went wrong. Please try again.";
+
+/** Manage Profile. Shared by the student and admin portals; the page passes in the account details. */
+export function ProfileForm({ firstName: savedFirst, lastName: savedLast, email }: { firstName: string; lastName: string; email: string }) {
+  const router = useRouter();
   const toast = useToast();
 
   // Account form
-  const [firstName, setFirstName] = useState(session?.firstName ?? "");
-  const [lastName, setLastName] = useState(session?.lastName ?? "");
+  const [firstName, setFirstName] = useState(savedFirst);
+  const [lastName, setLastName] = useState(savedLast);
   const [accErrors, setAccErrors] = useState<{ firstName?: string | null; lastName?: string | null }>({});
   const [savingAccount, setSavingAccount] = useState(false);
   const [editingAccount, setEditingAccount] = useState(false);
 
+  // After a save, router.refresh() brings in the new saved values.
   useEffect(() => {
-    if (session) {
-      setFirstName(session.firstName);
-      setLastName(session.lastName);
-    }
-  }, [session]);
+    setFirstName(savedFirst);
+    setLastName(savedLast);
+  }, [savedFirst, savedLast]);
 
-  const accountChanged = !!session && (firstName.trim() !== session.firstName || lastName.trim() !== session.lastName);
+  const accountChanged = firstName.trim() !== savedFirst || lastName.trim() !== savedLast;
 
-  const saveAccount = (e: FormEvent) => {
+  const saveAccount = async (e: FormEvent) => {
     e.preventDefault();
+    if (savingAccount) return;
     const next = { firstName: validateName(firstName, "First name"), lastName: validateName(lastName, "Last name") };
     setAccErrors(next);
     if (next.firstName || next.lastName) return;
@@ -39,18 +42,35 @@ export function ProfileForm() {
       setEditingAccount(false);
       return;
     }
+
     setSavingAccount(true);
-    window.setTimeout(() => {
-      updateProfile(firstName, lastName);
+    try {
+      // These keys must match what UpdateProfile reads.
+      const fd = new FormData();
+      fd.append("firstName", firstName.trim());
+      fd.append("lastName", lastName.trim());
+      const res = await UpdateProfile(fd);
+
+      if (res.success) {
+        setEditingAccount(false);
+        toast("Profile updated.", "success");
+        router.refresh(); // re-reads the account so the header shows the new name too
+        return;
+      }
+      const fe = res.errors;
+      if (fe?.firstName || fe?.lastName) setAccErrors({ firstName: fe.firstName ?? null, lastName: fe.lastName ?? null });
+      else toast(res.message || GENERIC_ERROR, "error");
+    } catch (err) {
+      console.error(err);
+      toast(GENERIC_ERROR, "error");
+    } finally {
       setSavingAccount(false);
-      setEditingAccount(false);
-      toast("Account details saved (demo: stored in this browser only).", "success");
-    }, 500);
+    }
   };
 
   const cancelAccountEdit = () => {
-    setFirstName(session?.firstName ?? "");
-    setLastName(session?.lastName ?? "");
+    setFirstName(savedFirst);
+    setLastName(savedLast);
     setAccErrors({});
     setEditingAccount(false);
   };
@@ -63,8 +83,9 @@ export function ProfileForm() {
   const [savingPw, setSavingPw] = useState(false);
   const [editingPassword, setEditingPassword] = useState(false);
 
-  const savePassword = (e: FormEvent) => {
+  const savePassword = async (e: FormEvent) => {
     e.preventDefault();
+    if (savingPw) return;
     const errs = {
       current: current ? null : "Enter your current password.",
       next: validateNewPassword(nextPw) ?? (nextPw && nextPw === current ? "Choose a password different from your current one." : null),
@@ -72,17 +93,37 @@ export function ProfileForm() {
     };
     setPwErrors(errs);
     if (errs.current || errs.next || errs.confirm) return;
+
     setSavingPw(true);
-    // SIMULATED: the current password is not checked and nothing is stored.
-    window.setTimeout(() => {
+    try {
+      // These keys must match what ChangePassword reads.
+      const fd = new FormData();
+      fd.append("oldPassword", current);
+      fd.append("newPassword", nextPw);
+      fd.append("confirmPassword", confirm);
+      const res = await ChangePassword(fd);
+
+      if (res.success) {
+        setCurrent("");
+        setNextPw("");
+        setConfirm("");
+        setPwErrors({});
+        setEditingPassword(false);
+        toast("Password changed.", "success");
+        return;
+      }
+      const fe = res.errors;
+      if (fe?.oldPassword || fe?.newPassword || fe?.confirmPassword) {
+        setPwErrors({ current: fe.oldPassword ?? null, next: fe.newPassword ?? null, confirm: fe.confirmPassword ?? null });
+      } else {
+        toast(res.message || GENERIC_ERROR, "error");
+      }
+    } catch (err) {
+      console.error(err);
+      toast(GENERIC_ERROR, "error");
+    } finally {
       setSavingPw(false);
-      setCurrent("");
-      setNextPw("");
-      setConfirm("");
-      setPwErrors({});
-      setEditingPassword(false);
-      toast("Password changed (demo: no password is actually stored).", "success");
-    }, 600);
+    }
   };
 
   const cancelPasswordEdit = () => {
@@ -148,7 +189,7 @@ export function ProfileForm() {
                 RTU email
               </label>
               <div className="input-wrap">
-                <input id="profile-email" className={`input ${styles.locked}`} value={session?.email ?? ""} readOnly aria-describedby="email-hint" />
+                <input id="profile-email" className={`input ${styles.locked}`} value={email} readOnly aria-describedby="email-hint" />
                 <Icon name="lock" size={20} className="input-lock" />
               </div>
               <span id="email-hint" className="field-hint">
