@@ -13,6 +13,9 @@
 .brand {
   align-self: center;
 }
+.brand > a > span > span:last-child {
+  line-height: 1.65;
+}
 .links,
 .contact {
   display: flex;
@@ -24,8 +27,7 @@
 .links a,
 .contact a {
   color: var(--white);
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  text-decoration: none;
   width: fit-content;
   /* 40px tall tap target; the gap above was folded into this height */
   display: inline-flex;
@@ -34,6 +36,19 @@
 }
 .links a:hover {
   color: var(--yellow);
+}
+.links a:hover,
+.contact a:hover,
+.links a:focus-visible,
+.contact a:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.brand a:focus-visible,
+.links a:focus-visible,
+.contact a:focus-visible {
+  outline: 2px solid var(--white);
+  outline-offset: 4px;
 }
 .heading {
   font-weight: 700;

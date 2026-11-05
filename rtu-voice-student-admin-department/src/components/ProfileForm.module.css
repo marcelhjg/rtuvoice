@@ -1,23 +1,23 @@
 .page :global(.page-head) {
-  padding-top: 24px;
-  padding-bottom: 12px;
+  padding-top: 12px;
+  padding-bottom: 0;
 }
 .page :global(.page-title) {
-  font-size: 32px;
+  font-size: 36px;
   line-height: 1.15;
 }
 .page :global(.page-subtitle) {
   margin-top: 5px;
-  font-size: 15px;
+  font-size: 16px;
 }
 .grid {
-  width: min(100%, 920px);
-  margin: 0 0 8px;
+  width: 100%;
+  margin: 0 0 24px;
 }
 .card {
   display: flex;
   flex-direction: column;
-  padding: 20px 36px 0;
+  padding: 16px 36px 12px;
   background: var(--white);
   border: 1px solid #d8dce6;
   border-radius: 20px;
@@ -27,15 +27,15 @@
   display: flex;
   align-items: center;
   gap: 14px;
-  padding-bottom: 12px;
+  padding-bottom: 14px;
   border-bottom: 1px solid #e8ebf1;
 }
 .avatar {
   display: grid;
   flex: none;
   place-items: center;
-  width: 52px;
-  height: 52px;
+  width: 56px;
+  height: 56px;
   border: 1px solid var(--gold);
   border-radius: 50%;
   background: var(--navy);
@@ -70,7 +70,7 @@
   align-items: center;
   justify-content: center;
   gap: 7px;
-  min-height: 42px;
+  min-height: 46px;
   padding: 0 14px;
   border: 1px solid var(--blue);
   border-radius: 8px;
@@ -92,7 +92,7 @@
   outline-offset: 2px;
 }
 .accountForm {
-  padding: 10px 0 12px;
+  padding: 10px 0 8px;
 }
 .fields {
   display: flex;
@@ -105,8 +105,8 @@
   gap: 12px;
 }
 .input {
-  min-height: 44px;
-  height: 44px;
+  min-height: 48px;
+  height: 48px;
   background: var(--input-bg);
   border-color: #c6cbd6;
   font-size: 15px;
@@ -119,7 +119,7 @@
   color: #4b5563;
 }
 .locked {
-  min-height: 44px;
+  min-height: 48px;
   background: #f5f6f9;
   border-color: #dce1ea;
   color: #4b5563;
@@ -142,7 +142,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 18px;
-  min-height: 62px;
+  min-height: 60px;
 }
 .passwordIntro {
   min-width: 0;
@@ -164,18 +164,15 @@
 }
 .passwordFields {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px 14px;
-  padding: 0 0 12px;
-}
-.passwordFields > :last-child {
-  grid-column: 1 / -1;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px 14px;
+  padding: 0 0 8px;
 }
 .actions {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
-  margin-top: 12px;
+  margin-top: 8px;
 }
 .save,
 .cancel {
@@ -253,7 +250,6 @@
   .passwordFields {
     grid-template-columns: minmax(0, 1fr);
   }
-  .passwordFields > :last-child,
   .reqs {
     grid-column: auto;
   }

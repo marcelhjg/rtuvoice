@@ -239,15 +239,6 @@
   place-items: center;
   color: #222;
 }
-.raiseNote {
-  margin-top: 44px;
-  text-align: center;
-  font-family: var(--font-inter);
-  font-weight: 500;
-  font-size: 16px;
-  color: var(--text-muted);
-}
-
 /* ---------- Privacy ---------- */
 .privacy {
   background: var(--navy);
@@ -282,11 +273,6 @@
   font-weight: 500;
   font-size: 16px;
   color: #a7adbc;
-}
-.privacyRule {
-  margin: 28px 0 0;
-  border: 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.18);
 }
 .privacyText + .privacyLink,
 .privacyLink {
@@ -432,7 +418,7 @@
 }
 .faqIcon {
   flex: none;
-  color: var(--gold);
+  color: var(--navy);
 }
 .faqPanel {
   padding: 0 24px 20px;
@@ -441,24 +427,6 @@
   font-size: 15px;
   line-height: 1.65;
   color: var(--blue);
-}
-
-/* ---------- Notice strip ---------- */
-.notice {
-  min-height: 57px;
-  padding: 10px var(--gutter);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  background: #fdf1cd;
-  color: #6b4400;
-  font-family: var(--font-inter);
-  font-size: 16px;
-  text-align: center;
-}
-.notice svg {
-  flex: none;
 }
 
 /* ---------- CTA ---------- */
@@ -742,6 +710,43 @@
 }
 
 @media (max-width: 767px) {
+  .hero {
+    min-height: 34rem;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem var(--gutter) calc(4rem + env(safe-area-inset-bottom));
+    text-align: center;
+  }
+  .heroInner,
+  .heroTitle,
+  .heroText {
+    text-align: center;
+  }
+  .heroTitle,
+  .heroText {
+    margin-right: auto;
+    margin-left: auto;
+  }
+  .heroActions {
+    align-items: center;
+  }
+  .heroBtnGhost {
+    border: 2px solid var(--white);
+    background: transparent;
+    backdrop-filter: none;
+  }
+  .how,
+  .raise,
+  .privacy,
+  .resolved,
+  .faq,
+  .cta,
+  :global(#how-to-submit) {
+    padding: 2.75rem var(--gutter);
+  }
+}
+
+@media (max-width: 767px) {
   :global(html) {
     scroll-padding-top: 3.5rem;
   }
@@ -783,6 +788,175 @@
 @media (min-width: 1024px) {
   .scrollCue {
     display: none;
+  }
+}
+
+/* ---------- Final responsive polish ---------- */
+.raise {
+  background: var(--surface-page);
+}
+.stepNo {
+  color: #806000;
+}
+.audience {
+  padding: 24px 28px;
+}
+.audienceText {
+  line-height: 1.65;
+}
+.resolvedNote {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-subtle);
+}
+.faq {
+  background: var(--surface-page);
+}
+.faqIcon {
+  color: var(--navy);
+}
+.links a,
+.contact a {
+  text-decoration: none;
+}
+.links a:hover,
+.contact a:hover,
+.links a:focus-visible,
+.contact a:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.brand a:focus-visible,
+.links a:focus-visible,
+.contact a:focus-visible {
+  outline: 2px solid var(--white);
+  outline-offset: 4px;
+}
+:global(#how-to-submit ol > li:nth-child(3) > div > span:last-child) {
+  display: none;
+}
+:global(#how-to-submit ol > li:nth-child(4) > div > span:last-child) {
+  font-size: 0;
+  white-space: nowrap;
+}
+:global(#how-to-submit ol > li:nth-child(4) > div > span:last-child::after) {
+  content: "Images, audio, PDF or video · up to 5 MB";
+  font-size: 11px;
+}
+:global(#how-to-submit div[aria-hidden="true"] > div:nth-child(2) > div:nth-child(4) > div > small) {
+  display: none;
+}
+:global(#how-to-submit div[aria-hidden="true"] > div:nth-child(2) > div:nth-child(3) > div > div) {
+  font-size: 0;
+}
+:global(#how-to-submit div[aria-hidden="true"] > div:nth-child(2) > div:nth-child(3) > div > div::after) {
+  content: "Describe what happened, where, and when.";
+  font-size: 10px;
+}
+
+@media (max-width: 767px) {
+  .hero {
+    box-sizing: border-box;
+    min-height: 34rem;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem var(--gutter) calc(4rem + env(safe-area-inset-bottom));
+    text-align: center;
+  }
+  .heroInner {
+    text-align: center;
+  }
+  .heroTitle,
+  .heroText {
+    margin-right: auto;
+    margin-left: auto;
+    text-align: center;
+  }
+  .heroActions {
+    align-items: center;
+  }
+  .heroBtnGhost {
+    border: 2px solid var(--white);
+    background: transparent;
+    backdrop-filter: none;
+  }
+  .how,
+  .raise,
+  .privacy,
+  .resolved,
+  .faq,
+  .cta,
+  :global(#how-to-submit) {
+    padding: 2.75rem var(--gutter);
+  }
+  .how .eyebrow,
+  .how .sectionTitle,
+  .how .sectionLead,
+  .resolved .sectionTitleLeft,
+  :global(#how-to-submit > header) {
+    text-align: left;
+  }
+  .raise .sectionTitle,
+  .faq .sectionTitle {
+    text-align: center;
+  }
+  .sectionTitle {
+    margin-top: 0;
+  }
+  .sectionLead {
+    margin-top: 0.75rem;
+    line-height: 1.6;
+  }
+  .steps {
+    margin-top: 2rem;
+  }
+  .resolvedText {
+    line-height: 1.6;
+  }
+  .previewRow {
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 16px;
+    line-height: 1.5;
+  }
+  .previewRow > span:first-child {
+    width: 100%;
+  }
+  .smallBadge {
+    align-self: flex-start;
+  }
+  .faqList {
+    margin: 1.5rem 0 0;
+  }
+  .faqButton {
+    padding-inline: 0;
+  }
+  .faqPanel {
+    padding-inline: 0;
+    color: var(--text-body);
+  }
+  :global(#how-to-submit > header > .eyebrow) {
+    text-align: left;
+  }
+  :global(#how-to-submit > header > h2),
+  :global(#how-to-submit > header > p) {
+    text-align: left;
+  }
+  :global(#how-to-submit [role="note"]) {
+    align-items: flex-start;
+    gap: 12px;
+    margin-top: 24px;
+    padding: 14px 16px;
+    text-align: left;
+  }
+  :global(#how-to-submit [role="note"] > svg) {
+    flex: none;
+    margin-top: 2px;
+  }
+  :global(#how-to-submit [role="note"] > p) {
+    line-height: 1.6;
   }
 }
 
@@ -845,5 +1019,42 @@
     border: 1px solid rgba(255, 255, 255, 0.72);
     background: rgba(255, 255, 255, 0.08);
     backdrop-filter: blur(8px);
+  }
+}
+
+@media (max-width: 767px) {
+  .hero {
+    min-height: 34rem;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem var(--gutter) calc(4rem + env(safe-area-inset-bottom));
+    text-align: center;
+  }
+  .heroInner,
+  .heroTitle,
+  .heroText {
+    text-align: center;
+  }
+  .heroTitle,
+  .heroText {
+    margin-right: auto;
+    margin-left: auto;
+  }
+  .heroActions {
+    align-items: center;
+  }
+  .heroBtnGhost {
+    border: 2px solid var(--white);
+    background: transparent;
+    backdrop-filter: none;
+  }
+  .how,
+  .raise,
+  .privacy,
+  .resolved,
+  .faq,
+  .cta,
+  :global(#how-to-submit) {
+    padding: 2.75rem var(--gutter);
   }
 }

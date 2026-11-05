@@ -4,7 +4,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { LANDING_PREVIEW } from "@/lib/demo-data";
 import type { PublicConcern } from "@/lib/types";
 import { Faq } from "./Faq";
-import { EVIDENCE_GUIDANCE, HowToSubmitSection } from "./HowToSubmitSection";
+import { HowToSubmitSection } from "./HowToSubmitSection";
 import styles from "./landing.module.css";
 
 const STEPS: { icon: IconName; title: string; text: string }[] = [
@@ -89,8 +89,6 @@ export default function LandingPage() {
         </ol>
       </section>
 
-      <HowToSubmitSection />
-
       {/* What can you raise */}
       <section className={styles.raise} aria-labelledby="raise-title">
         <h2 id="raise-title" className={`${styles.sectionTitle} ${styles.navyTitle}`}>
@@ -106,8 +104,9 @@ export default function LandingPage() {
             </li>
           ))}
         </ul>
-        <p className={styles.raiseNote}>Add evidence as {EVIDENCE_GUIDANCE}</p>
       </section>
+
+      <HowToSubmitSection />
 
       {/* Privacy */}
       <section className={styles.privacy} aria-labelledby="privacy-title">
@@ -118,8 +117,6 @@ export default function LandingPage() {
               Identity-shielded by default, not untraceable.
             </h2>
             <p className={styles.privacyText}>We&apos;re clear about who can see what, so you can decide what to share.</p>
-            <hr className={styles.privacyRule} />
-            <p className={styles.privacyText}>Tip: avoid names, contact details, and identifying photos or recordings.</p>
             <Link href="/privacy" className={styles.privacyLink}>
               Read the Privacy Notice →
             </Link>
@@ -166,11 +163,6 @@ export default function LandingPage() {
         </h2>
         <Faq />
       </section>
-
-      <div className={styles.notice} role="note">
-        <Icon name="alert-triangle" size={16} />
-        <span>Please provide clear details and supporting evidence so your concern can be reviewed properly.</span>
-      </div>
 
       {/* CTA */}
       <section className={styles.cta} aria-labelledby="cta-title">
