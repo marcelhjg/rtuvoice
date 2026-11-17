@@ -5,7 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { str } from "@/features/shared/sharedUtils";
 import type { SubmitComplaintErrors, UploadedFile } from "@/features/student/studentTypes";
 import {randomInt} from 'crypto';
-import { MAX_FILES, TITLE_MAX, DESCRIPTION_MAX, MAX_TOTAL_BYTES, EXTENSIONS } from "./studentTypes"; // your real path
+import { MAX_FILES, TITLE_MAX, DESCRIPTION_MAX, MAX_TOTAL_BYTES, EXTENSIONS, isAllowedEvidenceType } from "./studentTypes"; // your real path
 /* ---------------- constants ---------------- */
 
 export const EVIDENCE_BUCKET = "complaint-evidence"; // your PRIVATE bucket
@@ -22,9 +22,6 @@ export function generateTrackingId(length: number = 5): string {
     return `STU-${id}`;
 }
 
-export function isAllowedEvidenceType(type: string) {
-    return Object.prototype.hasOwnProperty.call(EXTENSIONS, type);
-}
 
 /* ---------------- reading + validating the complaint form ---------------- */
 

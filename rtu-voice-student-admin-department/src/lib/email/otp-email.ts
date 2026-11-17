@@ -12,9 +12,9 @@ function requireEnv(name: string): string {
 }
 
 const resend = new Resend(requireEnv("RESEND_API_KEY"));
-const MAIL_FROM = requireEnv("MAIL_FROM");             // e.g. RTU Voice <onboarding@resend.dev>
+const MAIL_FROM = requireEnv("MAIL_FROM");             
 const SITE_URL = requireEnv("NEXT_PUBLIC_SITE_URL");
-const LOG_OTP = process.env.LOG_OTP === "true";         // set only in .env.local
+const LOG_OTP = process.env.LOG_OTP === "true";      
 
 async function sendOtpEmail(
     purpose: OtpPurpose,
