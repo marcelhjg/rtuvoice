@@ -1,71 +1,29 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser } from "@/features/auth/guards";
 import { analyzeComplaint, type ComplaintAnalysis } from "@/features/ai/analyzeComplaint";
 import { revalidatePath } from "next/cache";
+import type { ActionResult, ActionState, ComplaintListData } from "@/features/shared/sharedTypes";
+import { PAGE_SIZE, cleanSearch, roundTo } from "@/features/shared/sharedUtils";
+import { 
+  ADMIN_LISTS,
+  MASTER_STATUSES,
+  PRIORITY_ID,
+  type AdminComplaintDetails,
+  type AdminDashboardStats,
+  type AdminListKey,
+  type ComplaintRow,
+  type MasterQueueFilters,
+  type OngoingComplaint,
+  type OngoingComplaintState,
+  type PendingComplaint,
+  type PendingComplaintState,
+  type PendingQueueFilters,
+  type StatsType,
+} from "@/features/admin/adminTypes";
 
-export type PendingComplaint = {
-  id: string;
-  created_at: string;
-  tracking_id: string;
-  title: string;
-  category: string | null;
-  is_returned: boolean;
-  returned_at: string | null;
-  returned_by_department_id: number | null;
-  returned_by_department: string | null;
-  return_reason: string | null;
-};
-
-export type PendingComplaintState = {
-  success: boolean;
-  message: string;
-  pending_complaints?: PendingComplaint[];
-};
-
-export type OngoingComplaint = {
-  id: string;
-  created_at: string;
-  tracking_id: string;
-  title: string;
-  priority: string | null;
-  status: string;
-  department_id: number;
-  department: string | null;
-  can_reassign: boolean;
-  returned_department_ids: number[];
-  first_assigned_at: string | null;
-  resolved_at: string | null;
-  acknowledge_days: number | null;
-  resolve_days: number | null;
-};
-
-export type OngoingComplaintState = {
-  success: boolean;
-  message: string;
-  ongoing_complaints?: OngoingComplaint[];
-};
-
-export type PendingQueueFilters = {
-  search?: string;
-  sort?: "newest" | "oldest";
-};
-
-export type MasterQueueFilters = {
-  search?: string;
-  status?: "assigned" | "in_progress" | "resolved";
-  department_id?: number;
-};
-
-const MASTER_STATUSES = ["assigned", "in_progress", "resolved"] as const;
-
-// trim, cap length, and turn "" into null
-const cleanSearch = (s?: string) => {
-  const v = s?.trim().slice(0, 50);
-  return v ? v : null;
-};
+/* ---------------- validation + master tracking queues ---------------- */
 
 export async function getPendingComplaints(
   filters: PendingQueueFilters = {}
@@ -113,9 +71,9 @@ export async function getMasterTrackingQueue(
   return { success: true, message: "", ongoing_complaints: (data ?? []) as OngoingComplaint[] };
 }
 
-const PRIORITY_ID = { low: 1, mid: 2, high: 3 } as const; // confirm against priority_levels
+/* ---------------- assign / reject ---------------- */
 
-export async function assign_complaint(formData: FormData) {
+export async function assignComplaint(formData: FormData): Promise<ActionState> {
   const me = await getCurrentUser();
   if (!me || me.role !== "admin") return { success: false, message: "Not allowed." };
 
@@ -173,11 +131,11 @@ export async function assign_complaint(formData: FormData) {
     };
   }
 
-//   revalidatePath("/admin", "layout");
+  // revalidatePath("/admin", "layout");
   return { success: true, message: "Complaint assigned." };
 }
 
-export async function reject_complaint(formData: FormData) {
+export async function rejectComplaint(formData: FormData): Promise<ActionState> {
   const me = await getCurrentUser();
   if (!me || me.role !== "admin") return { success: false, message: "Not allowed." };
 
@@ -206,75 +164,18 @@ export async function reject_complaint(formData: FormData) {
     };
   }
 
-//   revalidatePath("/admin", "layout");
+  // revalidatePath("/admin", "layout");
   return { success: true, message: "Complaint rejected." };
 }
 
-const PAGE_SIZE = 8;
-
-type SlaFields = {
-  assigned_at: string | null;
-  acknowledged_at: string | null;
-  resolved_at: string | null;
-  ack_due_at: string | null;
-  resolve_due_at: string | null;   // set once at first assignment
-  ack_days: number | null;
-  resolve_days: number | null;
-};
-
-export type ComplaintRow = SlaFields & {
-  tracking_id: string;
-  title: string;
-  category_name: string;
-  department_name: string | null;
-  department_acronym: string | null;
-  status_id: number;
-  status_name: string;
-  priority_name: string | null;
-  created_at: string;
-};
-
-type ReturnInfo = {
-  department_id: number;
-  department_name: string | null;
-  reason: string | null;
-  returned_at: string;
-};
-
-export type AdminComplaintDetails = SlaFields & {
-  id: string;
-  tracking_id: string;
-  title: string;
-  description: string;
-  status_id: number;
-  status_name: string;
-  category_name: string;
-  priority_name: string | null;
-  department_id: number | null;
-  department_name: string | null;
-  created_at: string;
-  updated_at: string;
-  attachments: { id: number; file_name: string | null; file_type: string; file_size: number | null }[];
-  progress: { entry_kind: "submitted" | "status"; entry_status_id: number | null; entry_message: string | null; entry_at: string }[];
-  updates: { entry_kind: "update"; entry_status_id: null; entry_message: string; entry_at: string }[];
-  current_return: ReturnInfo | null;
-  returns: ReturnInfo[];
-};
-
-// status ids: 1 pending, 2 assigned, 3 in_progress, 4 resolved, 5 rejected
-export const ADMIN_LISTS = {
-  total:       { statusIds: undefined, dateField: "created"  },
-  assigned:    { statusIds: [2],       dateField: "assigned" },
-  in_progress: { statusIds: [3],       dateField: "assigned" },
-  resolved:    { statusIds: [4],       dateField: "resolved" },
-} as const;
+/* ---------------- complaint lists + details ---------------- */
 
 export async function getComplaintsAdmin(
-  list: keyof typeof ADMIN_LISTS,
+  list: AdminListKey,
   opts: { departmentId?: number; search?: string; sort?: "newest" | "oldest"; page?: number } = {}
-) {
+): Promise<ActionResult<ComplaintListData<ComplaintRow>>> {
   const me = await getCurrentUser();
-  if (!me || me.role !== "admin") return { success: false as const, message: "Not allowed." };
+  if (!me || me.role !== "admin") return { success: false, message: "Not allowed." };
 
   const cfg = ADMIN_LISTS[list];
   const page = Math.max(1, Math.floor(opts.page ?? 1));
@@ -294,12 +195,12 @@ export async function getComplaintsAdmin(
 
   if (error) {
     console.error("[get_complaints_admin] rpc failed:", error);
-    return { success: false as const, message: "Something went wrong. Please try again." };
+    return { success: false, message: "Something went wrong. Please try again." };
   }
 
   const { total, status_total, rows } = data as { total: number; status_total: number; rows: ComplaintRow[] };
   return {
-    success: true as const,
+    success: true,
     rows,
     total,
     statusTotal: status_total,
@@ -308,124 +209,35 @@ export async function getComplaintsAdmin(
   };
 }
 
-export async function getComplaintDetails(trackingId: string) {
+export async function getComplaintDetails(
+  trackingId: string
+): Promise<ActionResult<{ trackResult: AdminComplaintDetails }>> {
   const me = await getCurrentUser();
-  if (!me || me.role !== "admin") return { success: false as const, message: "Not allowed." };
+  if (!me || me.role !== "admin") return { success: false, message: "Not allowed." };
 
   const id = trackingId.trim();
-  if (!id) return { success: false as const, message: "Invalid request." };
+  if (!id) return { success: false, message: "Invalid request." };
 
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("get_complaint_details_admin", { p_tracking_id: id });
 
   if (error) {
     console.error("[get_complaint_details_admin] rpc failed:", error);
-    return { success: false as const, message: "Something went wrong. Please try again." };
+    return { success: false, message: "Something went wrong. Please try again." };
   }
-  if (!data) return { success: false as const, message: "Complaint not found." };
+  if (!data) return { success: false, message: "Complaint not found." };
 
-  return { success: true as const, message: "", trackResult: data as AdminComplaintDetails };
+  return { success: true, message: "", trackResult: data as AdminComplaintDetails };
 }
 
+/* ---------------- dashboard stats ---------------- */
 
-/* ---------------- evidence files ---------------- */
-
-export type EvidenceUrlState = {
-    success: boolean;
-    message: string;
-    url?: string;
-};
-
-// one row returned by get_attachment_for_download
-export type EvidenceFileRow = {
-    out_path: string;
-    out_filename: string | null;
-};
-
-export const EVIDENCE_BUCKET = "complaint-evidence"; // your PRIVATE bucket
-export const URL_LIFETIME_SECONDS = 60;
-
-export async function getEvidenceUrl(
-    attachmentId: number,
-    download: boolean = false
-): Promise<EvidenceUrlState> {
-    const me = await getCurrentUser();
-    if (!me) return { success: false, message: "Not allowed." };
-
-    if (!Number.isInteger(attachmentId) || attachmentId <= 0) {
-        return { success: false, message: "File not found." };
-    }
-
-    // permission check: the function returns a row only if this user may see the file
-    const supabase = await createClient();
-    const { data, error } = await supabase.rpc("get_attachment_for_download", {
-        p_attachment_id: attachmentId,
-    });
-
-    const file = (Array.isArray(data) ? data[0] : data) as EvidenceFileRow | null | undefined;
-    if (error || !file) {
-        return { success: false, message: "File not found." };
-    }
-
-    // signed URL (admin client, because the bucket is private and has no student policies)
-    const admin = await createAdminClient();
-    const { data: signed, error: signError } = await admin.storage
-        .from(EVIDENCE_BUCKET)
-        .createSignedUrl(
-            file.out_path,
-            URL_LIFETIME_SECONDS,
-            download ? { download: file.out_filename ?? true } : undefined // download = save with the original name
-        );
-
-    if (signError || !signed) {
-        console.error("[getEvidenceUrl] sign failed:", signError);
-        return { success: false, message: "Couldn't open the file. Please try again." };
-    }
-
-    return { success: true, message: "", url: signed.signedUrl };
-}
-
-export type StatsType = {
-  kpis: {
-    total: number,
-    approved: number,
-    resolved: number,
-    overdue: number,
-    resolve_time_count: number,
-    resolve_time_total_days: number,
-  },
-  by_category: {
-    id: number,
-    name: string,
-    count: number,
-  }[],
-  by_department: {
-    id: number,
-    name: string,
-    acronym: string,
-    count: number,
-  }[],
-  monthly: {
-    month_start: string,
-    submitted: number,
-    resolved: number,
-  }[],
-  by_priority: {
-    id: number,
-    name: string,
-    count: number,
-  }[]
-}
-
-const round = (n: number, digits = 0) => {
-  const f = 10 ** digits;
-  return Math.round((n + Number.EPSILON) * f) / f;
-};
-
-export async function getAdminDashboardStats(department_id?: number) {
+export async function getAdminDashboardStats(
+  department_id?: number
+): Promise<ActionResult<{ stats: AdminDashboardStats }>> {
   const me = await getCurrentUser();
   if (!me || me.role !== "admin") {
-    return { success: false, message: "Not allowed." } as const;
+    return { success: false, message: "Not allowed." };
   }
 
   const supabase = await createClient(); // must use the user's session
@@ -436,15 +248,15 @@ export async function getAdminDashboardStats(department_id?: number) {
 
   if (error || !data) {
     console.error("[get_admin_dashboard_stats] rpc failed:", error);
-    return { success: false, message: "Something went wrong. Please try again." } as const;
+    return { success: false, message: "Something went wrong. Please try again." };
   }
 
   const { kpis, by_category, by_department, monthly, by_priority } = data as StatsType;
 
-  const resolve_rate = kpis.approved > 0 ? round((kpis.resolved / kpis.approved) * 100) : 0;
+  const resolve_rate = kpis.approved > 0 ? roundTo((kpis.resolved / kpis.approved) * 100) : 0;
   const avg_time_resolve =
     kpis.resolve_time_count > 0
-      ? round(kpis.resolve_time_total_days / kpis.resolve_time_count, 1)
+      ? roundTo(kpis.resolve_time_total_days / kpis.resolve_time_count, 1)
       : 0;
 
   const byCountDesc = <T extends { count: number }>(rows: T[]) =>
@@ -456,7 +268,7 @@ export async function getAdminDashboardStats(department_id?: number) {
     stats: {
       kpis: {
         total: kpis.total,
-        approved: kpis.approved,   
+        approved: kpis.approved,
         resolved: kpis.resolved,
         resolve_rate,
         overdue: kpis.overdue,
@@ -464,9 +276,8 @@ export async function getAdminDashboardStats(department_id?: number) {
       },
       by_category: byCountDesc(by_category),
       by_department: byCountDesc(by_department),
-      monthly,                      
+      monthly,
       by_priority,
     },
-  } as const;
+  };
 }
-
