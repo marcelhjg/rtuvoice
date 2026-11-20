@@ -15,7 +15,7 @@ PRIORITY LEVELS
 
 OUTPUT
 Respond with only valid JSON and no other text:
-{"title": "<title, max 100 characters>", "summary": "<2-3 sentences>", "priority": "low" | "mid" | "high"}`;
+{"title": "<title, max 100 characters>", "summary": "<2-3 sentences>", "priority": "high" | "mid" | "low"}`;
 
 export const PRIORITY_ONLY_PROMPT = `You assess student complaints for a university concern system.
 For each complaint, assign a priority level.
@@ -33,4 +33,4 @@ PRIORITY LEVELS
 
 OUTPUT
 Respond with only valid JSON and no other text:
-{"priority": "low" | "mid" | "high"}`;
+{"priority": "high" | "mid" | "low"}`;

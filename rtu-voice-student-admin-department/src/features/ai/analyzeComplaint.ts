@@ -6,7 +6,7 @@ const MODELS = [
   process.env.OPENROUTER_FALLBACK ?? "google/gemma-4-31b-it:free",
 ];
 
-const PRIORITIES = ["low", "mid", "high"] as const;
+const PRIORITIES = ["high", "mid", "low"] as const;
 const MAX_DESCRIPTION = 4000;
 
 export type AnalyzeType = { title: string; description: string; is_public: boolean };
