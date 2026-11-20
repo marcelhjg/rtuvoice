@@ -17,6 +17,8 @@ import {
   type NeedsAttentionRow,
   type NextStatus,
 } from "@/features/department/departmentTypes";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { sendReturnedToAdminEmails, sendStatusUpdateEmail, sendUpdateMessageEmail } from "@/lib/email/notification";
 
 /* ---------------- status + updates + return ---------------- */
 
@@ -48,6 +50,34 @@ export async function updateComplaintStatus(
       };
     }
     return { success: false, message: "Something went wrong. Please try again." };
+  }
+
+  const supabaseAdmin = await createAdminClient();
+
+  const { data: complaint, error: complaintError } = await supabaseAdmin
+    .from("complaints")
+    .select("tracking_id, user_id")
+    .eq("id", complaintId)
+    .maybeSingle();
+
+  if (complaintError || !complaint) {
+    console.error("[updateStatus] email skipped, complaint lookup failed:", { complaintId, complaintError });
+  } else {
+    const { data: student, error: studentError } = await supabaseAdmin
+      .from("users")
+      .select("rtu_email, first_name, last_name")
+      .eq("id", complaint.user_id)
+      .maybeSingle();
+
+    if (studentError || !student) {
+      console.error("[updateStatus] email skipped, student lookup failed:", { userId: complaint.user_id, studentError });
+    } else {
+      await sendStatusUpdateEmail({
+        ...student,
+        tracking_id: complaint.tracking_id,
+        status: newStatus,
+      });
+    }
   }
 
   // revalidatePath("/department/complaints"); // <- your route, if using Next.js caching
@@ -87,6 +117,29 @@ export async function addComplaintUpdate(
     return { success: false, message: "Something went wrong. Please try again." };
   }
 
+  const supabaseAdmin = await createAdminClient();
+
+  const { data: complaintData, error: complaintError } = await supabaseAdmin
+    .from("complaints")
+    .select("user_id, tracking_id")
+    .eq("id", complaintId)
+    .maybeSingle();
+
+  if (complaintError || !complaintData) {
+    console.error("[updateMessage] email skipped, complaint lookup failed:", { complaintId, complaintError });
+  } else {
+    const { data: userData, error: userError } = await supabaseAdmin
+      .from("users")
+      .select("rtu_email, first_name, last_name")
+      .eq("id", complaintData.user_id)
+      .maybeSingle();
+
+    if (userError || !userData) {
+      console.error("[updateMessage] email skipped, student lookup failed:", { userId: complaintData.user_id, userError });
+    } else {
+      await sendUpdateMessageEmail({ ...userData, tracking_id: complaintData.tracking_id });
+    }
+  }
   return { success: true, message: "Update added." };
 }
 
@@ -125,6 +178,37 @@ export async function returnComplaint(
     return { success: false, message: "Something went wrong. Please try again." };
   }
 
+  const supabaseAdmin = await createAdminClient();
+
+  const [{ data: complaintData, error: complaintError }, { data: admins, error: adminsError }] =
+    await Promise.all([
+      supabaseAdmin
+        .from("complaints")
+        .select("tracking_id")
+        .eq("id", complaintId)
+        .maybeSingle(),
+      supabaseAdmin
+        .from("users")
+        .select("rtu_email, first_name, last_name")
+        .eq("role", 2),
+    ]);
+
+  if (complaintError || !complaintData || adminsError || !admins?.length) {
+    console.error("[returnComplaint] email skipped, lookup failed:", {
+      complaintId,
+      complaintError,
+      adminsError,
+      adminCount: admins?.length ?? 0,
+    });
+  } else {
+    await sendReturnedToAdminEmails({
+      trackingId: complaintData.tracking_id,
+      admins,
+      reason, // only if your action has one
+    });
+  }
+
+return { success: true, message: "Complaint returned to admin." };
   // revalidatePath("/department/complaints"); // <- your route, if using Next.js caching
   return { success: true, message: "Complaint rejected and returned to the admin for review." };
 }

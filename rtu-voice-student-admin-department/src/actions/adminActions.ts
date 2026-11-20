@@ -22,6 +22,8 @@ import {
   type PendingQueueFilters,
   type StatsType,
 } from "@/features/admin/adminTypes";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { sendAssignmentEmail, sendReassignmentEmails } from "@/lib/email/notification";
 
 /* ---------------- validation + master tracking queues ---------------- */
 
@@ -80,16 +82,20 @@ export async function assignComplaint(formData: FormData): Promise<ActionState> 
   const complaintId = String(formData.get("complaint_id") ?? "");
   const departmentId = Number(formData.get("department_id"));
   const reason = String(formData.get("reason") ?? "").trim() || null;
+  const action = String(formData.get("action") ?? ""); // "assign" | "reassign"
 
   if (!complaintId || !Number.isInteger(departmentId)) {
     return { success: false, message: "Invalid request." };
+  }
+  if (action !== "assign" && action !== "reassign") {
+    return { success: false, message: "Invalid action." };
   }
 
   const supabase = await createClient();
 
   const { data: complaint, error: fetchError } = await supabase
     .from("complaints")
-    .select("title, description, is_public, priority_id")
+    .select("title, description, is_public, priority_id, department_id")
     .eq("id", complaintId)
     .maybeSingle();
 
@@ -98,6 +104,9 @@ export async function assignComplaint(formData: FormData): Promise<ActionState> 
     return { success: false, message: "Couldn't fetch the complaint. Please try again." };
   }
   if (!complaint) return { success: false, message: "Complaint not found." };
+
+  // capture the current department BEFORE the rpc overwrites it
+  const previousDepartmentId = complaint.department_id;
 
   // AI runs only the first time (no priority saved yet)
   let ai: ComplaintAnalysis | null = null;
@@ -123,12 +132,60 @@ export async function assignComplaint(formData: FormData): Promise<ActionState> 
     console.error("[assign_complaint] rpc failed:", error);
     return {
       success: false,
-      // P0001 = the messages you wrote with `raise exception`; anything else stays generic
       message:
         error.code === "P0001"
           ? error.message
           : "Couldn't assign to a department. Please try again.",
     };
+  }
+
+  const supabaseAdmin = await createAdminClient();
+
+  const { data: dept } = await supabaseAdmin
+  .from("users")
+  .select("rtu_email, first_name, last_name")
+  .eq("department_id", departmentId)
+  .eq("role_id", 3)
+  .eq("is_active", true)
+  .maybeSingle();
+
+  const { data: complaintdata } = await supabaseAdmin
+    .from("complaints")
+    .select("tracking_id")
+    .eq("id", complaintId)
+    .maybeSingle();
+
+  if (!dept || !complaintdata) {
+    console.error("[assignComplaint] email skipped, lookup failed:", {
+      complaintId,
+      departmentId,
+      deptFound: !!dept,
+      complaintFound: !!complaintdata,
+    });
+  } else if (action === "assign") {
+    await sendAssignmentEmail({ ...dept, tracking_id: complaintdata.tracking_id });
+  } else {
+    const { data: previousDept } = previousDepartmentId != null
+      ? await supabaseAdmin
+          .from("users")
+          .select("rtu_email, first_name, last_name")
+          .eq("department_id", previousDepartmentId)
+          .eq("role_id", 3)
+          .eq("is_active", true)
+          .maybeSingle()
+      : { data: null };
+
+    if (previousDept) {
+      await sendReassignmentEmails({
+        trackingId: complaintdata.tracking_id,
+        previousDept,
+        newDept: dept,
+      });
+    } else {
+      // no previous department found: still notify the new one
+      console.error("[assignComplaint] previous department not found, sending assignment email only");
+      await sendAssignmentEmail({ ...dept, tracking_id: complaintdata.tracking_id });
+    }
   }
 
   // revalidatePath("/admin", "layout");
