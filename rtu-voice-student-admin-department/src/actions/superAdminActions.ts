@@ -264,6 +264,7 @@ export async function createAccount(input: CreateAccountInput): Promise<ActionSt
   const { data: created, error: authError } = await admin.auth.admin.createUser({
     email,
     email_confirm: true,
+    user_metadata: { first_name: first, last_name: last }
   });
 
   if (authError || !created?.user) {

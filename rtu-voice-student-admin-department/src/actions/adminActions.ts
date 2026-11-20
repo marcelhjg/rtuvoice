@@ -108,6 +108,28 @@ export async function assignComplaint(formData: FormData): Promise<ActionState> 
   // capture the current department BEFORE the rpc overwrites it
   const previousDepartmentId = complaint.department_id;
 
+  // verify the target department has an active account BEFORE spending an AI call
+  const supabaseAdmin = await createAdminClient();
+
+  const { data: dept, error: deptError } = await supabaseAdmin
+    .from("users")
+    .select("rtu_email, first_name, last_name")
+    .eq("department_id", departmentId)
+    .eq("role_id", 3)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  if (deptError) {
+    console.error("[assignComplaint] department lookup failed:", deptError);
+    return { success: false, message: "Couldn't verify the department. Please try again." };
+  }
+  if (!dept) {
+    return {
+      success: false,
+      message: "This department has no active account. Activate one before assigning.",
+    };
+  }
+
   // AI runs only the first time (no priority saved yet)
   let ai: ComplaintAnalysis | null = null;
   if (complaint.priority_id == null) {
@@ -139,29 +161,14 @@ export async function assignComplaint(formData: FormData): Promise<ActionState> 
     };
   }
 
-  const supabaseAdmin = await createAdminClient();
-
-  const { data: dept } = await supabaseAdmin
-  .from("users")
-  .select("rtu_email, first_name, last_name")
-  .eq("department_id", departmentId)
-  .eq("role_id", 3)
-  .eq("is_active", true)
-  .maybeSingle();
-
   const { data: complaintdata } = await supabaseAdmin
     .from("complaints")
     .select("tracking_id")
     .eq("id", complaintId)
     .maybeSingle();
 
-  if (!dept || !complaintdata) {
-    console.error("[assignComplaint] email skipped, lookup failed:", {
-      complaintId,
-      departmentId,
-      deptFound: !!dept,
-      complaintFound: !!complaintdata,
-    });
+  if (!complaintdata) {
+    console.error("[assignComplaint] email skipped, tracking id lookup failed:", { complaintId });
   } else if (action === "assign") {
     await sendAssignmentEmail({ ...dept, tracking_id: complaintdata.tracking_id });
   } else {

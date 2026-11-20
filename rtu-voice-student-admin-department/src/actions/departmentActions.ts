@@ -190,7 +190,7 @@ export async function returnComplaint(
       supabaseAdmin
         .from("users")
         .select("rtu_email, first_name, last_name")
-        .eq("role", 2),
+        .eq("role_id", 2),
     ]);
 
   if (complaintError || !complaintData || adminsError || !admins?.length) {
@@ -208,9 +208,8 @@ export async function returnComplaint(
     });
   }
 
-return { success: true, message: "Complaint returned to admin." };
+  return { success: true, message: "Complaint returned to admin." };
   // revalidatePath("/department/complaints"); // <- your route, if using Next.js caching
-  return { success: true, message: "Complaint rejected and returned to the admin for review." };
 }
 
 /* ---------------- complaint lists + details ---------------- */

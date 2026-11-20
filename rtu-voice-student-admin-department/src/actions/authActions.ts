@@ -205,7 +205,7 @@ export async function validateEmailForPwReset(formData: FormData): Promise<verif
     if (!registered) {
         return { success: false, message: "Your institutional email is not registered yet!" };
     }
-    const supabase = await createClient();
+    const supabase = await createAdminClient();
     const {data: fetchName, error: fetchError} = await supabase.from("users").select("first_name").eq("rtu_email", email).maybeSingle();
 
     if( fetchError || !fetchName){

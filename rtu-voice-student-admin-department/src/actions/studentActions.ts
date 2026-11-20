@@ -101,48 +101,6 @@ export async function trackComplaint(formData: FormData): Promise<TrackComplaint
     return fetchTrackedComplaint(trackingId);
 }
 
-/* ---------------- evidence files ---------------- */
-
-export async function getEvidenceUrl(
-    attachmentId: number,
-    download: boolean = false
-): Promise<EvidenceUrlState> {
-    const me = await getCurrentUser();
-    if (!me) return { success: false, message: "Not allowed." };
-
-    if (!Number.isInteger(attachmentId) || attachmentId <= 0) {
-        return { success: false, message: "File not found." };
-    }
-
-    // permission check: the function returns a row only if this user may see the file
-    const supabase = await createClient();
-    const { data, error } = await supabase.rpc("get_attachment_for_download", {
-        p_attachment_id: attachmentId,
-    });
-
-    const file = (Array.isArray(data) ? data[0] : data) as EvidenceFileRow | null | undefined;
-    if (error || !file) {
-        return { success: false, message: "File not found." };
-    }
-
-    // signed URL (admin client, because the bucket is private and has no student policies)
-    const admin = await createAdminClient();
-    const { data: signed, error: signError } = await admin.storage
-        .from(EVIDENCE_BUCKET)
-        .createSignedUrl(
-            file.out_path,
-            URL_LIFETIME_SECONDS,
-            download ? { download: file.out_filename ?? true } : undefined // download = save with the original name
-        );
-
-    if (signError || !signed) {
-        console.error("[getEvidenceUrl] sign failed:", signError);
-        return { success: false, message: "Couldn't open the file. Please try again." };
-    }
-
-    return { success: true, message: "", url: signed.signedUrl };
-}
-
 /* ---------------- history ---------------- */
 
 export async function getHistory(): Promise<HistoryState> {
