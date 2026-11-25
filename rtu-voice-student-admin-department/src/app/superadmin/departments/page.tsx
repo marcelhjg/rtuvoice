@@ -8,13 +8,14 @@ export const metadata: Metadata = { title: "Departments" };
 export default async function DepartmentsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ q?: string; status?: string; page?: string }>;
 }) {
   const sp = await searchParams;
   const page = Math.max(1, Number.parseInt(sp.page ?? "1", 10) || 1);
+  const status = sp.status === "active" || sp.status === "inactive" ? sp.status : "all";
+  const isActive = status === "all" ? undefined : status === "active";
 
-  // no status filter: deactivated departments stay listed so they can be reactivated
-  const res = await getDepartmentAccounts({ page });
+  const res = await getDepartmentAccounts({ search: sp.q, isActive, page });
 
   return (
     <DepartmentsView

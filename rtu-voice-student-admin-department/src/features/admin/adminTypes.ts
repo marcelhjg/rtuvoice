@@ -9,6 +9,11 @@ export const MASTER_STATUSES = ["assigned", "in_progress", "resolved"] as const;
 
 export const PRIORITY_ID = { high: 1, mid: 2, low: 3 } as const; // confirm against priority_levels
 
+export const MAX_REJECT_REASON = 500;
+
+export const ASSIGN_ACTIONS = ["assign", "reassign"] as const;
+export type AssignAction = (typeof ASSIGN_ACTIONS)[number];
+
 // status ids: 1 pending, 2 assigned, 3 in_progress, 4 resolved, 5 rejected
 export const ADMIN_LISTS = {
   total:       { statusIds: undefined, dateField: "created"  },

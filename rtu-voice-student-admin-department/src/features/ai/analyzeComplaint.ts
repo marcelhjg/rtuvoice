@@ -7,7 +7,10 @@ const MODELS = [
 ];
 
 const PRIORITIES = ["high", "mid", "low"] as const;
-const MAX_DESCRIPTION = 4000;
+const MAX_DESCRIPTION = 500;
+
+const PER_MODEL_MS = 15_000;
+const TOTAL_MS = 35_000;
 
 export type AnalyzeType = { title: string; description: string; is_public: boolean };
 
@@ -17,9 +20,9 @@ export type ComplaintAnalysis = {
   priority: (typeof PRIORITIES)[number];
 };
 
-function parseAnalysis(obj: any, is_public: boolean): ComplaintAnalysis {
+function parseAnalysis(obj: Record<string, unknown> | null, is_public: boolean): ComplaintAnalysis {
   const priority = String(obj?.priority ?? "").toLowerCase();
-  if (!PRIORITIES.includes(priority as any)) throw new Error("Invalid AI output shape");
+  if (!(PRIORITIES as readonly string[]).includes(priority)) throw new Error("Invalid AI output shape");
   const p = priority as ComplaintAnalysis["priority"];
 
   if (!is_public) return { ai_title: null, ai_summary: null, priority: p };
@@ -31,14 +34,14 @@ function parseAnalysis(obj: any, is_public: boolean): ComplaintAnalysis {
   return { ai_title: title.slice(0, 120), ai_summary: summary.slice(0, 600), priority: p };
 }
 
-async function callModel(model: string, { title, description, is_public }: AnalyzeType) {
+async function callModel(model: string, { title, description, is_public }: AnalyzeType, timeoutMs: number) {
   const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
       "Content-Type": "application/json",
     },
-    signal: AbortSignal.timeout(45_000),
+    signal: AbortSignal.timeout(timeoutMs),
     body: JSON.stringify({
       model,
       response_format: { type: "json_object" },
@@ -53,7 +56,10 @@ async function callModel(model: string, { title, description, is_public }: Analy
     }),
   });
 
-  if (!response.ok) throw new Error(`OpenRouter ${response.status}`);
+  if (!response.ok) {
+    const detail = (await response.text().catch(() => "")).slice(0, 300);
+    throw new Error(`OpenRouter ${response.status}${detail ? `: ${detail}` : ""}`);
+  }
 
   const data = await response.json();
   const raw: string | undefined = data.choices?.[0]?.message?.content;
@@ -67,9 +73,18 @@ async function callModel(model: string, { title, description, is_public }: Analy
 }
 
 export async function analyzeComplaint(input: AnalyzeType): Promise<ComplaintAnalysis | null> {
+  if (!process.env.OPENROUTER_API_KEY) {
+    console.error("[ai] OPENROUTER_API_KEY is not set");
+    return null;
+  }
+  const deadline = Date.now() + TOTAL_MS;
+
   for (const model of MODELS) {
+    const remaining = deadline - Date.now();
+    if (remaining <= 0) break;
+
     try {
-      return await callModel(model, input);
+      return await callModel(model, input, Math.min(PER_MODEL_MS, remaining));
     } catch (err) {
       console.error(`[ai] ${model} failed:`, err instanceof Error ? err.message : err);
     }

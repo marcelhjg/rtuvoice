@@ -5,6 +5,7 @@
 
 export const STAFF_ROLE_ID = { admin: 2, department: 3 } as const;
 export type StaffRole = keyof typeof STAFF_ROLE_ID;
+export const STUDENT_ROLE_ID = 1;
 
 export const EMAIL_DOMAIN = "@rtu.edu.ph";
 export const MAX_PERSON_NAME = 100;
@@ -45,6 +46,24 @@ export type StaffAccountFilters = {
   search?: string;
   role?: StaffRole;      // undefined = all roles
   isActive?: boolean;    // undefined = all
+  page?: number;
+};
+
+/* ---------------- student accounts page ---------------- */
+
+export type StudentAccountRow = {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  is_active: boolean;
+  created_at: string;
+  open_complaints: number; // pending + assigned + in progress; shown in the deactivate dialog
+};
+
+export type StudentAccountFilters = {
+  search?: string;
+  isActive?: boolean; // undefined = all
   page?: number;
 };
 

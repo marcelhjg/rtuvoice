@@ -1,12 +1,15 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser } from "@/features/auth/guards";
 import type { ActionResult, ActionState, ComplaintListData } from "@/features/shared/sharedTypes";
-import { PAGE_SIZE, UUID_RE, roundTo } from "@/features/shared/sharedUtils";
+import { UUID_RE, cleanSearch, roundTo, toPage, pageParams, totalPagesOf } from "@/features/shared/sharedUtils";
+import { runAfterResponse } from "@/features/shared/background";
 import {
   DEPARTMENT_LISTS,
   MAX_REASON,
+  MAX_UPDATE_MESSAGE,
   NEXT_STATUSES,
   type DepartmentComplaintDetails,
   type DepartmentComplaintRow,
@@ -17,8 +20,40 @@ import {
   type NeedsAttentionRow,
   type NextStatus,
 } from "@/features/department/departmentTypes";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { sendReturnedToAdminEmails, sendStatusUpdateEmail, sendUpdateMessageEmail } from "@/lib/email/notification";
+
+/* ---------------- helpers (not exported) ---------------- */
+
+// The student who filed a complaint, for notification emails. Runs after the response is sent.
+// (If complaints.user_id has a foreign key to users, this can become one embedded select:
+//  .select("tracking_id, student:user_id(rtu_email, first_name, last_name)") )
+async function loadStudentForEmail(complaintId: string, tag: string) {
+  const supabaseAdmin = await createAdminClient();
+
+  const { data: complaint, error: complaintError } = await supabaseAdmin
+    .from("complaints")
+    .select("tracking_id, user_id")
+    .eq("id", complaintId)
+    .maybeSingle();
+
+  if (complaintError || !complaint) {
+    console.error(`[${tag}] email skipped, complaint lookup failed:`, { complaintId, complaintError });
+    return null;
+  }
+
+  const { data: student, error: studentError } = await supabaseAdmin
+    .from("users")
+    .select("rtu_email, first_name, last_name")
+    .eq("id", complaint.user_id)
+    .maybeSingle();
+
+  if (studentError || !student) {
+    console.error(`[${tag}] email skipped, student lookup failed:`, { userId: complaint.user_id, studentError });
+    return null;
+  }
+
+  return { student, trackingId: complaint.tracking_id as string };
+}
 
 /* ---------------- status + updates + return ---------------- */
 
@@ -52,33 +87,12 @@ export async function updateComplaintStatus(
     return { success: false, message: "Something went wrong. Please try again." };
   }
 
-  const supabaseAdmin = await createAdminClient();
-
-  const { data: complaint, error: complaintError } = await supabaseAdmin
-    .from("complaints")
-    .select("tracking_id, user_id")
-    .eq("id", complaintId)
-    .maybeSingle();
-
-  if (complaintError || !complaint) {
-    console.error("[updateStatus] email skipped, complaint lookup failed:", { complaintId, complaintError });
-  } else {
-    const { data: student, error: studentError } = await supabaseAdmin
-      .from("users")
-      .select("rtu_email, first_name, last_name")
-      .eq("id", complaint.user_id)
-      .maybeSingle();
-
-    if (studentError || !student) {
-      console.error("[updateStatus] email skipped, student lookup failed:", { userId: complaint.user_id, studentError });
-    } else {
-      await sendStatusUpdateEmail({
-        ...student,
-        tracking_id: complaint.tracking_id,
-        status: newStatus,
-      });
-    }
-  }
+  // the two email lookups + SMTP happen after the response
+  runAfterResponse(async () => {
+    const found = await loadStudentForEmail(complaintId, "updateStatus");
+    if (!found) return;
+    await sendStatusUpdateEmail({ ...found.student, tracking_id: found.trackingId, status: newStatus });
+  }, "updateComplaintStatus email");
 
   // revalidatePath("/department/complaints"); // <- your route, if using Next.js caching
   return {
@@ -97,8 +111,8 @@ export async function addComplaintUpdate(
   const trimmed = message?.trim() ?? "";
   if (!UUID_RE.test(complaintId)) return { success: false, message: "Invalid request." };
   if (!trimmed) return { success: false, message: "Please enter an update message." };
-  if (trimmed.length > 500) {
-    return { success: false, message: "Update message is too long (max 500 characters)." };
+  if (trimmed.length > MAX_UPDATE_MESSAGE) {
+    return { success: false, message: `Update message is too long (max ${MAX_UPDATE_MESSAGE} characters).` };
   }
 
   const supabase = await createClient();
@@ -117,29 +131,12 @@ export async function addComplaintUpdate(
     return { success: false, message: "Something went wrong. Please try again." };
   }
 
-  const supabaseAdmin = await createAdminClient();
+  runAfterResponse(async () => {
+    const found = await loadStudentForEmail(complaintId, "updateMessage");
+    if (!found) return;
+    await sendUpdateMessageEmail({ ...found.student, tracking_id: found.trackingId });
+  }, "addComplaintUpdate email");
 
-  const { data: complaintData, error: complaintError } = await supabaseAdmin
-    .from("complaints")
-    .select("user_id, tracking_id")
-    .eq("id", complaintId)
-    .maybeSingle();
-
-  if (complaintError || !complaintData) {
-    console.error("[updateMessage] email skipped, complaint lookup failed:", { complaintId, complaintError });
-  } else {
-    const { data: userData, error: userError } = await supabaseAdmin
-      .from("users")
-      .select("rtu_email, first_name, last_name")
-      .eq("id", complaintData.user_id)
-      .maybeSingle();
-
-    if (userError || !userData) {
-      console.error("[updateMessage] email skipped, student lookup failed:", { userId: complaintData.user_id, userError });
-    } else {
-      await sendUpdateMessageEmail({ ...userData, tracking_id: complaintData.tracking_id });
-    }
-  }
   return { success: true, message: "Update added." };
 }
 
@@ -152,7 +149,8 @@ export async function returnComplaint(
   if (!me || me.role !== "department") return { success: false, message: "Not allowed." };
 
   const trimmed = reason?.trim() ?? "";
-  // if (!UUID_RE.test(complaintId)) return { success: false, message: "Invalid request." };
+  // Re-enabled (it was commented out). If your complaint ids are not UUIDs, remove it again.
+  if (!UUID_RE.test(complaintId)) return { success: false, message: "Invalid request." };
   if (!trimmed) return { success: false, message: "Please provide a reason for returning." };
   if (trimmed.length > MAX_REASON) {
     return { success: false, message: `Reason is too long (max ${MAX_REASON} characters).` };
@@ -178,35 +176,39 @@ export async function returnComplaint(
     return { success: false, message: "Something went wrong. Please try again." };
   }
 
-  const supabaseAdmin = await createAdminClient();
+  runAfterResponse(async () => {
+    const supabaseAdmin = await createAdminClient();
 
-  const [{ data: complaintData, error: complaintError }, { data: admins, error: adminsError }] =
-    await Promise.all([
-      supabaseAdmin
-        .from("complaints")
-        .select("tracking_id")
-        .eq("id", complaintId)
-        .maybeSingle(),
-      supabaseAdmin
-        .from("users")
-        .select("rtu_email, first_name, last_name")
-        .eq("role_id", 2),
-    ]);
+    const [{ data: complaintData, error: complaintError }, { data: admins, error: adminsError }] =
+      await Promise.all([
+        supabaseAdmin
+          .from("complaints")
+          .select("tracking_id")
+          .eq("id", complaintId)
+          .maybeSingle(),
+        supabaseAdmin
+          .from("users")
+          .select("rtu_email, first_name, last_name")
+          .eq("role_id", 2)
+          .eq("is_active", true), // deactivated admins shouldn't be emailed
+      ]);
 
-  if (complaintError || !complaintData || adminsError || !admins?.length) {
-    console.error("[returnComplaint] email skipped, lookup failed:", {
-      complaintId,
-      complaintError,
-      adminsError,
-      adminCount: admins?.length ?? 0,
-    });
-  } else {
+    if (complaintError || !complaintData || adminsError || !admins?.length) {
+      console.error("[returnComplaint] email skipped, lookup failed:", {
+        complaintId,
+        complaintError,
+        adminsError,
+        adminCount: admins?.length ?? 0,
+      });
+      return;
+    }
+
     await sendReturnedToAdminEmails({
       trackingId: complaintData.tracking_id,
       admins,
-      reason, // only if your action has one
+      reason: trimmed, // the same text that was saved, not the untrimmed input
     });
-  }
+  }, "returnComplaint email");
 
   return { success: true, message: "Complaint returned to admin." };
   // revalidatePath("/department/complaints"); // <- your route, if using Next.js caching
@@ -222,16 +224,17 @@ export async function getComplaintsDepartment(
   if (!me || me.role !== "department") return { success: false, message: "Not allowed." };
 
   const cfg = DEPARTMENT_LISTS[list];
-  const page = Math.max(1, Math.floor(opts.page ?? 1));
+  if (!cfg) return { success: false, message: "Invalid request." };
+
+  const page = toPage(opts.page);
 
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("get_complaints_department", {
     p_status_ids: cfg.statusIds ? [...cfg.statusIds] : null,
-    p_search: opts.search?.trim() || null,
+    p_search: cleanSearch(opts.search),
     p_sort: opts.sort === "oldest" ? "oldest" : "newest",
     p_date_field: cfg.dateField,
-    p_limit: PAGE_SIZE,
-    p_offset: (page - 1) * PAGE_SIZE,
+    ...pageParams(page),
   });
 
   if (error) {
@@ -251,7 +254,7 @@ export async function getComplaintsDepartment(
     total,                       // follows the search: "Showing 1-8 of 13"
     statusTotal: status_total,   // header badge
     page,
-    totalPages: Math.max(1, Math.ceil(total / PAGE_SIZE)),
+    totalPages: totalPagesOf(total),
   };
 }
 
@@ -261,7 +264,7 @@ export async function getComplaintDetailsDepartment(
   const me = await getCurrentUser();
   if (!me || me.role !== "department") return { success: false, message: "Not allowed." };
 
-  const id = trackingId.trim();
+  const id = trackingId?.trim() ?? "";
   if (!id) return { success: false, message: "Invalid request." };
 
   const supabase = await createClient();
@@ -286,16 +289,14 @@ export async function getNeedsAttention(
   const me = await getCurrentUser();
   if (!me || me.role !== "department") return { success: false, message: "Not allowed." };
 
-  const page = Math.max(1, Math.floor(opts.page ?? 1));
-  const priorityId =
-    opts.priorityId !== undefined && Number.isInteger(opts.priorityId) ? opts.priorityId : null;
+  const page = toPage(opts.page);
+  const priorityId = Number.isInteger(opts.priorityId) ? (opts.priorityId as number) : null;
 
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("get_needs_attention_department", {
-    p_search: opts.search?.trim() || null,
+    p_search: cleanSearch(opts.search),
     p_priority_id: priorityId,
-    p_limit: PAGE_SIZE,
-    p_offset: (page - 1) * PAGE_SIZE,
+    ...pageParams(page),
   });
 
   if (error) {
@@ -318,7 +319,7 @@ export async function getNeedsAttention(
     waitingCount: waiting_count,            // "4 waiting to be acknowledged"
     badge: overdue_count + waiting_count,   // the number next to the title
     page,
-    totalPages: Math.max(1, Math.ceil(total / PAGE_SIZE)),
+    totalPages: totalPagesOf(total),
   };
 }
 

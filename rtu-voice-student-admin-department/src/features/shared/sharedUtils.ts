@@ -33,3 +33,35 @@ export const cleanSearch = (s?: string) => {
   const v = s?.trim().slice(0, 50);
   return v ? v : null;
 };
+
+/* ---------------- paging (used by every paginated list action) ---------------- */
+
+// 1-based page number. NaN / Infinity / undefined fall back to 1
+// (before, NaN slipped through Math.max and became an invalid OFFSET).
+export const toPage = (page?: number) =>
+  Number.isFinite(page) ? Math.max(1, Math.floor(page as number)) : 1;
+
+// the limit/offset pair every list RPC takes
+export const pageParams = (page: number) => ({
+  p_limit: PAGE_SIZE,
+  p_offset: (page - 1) * PAGE_SIZE,
+});
+
+export const totalPagesOf = (total: number) => Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+/* ---------------- small guards ---------------- */
+
+// `key in obj` is also true for inherited keys like "constructor" / "toString"; this is not.
+export const hasKey = <T extends object>(obj: T, key: PropertyKey): key is keyof T =>
+  Object.prototype.hasOwnProperty.call(obj, key);
+
+/* ---------------- status labels (database value -> display text) ---------------- */
+
+const STATUS_LABEL: Record<string, string> = {
+  pending: "Pending",
+  assigned: "Assigned",
+  in_progress: "In Progress",
+  resolved: "Resolved",
+  rejected: "Rejected",
+};
+export const statusLabel = (s: string) => STATUS_LABEL[s] ?? s;

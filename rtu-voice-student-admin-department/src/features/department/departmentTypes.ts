@@ -8,7 +8,8 @@ import type { SlaFields } from "@/features/shared/sharedTypes";
 export const NEXT_STATUSES = ["in_progress", "resolved"] as const;
 export type NextStatus = (typeof NEXT_STATUSES)[number];
 
-export const MAX_REASON = 2000;
+export const MAX_REASON = 500;
+export const MAX_UPDATE_MESSAGE = 500; // the old check enforced 500 but its error text said 2000; change this if 2000 was intended
 
 // status ids: 2 assigned, 3 in_progress, 4 resolved
 export const DEPARTMENT_LISTS = {
@@ -33,7 +34,9 @@ export type DepartmentComplaintRow = SlaFields & {
   created_at: string;
 };
 
-export type DepartmentComplaintDetails = {
+// SlaFields = assigned_at, acknowledged_at (when it was set to in progress), resolved_at,
+// ack_due_at, resolve_due_at (set once at first assignment), ack_days, resolve_days
+export type DepartmentComplaintDetails = SlaFields & {
   id: string;
   tracking_id: string;
   title: string;
@@ -44,15 +47,6 @@ export type DepartmentComplaintDetails = {
   department_name: string | null;
   priority_name: string | null;
   created_at: string;               // ISO timestamp, UTC
-
-  // SLA
-  assigned_at: string | null;
-  acknowledged_at: string | null;   // when it was set to in progress
-  resolved_at: string | null;
-  ack_due_at: string | null;
-  resolve_due_at: string | null;    // set once at first assignment
-  ack_days: number | null;
-  resolve_days: number | null;
 
   attachments: {
     id: number;

@@ -1,12 +1,14 @@
 import "server-only";
 
-import crypto from 'crypto'
-import bcrypt from 'bcrypt';
+import { randomInt, createHmac, timingSafeEqual } from "crypto";
 import { cookies } from "next/headers";
-import { createHmac, timingSafeEqual } from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendRegistrationEmail, sendResetPasswordEmail } from "@/lib/email/otp-email";
+import { str } from "@/features/shared/sharedUtils";
 import { PURPOSE, type Purpose, type verifyState } from "./authTypes";
+
+// `str` now lives only in sharedUtils; re-exported so existing imports from here keep working.
+export { str };
 
 /* ------------------------------------------------------------------ */
 /* Constants & small helpers (not exported -> not public endpoints)    */
@@ -20,9 +22,6 @@ const RESET_TOKEN_TTL_MS = 10 * 60 * 1000;  // 10 minutes
 const MIN_PASSWORD_LENGTH = 8;
 export const RESET_COOKIE = "pw_reset";
 
-
-export const str = (v: FormDataEntryValue | null) => (v ?? "").toString();
-
 export function isRtuEmail(email: string) {
     const parts = email.split("@");
     return parts.length === 2 && parts[0].length > 0 && parts[1] === RTU_DOMAIN;
@@ -33,7 +32,7 @@ export function validatePassword(password: string): string | null {
     if (password.length < MIN_PASSWORD_LENGTH) {
         return `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`;
     }
-    
+
     // Character requirement validation
     const hasLowercase = /[a-z]/.test(password);
     const hasUppercase = /[A-Z]/.test(password);
@@ -48,7 +47,7 @@ export function validatePassword(password: string): string | null {
     if (!hasDigit) {
         return "Password must contain at least one digit.";
     }
-    
+
     return null;
 }
 
@@ -69,12 +68,24 @@ export async function emailIsRegistered(email: string): Promise<boolean | null> 
     return !!data;
 }
 
+/* ---- HMAC helpers (signed reset cookie + OTP hashing) ---- */
+
+function secret() {
+    const s = process.env.AUTH_COOKIE_SECRET;
+    if (!s) throw new Error("AUTH_COOKIE_SECRET is not set");
+    return s;
+}
+
+function safeEqual(a: string, b: string) {
+    const x = Buffer.from(a);
+    const y = Buffer.from(b);
+    return x.length === y.length && timingSafeEqual(x, y);
+}
+
 /* ---- signed, short-lived "OTP verified" cookie for password reset ---- */
 
 export function sign(value: string) {
-    const secret = process.env.AUTH_COOKIE_SECRET;
-    if (!secret) throw new Error("AUTH_COOKIE_SECRET is not set");
-    return createHmac("sha256", secret).update(value).digest("hex");
+    return createHmac("sha256", secret()).update(value).digest("hex");
 }
 
 export async function setResetToken(email: string) {
@@ -98,9 +109,7 @@ export async function readResetToken(): Promise<string | null> {
     const [payload, sig] = raw.split(".");
     if (!payload || !sig) return null;
 
-    const a = Buffer.from(sig);
-    const b = Buffer.from(sign(payload));
-    if (a.length !== b.length || !timingSafeEqual(a, b)) return null;
+    if (!safeEqual(sig, sign(payload))) return null;
 
     try {
         const { email, exp } = JSON.parse(Buffer.from(payload, "base64url").toString());
@@ -112,8 +121,23 @@ export async function readResetToken(): Promise<string | null> {
 }
 
 /* ------------------------------------------------------------------ */
-/* OTP core: issue + check                                             */
+/* OTP core: generate, hash, issue + check                             */
 /* ------------------------------------------------------------------ */
+
+// one random draw, zero-padded (no loop, no async needed)
+export function generateOtp(length: number = 6): string {
+    return randomInt(0, 10 ** length).toString().padStart(length, "0");
+}
+
+// Keyed hash bound to email + purpose, so a stored hash can't be brute-forced
+// without the secret and can't be replayed for another email or flow.
+// (The "otp:" prefix keeps these inputs disjoint from the reset-cookie payloads,
+// which are base64url and can never contain ":".)
+export function hashOtp(otp: string, email: string, purpose: Purpose): string {
+    return createHmac("sha256", secret())
+        .update(`otp:${PURPOSE[purpose]}:${email}:${otp}`)
+        .digest("hex");
+}
 
 // enforces cooldown + daily cap, stores a hashed OTP, invalidates older ones, emails the code
 export async function issueOtp(firstName: string, email: string, purpose: Purpose): Promise<{ success: boolean; message: string }> {
@@ -146,35 +170,35 @@ export async function issueOtp(firstName: string, email: string, purpose: Purpos
         }
     }
 
-    let otpCode: string;
-    try {
-        otpCode = await generateOtp();
-        const hashed = await hashOtp(otpCode);
+    const otpCode = generateOtp();
 
-        const { error: insertError } = await supabase.from("otp_verifications").insert({
-            email,
-            hashed_code: hashed,
-            purpose_id: purposeId,
-            attempts: 0,
-        });
-        if (insertError) throw insertError;
-    } catch (err) {
-        console.error("[issueOtp] generate/insert failed:", err);
+    const { error: insertError } = await supabase.from("otp_verifications").insert({
+        email,
+        hashed_code: hashOtp(otpCode, email, purpose),
+        purpose_id: purposeId,
+        attempts: 0,
+    });
+    if (insertError) {
+        console.error("[issueOtp] insert failed:", insertError);
         return { success: false, message: "Couldn't generate a code. Please try again." };
     }
 
-    // invalidate previous codes (the new one is already inserted)
-    if (recent.length > 0) {
-        await supabase
+    // The new code is already stored, so invalidating the old ones and sending the email are independent: run them together.
+    const invalidateOld = async () => {
+        if (recent.length === 0) return;
+        const { error } = await supabase
             .from("otp_verifications")
             .update({ expires_at: new Date().toISOString() })
             .in("id", recent.map((r) => r.id));
-    }
+        if (error) console.error("[issueOtp] invalidate failed:", error);
+    };
 
-    const result =
+    const [, result] = await Promise.all([
+        invalidateOld(),
         purpose === "registration"
-            ? await sendRegistrationEmail(email, otpCode, firstName)
-            : await sendResetPasswordEmail(email, otpCode, firstName);
+            ? sendRegistrationEmail(email, otpCode, firstName)
+            : sendResetPasswordEmail(email, otpCode, firstName),
+    ]);
 
     if (!result.success) {
         return { success: false, message: "Failed to send the email. Please try again." };
@@ -218,11 +242,33 @@ export async function checkOtp(formData: FormData, email: string, purpose: Purpo
         return { success: false, message: "Code expired. Please request a new one." };
     }
 
-    const isMatch = await bcrypt.compare(code, otpData.hashed_code);
+    // The comparison is instant (HMAC), so do it first and then make ONE guarded write.
+    // The write only lands if `attempts` is still what we read and the code is still unexpired
+    // (compare-and-set), so parallel requests can't all get a "free" guess, and a correct code
+    // can't be consumed twice. Success also bumps `attempts`, which is what makes a racing
+    // second request fail the guard.
+    const matches = safeEqual(hashOtp(code, email, purpose), otpData.hashed_code);
+    const used = otpData.attempts + 1;
+    const nowIso = new Date().toISOString();
 
-    if (!isMatch) {
-        const used = otpData.attempts + 1;
-        await supabase.from("otp_verifications").update({ attempts: used }).eq("id", otpData.id);
+    const { data: claimed, error: claimError } = await supabase
+        .from("otp_verifications")
+        .update(matches ? { attempts: used, expires_at: nowIso } : { attempts: used })
+        .eq("id", otpData.id)
+        .eq("attempts", otpData.attempts)
+        .gt("expires_at", nowIso)
+        .select("id");
+
+    if (claimError) {
+        console.error("[checkOtp] update failed:", claimError);
+        return { success: false, message: "Something went wrong. Please try again." };
+    }
+    if (!claimed || claimed.length === 0) {
+        // lost a race with a parallel request, or the code expired in between
+        return { success: false, message: "Please try again." };
+    }
+
+    if (!matches) {
         const left = MAX_OTP_ATTEMPTS - used;
         return {
             success: false,
@@ -232,36 +278,7 @@ export async function checkOtp(formData: FormData, email: string, purpose: Purpo
         };
     }
 
-    // consume: only succeeds if the code is still unexpired, so it can't be used twice
-    const nowIso = new Date().toISOString();
-    const { data: consumed, error: consumeError } = await supabase
-        .from("otp_verifications")
-        .update({ expires_at: nowIso })
-        .eq("id", otpData.id)
-        .gt("expires_at", nowIso)
-        .select("id");
-
-    if (consumeError || !consumed || consumed.length === 0) {
-        return { success: false, message: "Code expired. Please request a new one." };
-    }
-
     return { success: true, message: "OTP matched." };
-}
-
-export async function generateOtp(length: number = 6){
-    let otp = "";
-
-    for (let i = 0; i < length; i++){
-        otp += crypto.randomInt(0, 10).toString();
-    }
-    
-    return otp;
-}
-
-export async function hashOtp(otp: string, round: number = 10){
-    const hashedOtp = bcrypt.hash(otp, round);
-
-    return hashedOtp;
 }
 
 export function friendlyAuthError(error: { code?: string; status?: number; message?: string }): string {

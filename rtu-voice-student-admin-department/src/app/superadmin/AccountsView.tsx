@@ -69,7 +69,7 @@ export function AccountsView({
     <div className="container">
       <div className={s.head}>
         <div className={s.listTitleRow}>
-          <h1 className="page-title">Accounts</h1>
+          <h1 className="page-title">Staffs' Accounts</h1>
           {/* Counts the accounts matching the search, role and status filters. */}
           <span className={`${s.countPill} ${s.pillTotal}`} aria-label={`${total} of ${overallTotal} accounts shown`}>
             {total}

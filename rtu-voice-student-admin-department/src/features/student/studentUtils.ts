@@ -1,15 +1,22 @@
 import "server-only"; // uses the admin client: never import this from a "use client" file
 
-import { randomUUID } from "crypto";
+import { randomUUID, randomInt } from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { str } from "@/features/shared/sharedUtils";
+import { str, EVIDENCE_BUCKET } from "@/features/shared/sharedUtils";
 import type { SubmitComplaintErrors, UploadedFile } from "@/features/student/studentTypes";
-import {randomInt} from 'crypto';
-import { MAX_FILES, TITLE_MAX, DESCRIPTION_MAX, MAX_TOTAL_BYTES, EXTENSIONS, isAllowedEvidenceType } from "./studentTypes"; // your real path
+import {
+    MAX_FILES,
+    TITLE_MAX,
+    DESCRIPTION_MAX,
+    MAX_TOTAL_BYTES,
+    EXTENSIONS,
+    isAllowedEvidenceType,
+} from "@/features/student/studentTypes";
+
 /* ---------------- constants ---------------- */
 
-export const EVIDENCE_BUCKET = "complaint-evidence"; // your PRIVATE bucket
-export const URL_LIFETIME_SECONDS = 60;
+// These two used to be defined here AND in sharedUtils. One copy now; re-exported so old imports keep working.
+export { EVIDENCE_BUCKET, URL_LIFETIME_SECONDS } from "@/features/shared/sharedUtils";
 
 // no I, O, 0 or 1, since students will read these out and type them
 const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -37,7 +44,7 @@ export function parseComplaintForm(formData: FormData): ComplaintInput {
     return {
         title: str(formData.get("title")).trim(),
         description: str(formData.get("description")).trim(),
-        categoryId: Number(formData.get("categories")), 
+        categoryId: Number(formData.get("categories")),
         releaseToPublic: formData.get("privacy_setting") === "public",
         evidence: formData
             .getAll("evidence")
@@ -85,25 +92,41 @@ export async function removeFiles(admin: AdminClient, paths: string[]) {
 }
 
 // Uploads every file under a random name (no user id, no original name in the path).
-// If one upload fails, the ones already uploaded are removed and null is returned.
+// Files upload in parallel (up to MAX_FILES). If any upload fails, the ones that
+// succeeded are removed and null is returned.
 export async function uploadEvidence(admin: AdminClient, files: File[]): Promise<UploadedFile[] | null> {
+    if (files.length === 0) return [];
+
+    const results = await Promise.allSettled(
+        files.map(async (file): Promise<UploadedFile> => {
+            const path = `${randomUUID()}.${EXTENSIONS[file.type]}`;
+            const { error } = await admin.storage
+                .from(EVIDENCE_BUCKET)
+                .upload(path, file, { contentType: file.type });
+
+            if (error) throw error;
+            return { path, name: file.name, type: file.type, size: file.size };
+        })
+    );
+
     const uploaded: UploadedFile[] = [];
+    let failed = false;
 
-    for (const file of files) {
-        const path = `${randomUUID()}.${EXTENSIONS[file.type]}`;
-        const { error } = await admin.storage
-            .from(EVIDENCE_BUCKET)
-            .upload(path, file, { contentType: file.type });
-
-        if (error) {
-            console.error("[uploadEvidence] upload failed:", error);
-            await removeFiles(admin, uploaded.map((u) => u.path));
-            return null;
+    for (const r of results) {
+        if (r.status === "fulfilled") {
+            uploaded.push(r.value);
+        } else {
+            failed = true;
+            console.error("[uploadEvidence] upload failed:", r.reason);
         }
-        uploaded.push({ path, name: file.name, type: file.type, size: file.size });
     }
 
-    return uploaded;
+    if (failed) {
+        await removeFiles(admin, uploaded.map((u) => u.path));
+        return null;
+    }
+
+    return uploaded; // same order as `files`
 }
 
 /* ---------------- rpc results ---------------- */

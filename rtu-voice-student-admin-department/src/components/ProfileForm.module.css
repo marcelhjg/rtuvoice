@@ -1,5 +1,5 @@
 .page :global(.page-head) {
-  padding-top: 12px;
+  padding-top: clamp(2rem, 5vw, 3rem);
   padding-bottom: 20px;
 }
 .page :global(.page-title) {

@@ -4,7 +4,17 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser } from "@/features/auth/guards";
 import type { ActionResult, ActionState } from "@/features/shared/sharedTypes";
-import { PAGE_SIZE, UUID_RE, cleanSearch } from "@/features/shared/sharedUtils";
+import {
+  UUID_RE,
+  cleanSearch,
+  hasKey,
+  pageParams,
+  statusLabel,
+  toPage,
+  totalPagesOf,
+} from "@/features/shared/sharedUtils";
+import { runAfterResponse } from "@/features/shared/background";
+import { invalidateDepartmentOptions } from "@/features/admin/adminData";
 import {
   EMAIL_DOMAIN,
   MAX_DEPARTMENT_NAME,
@@ -23,6 +33,8 @@ import {
   type StaffAccountFilters,
   type StaffAccountListData,
   type StaffAccountRow,
+  type StudentAccountFilters,
+  type StudentAccountRow,
 } from "@/features/superAdmin/superAdminTypes";
 
 /* ---------------- helpers (not exported) ---------------- */
@@ -34,7 +46,6 @@ const isSuperAdmin = (me: { role?: string } | null | undefined) => me?.role === 
 const rpcMessage = (error: { code?: string; message: string }, fallback: string) =>
   error.code === "42501" ? "Not allowed." : error.code === "P0001" ? error.message : fallback;
 
-const toPage = (page?: number) => Math.max(1, Math.floor(page ?? 1));
 const optBool = (v: unknown) => (typeof v === "boolean" ? v : null);
 const EMAIL_RE = /^[^@\s]+@rtu\.edu\.ph$/;
 
@@ -50,15 +61,6 @@ async function syncAuthBan(userId: string, active: boolean) {
     console.error("[syncAuthBan] threw:", userId, e);
   }
 }
-
-const STATUS_LABEL: Record<string, string> = {
-  pending: "Pending",
-  assigned: "Assigned",
-  in_progress: "In Progress",
-  resolved: "Resolved",
-  rejected: "Rejected",
-};
-const statusLabel = (s: string) => STATUS_LABEL[s] ?? s;
 
 // builds the "Details" column text
 function buildDetails(r: ActivityLogRawRow): string | null {
@@ -81,15 +83,14 @@ export async function getStaffAccounts(
   if (!isSuperAdmin(me)) return { success: false, message: "Not allowed." };
 
   const page = toPage(opts.page);
-  const role = opts.role && opts.role in STAFF_ROLE_ID ? opts.role : null;
+  const role = opts.role && hasKey(STAFF_ROLE_ID, opts.role) ? opts.role : null;
 
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("get_staff_accounts", {
     p_search: cleanSearch(opts.search),
     p_role: role,
     p_is_active: optBool(opts.isActive),
-    p_limit: PAGE_SIZE,
-    p_offset: (page - 1) * PAGE_SIZE,
+    ...pageParams(page),
   });
 
   if (error || !data) {
@@ -111,7 +112,39 @@ export async function getStaffAccounts(
     overallTotal: raw.overall_total,
     roleCounts: raw.role_counts,
     page,
-    totalPages: Math.max(1, Math.ceil(raw.total / PAGE_SIZE)),
+    totalPages: totalPagesOf(raw.total),
+  };
+}
+
+export async function getStudentAccounts(
+  opts: StudentAccountFilters = {}
+): Promise<ActionResult<PagedData<StudentAccountRow>>> {
+  const me = await getCurrentUser();
+  if (!isSuperAdmin(me)) return { success: false, message: "Not allowed." };
+
+  const page = toPage(opts.page);
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("get_student_accounts", {
+    p_search: cleanSearch(opts.search),
+    p_is_active: optBool(opts.isActive),
+    ...pageParams(page),
+  });
+
+  if (error || !data) {
+    console.error("[get_student_accounts] rpc failed:", error);
+    return { success: false, message: "Couldn't load student accounts. Please try again." };
+  }
+
+  const raw = data as { total: number; overall_total: number; rows: StudentAccountRow[] };
+
+  return {
+    success: true,
+    rows: raw.rows,
+    total: raw.total,
+    overallTotal: raw.overall_total,
+    page,
+    totalPages: totalPagesOf(raw.total),
   };
 }
 
@@ -127,8 +160,7 @@ export async function getDepartmentAccounts(
   const { data, error } = await supabase.rpc("get_department_accounts", {
     p_search: cleanSearch(opts.search),
     p_is_active: optBool(opts.isActive),
-    p_limit: PAGE_SIZE,
-    p_offset: (page - 1) * PAGE_SIZE,
+    ...pageParams(page),
   });
 
   if (error || !data) {
@@ -144,7 +176,7 @@ export async function getDepartmentAccounts(
     total: raw.total,
     overallTotal: raw.overall_total,
     page,
-    totalPages: Math.max(1, Math.ceil(raw.total / PAGE_SIZE)),
+    totalPages: totalPagesOf(raw.total),
   };
 }
 
@@ -160,8 +192,7 @@ export async function getAdminAccounts(
   const { data, error } = await supabase.rpc("get_admin_accounts", {
     p_search: cleanSearch(opts.search),
     p_is_active: optBool(opts.isActive),
-    p_limit: PAGE_SIZE,
-    p_offset: (page - 1) * PAGE_SIZE,
+    ...pageParams(page),
   });
 
   if (error || !data) {
@@ -177,7 +208,7 @@ export async function getAdminAccounts(
     total: raw.total,
     overallTotal: raw.overall_total,
     page,
-    totalPages: Math.max(1, Math.ceil(raw.total / PAGE_SIZE)),
+    totalPages: totalPagesOf(raw.total),
   };
 }
 
@@ -188,7 +219,7 @@ export async function getActivityLog(
   if (!isSuperAdmin(me)) return { success: false, message: "Not allowed." };
 
   const page = toPage(opts.page);
-  const role = opts.role && opts.role in STAFF_ROLE_ID ? opts.role : null;
+  const role = opts.role && hasKey(STAFF_ROLE_ID, opts.role) ? opts.role : null;
   const action = opts.action && /^[a-z_]{1,50}$/.test(opts.action) ? opts.action : null;
 
   const supabase = await createClient();
@@ -196,8 +227,7 @@ export async function getActivityLog(
     p_search: cleanSearch(opts.search),
     p_action: action,
     p_actor_role: role,
-    p_limit: PAGE_SIZE,
-    p_offset: (page - 1) * PAGE_SIZE,
+    ...pageParams(page),
   });
 
   if (error || !data) {
@@ -227,7 +257,7 @@ export async function getActivityLog(
     total: raw.total,
     overallTotal: raw.overall_total,
     page,
-    totalPages: Math.max(1, Math.ceil(raw.total / PAGE_SIZE)),
+    totalPages: totalPagesOf(raw.total),
   };
 }
 
@@ -240,7 +270,8 @@ export async function createAccount(input: CreateAccountInput): Promise<ActionSt
   const email = input.email?.trim().toLowerCase() ?? "";
   const first = input.first_name?.trim() ?? "";
   const last = input.last_name?.trim() ?? "";
-  const roleId = input.role in STAFF_ROLE_ID ? STAFF_ROLE_ID[input.role] : null;
+  // hasKey, not `in`: "constructor" / "toString" are `in` every object
+  const roleId = hasKey(STAFF_ROLE_ID, input.role) ? STAFF_ROLE_ID[input.role] : null;
 
   if (!EMAIL_RE.test(email)) {
     return { success: false, message: `Email must be a valid ${EMAIL_DOMAIN} address.` };
@@ -259,7 +290,8 @@ export async function createAccount(input: CreateAccountInput): Promise<ActionSt
     return { success: false, message: "Admin accounts cannot belong to a department." };
   }
 
-  // 1) the auth user (no password: staff sign in with their email OTP)
+  // 1) the auth user (no password: the account is created already confirmed;
+  //    the person sets a password through "forgot password", so check that this is the flow you want)
   const admin = await createAdminClient();
   const { data: created, error: authError } = await admin.auth.admin.createUser({
     email,
@@ -324,7 +356,9 @@ export async function setAccountActive(
     return { success: false, message: rpcMessage(error, "Something went wrong. Please try again.") };
   }
 
-  await syncAuthBan(userId, isActive);
+  // The RPC already made the account inactive in the database (getCurrentUser and login both check that),
+  // so mirroring it into Auth is belt-and-braces and can happen after the response.
+  runAfterResponse(() => syncAuthBan(userId, isActive), "setAccountActive ban sync");
 
   // revalidatePath("/superadmin", "layout");
   return { success: true, message: isActive ? "Account reactivated." : "Account deactivated." };
@@ -352,18 +386,23 @@ export async function setDepartmentActive(
     return { success: false, message: rpcMessage(error, "Something went wrong. Please try again.") };
   }
 
-  // the RPC also (de)activated the department's account(s): mirror that in Auth
-  try {
+  invalidateDepartmentOptions();
+
+  // the RPC also (de)activated the department's account(s): mirror that in Auth, after the response
+  runAfterResponse(async () => {
     const admin = await createAdminClient();
-    const { data: accounts } = await admin
+    const { data: accounts, error: accountsError } = await admin
       .from("users")
       .select("id, is_active")
       .eq("department_id", departmentId)
       .eq("role_id", STAFF_ROLE_ID.department);
+
+    if (accountsError) {
+      console.error("[setDepartmentActive] account lookup failed:", accountsError);
+      return;
+    }
     await Promise.all((accounts ?? []).map((a) => syncAuthBan(a.id, a.is_active)));
-  } catch (e) {
-    console.error("[setDepartmentActive] auth sync failed:", e);
-  }
+  }, "setDepartmentActive ban sync");
 
   // revalidatePath("/superadmin", "layout");
   return { success: true, message: isActive ? "Department reactivated." : "Department deactivated." };
@@ -432,6 +471,8 @@ export async function renameDepartment(
     return { success: false, message: rpcMessage(error, "Something went wrong. Please try again.") };
   }
 
+  invalidateDepartmentOptions();
+
   // revalidatePath("/superadmin", "layout");
   return { success: true, message: "Department renamed." };
 }
@@ -490,6 +531,8 @@ export async function addDepartment(
     console.error("[add_department] rpc failed:", error);
     return { success: false, message: rpcMessage(error, "Couldn't add the department. Please try again.") };
   }
+
+  invalidateDepartmentOptions();
 
   // revalidatePath("/superadmin", "layout");
   return { success: true, message: "Department added.", department_id: Number(data) };

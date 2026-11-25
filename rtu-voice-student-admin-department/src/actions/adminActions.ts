@@ -1,18 +1,22 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser } from "@/features/auth/guards";
 import { analyzeComplaint, type ComplaintAnalysis } from "@/features/ai/analyzeComplaint";
-import { revalidatePath } from "next/cache";
 import type { ActionResult, ActionState, ComplaintListData } from "@/features/shared/sharedTypes";
-import { PAGE_SIZE, cleanSearch, roundTo } from "@/features/shared/sharedUtils";
-import { 
+import { cleanSearch, roundTo, toPage, pageParams, totalPagesOf } from "@/features/shared/sharedUtils";
+import { runAfterResponse } from "@/features/shared/background";
+import {
   ADMIN_LISTS,
+  ASSIGN_ACTIONS,
   MASTER_STATUSES,
+  MAX_REJECT_REASON,
   PRIORITY_ID,
   type AdminComplaintDetails,
   type AdminDashboardStats,
   type AdminListKey,
+  type AssignAction,
   type ComplaintRow,
   type MasterQueueFilters,
   type OngoingComplaint,
@@ -22,7 +26,6 @@ import {
   type PendingQueueFilters,
   type StatsType,
 } from "@/features/admin/adminTypes";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { sendAssignmentEmail, sendReassignmentEmails } from "@/lib/email/notification";
 
 /* ---------------- validation + master tracking queues ---------------- */
@@ -75,6 +78,8 @@ export async function getMasterTrackingQueue(
 
 /* ---------------- assign / reject ---------------- */
 
+const DEPT_ACCOUNT_COLUMNS = "rtu_email, first_name, last_name";
+
 export async function assignComplaint(formData: FormData): Promise<ActionState> {
   const me = await getCurrentUser();
   if (!me || me.role !== "admin") return { success: false, message: "Not allowed." };
@@ -82,43 +87,45 @@ export async function assignComplaint(formData: FormData): Promise<ActionState> 
   const complaintId = String(formData.get("complaint_id") ?? "");
   const departmentId = Number(formData.get("department_id"));
   const reason = String(formData.get("reason") ?? "").trim() || null;
-  const action = String(formData.get("action") ?? ""); // "assign" | "reassign"
+  const action = String(formData.get("action") ?? "");
 
-  if (!complaintId || !Number.isInteger(departmentId)) {
+  if (!complaintId || !Number.isInteger(departmentId) || departmentId <= 0) {
     return { success: false, message: "Invalid request." };
   }
-  if (action !== "assign" && action !== "reassign") {
+  if (!(ASSIGN_ACTIONS as readonly string[]).includes(action)) {
     return { success: false, message: "Invalid action." };
   }
+  const assignAction = action as AssignAction;
 
   const supabase = await createClient();
+  const supabaseAdmin = await createAdminClient();
 
-  const { data: complaint, error: fetchError } = await supabase
-    .from("complaints")
-    .select("title, description, is_public, priority_id, department_id")
-    .eq("id", complaintId)
-    .maybeSingle();
+  // The complaint and the target department's account don't depend on each other: fetch them together.
+  // (tracking_id never changes, so it comes along here instead of a second lookup after the RPC.)
+  const [complaintRes, deptRes] = await Promise.all([
+    supabase
+      .from("complaints")
+      .select("tracking_id, title, description, is_public, priority_id, department_id")
+      .eq("id", complaintId)
+      .maybeSingle(),
+    supabaseAdmin
+      .from("users")
+      .select(DEPT_ACCOUNT_COLUMNS)
+      .eq("department_id", departmentId)
+      .eq("role_id", 3)
+      .eq("is_active", true)
+      .maybeSingle(),
+  ]);
 
+  const { data: complaint, error: fetchError } = complaintRes;
   if (fetchError) {
     console.error("[complaints] fetch failed:", fetchError);
     return { success: false, message: "Couldn't fetch the complaint. Please try again." };
   }
   if (!complaint) return { success: false, message: "Complaint not found." };
 
-  // capture the current department BEFORE the rpc overwrites it
-  const previousDepartmentId = complaint.department_id;
-
   // verify the target department has an active account BEFORE spending an AI call
-  const supabaseAdmin = await createAdminClient();
-
-  const { data: dept, error: deptError } = await supabaseAdmin
-    .from("users")
-    .select("rtu_email, first_name, last_name")
-    .eq("department_id", departmentId)
-    .eq("role_id", 3)
-    .eq("is_active", true)
-    .maybeSingle();
-
+  const { data: dept, error: deptError } = deptRes;
   if (deptError) {
     console.error("[assignComplaint] department lookup failed:", deptError);
     return { success: false, message: "Couldn't verify the department. Please try again." };
@@ -129,6 +136,9 @@ export async function assignComplaint(formData: FormData): Promise<ActionState> 
       message: "This department has no active account. Activate one before assigning.",
     };
   }
+
+  // capture the current department BEFORE the rpc overwrites it
+  const previousDepartmentId = complaint.department_id;
 
   // AI runs only the first time (no priority saved yet)
   let ai: ComplaintAnalysis | null = null;
@@ -161,38 +171,35 @@ export async function assignComplaint(formData: FormData): Promise<ActionState> 
     };
   }
 
-  const { data: complaintdata } = await supabaseAdmin
-    .from("complaints")
-    .select("tracking_id")
-    .eq("id", complaintId)
-    .maybeSingle();
-
-  if (!complaintdata) {
-    console.error("[assignComplaint] email skipped, tracking id lookup failed:", { complaintId });
-  } else if (action === "assign") {
-    await sendAssignmentEmail({ ...dept, tracking_id: complaintdata.tracking_id });
+  // Emails go out after the response, so the admin doesn't wait on the previous-department lookup or SMTP.
+  const trackingId: string | null = complaint.tracking_id ?? null;
+  if (!trackingId) {
+    console.error("[assignComplaint] email skipped, no tracking id:", { complaintId });
   } else {
-    const { data: previousDept } = previousDepartmentId != null
-      ? await supabaseAdmin
-          .from("users")
-          .select("rtu_email, first_name, last_name")
-          .eq("department_id", previousDepartmentId)
-          .eq("role_id", 3)
-          .eq("is_active", true)
-          .maybeSingle()
-      : { data: null };
+    runAfterResponse(async () => {
+      if (assignAction === "assign") {
+        await sendAssignmentEmail({ ...dept, tracking_id: trackingId });
+        return;
+      }
 
-    if (previousDept) {
-      await sendReassignmentEmails({
-        trackingId: complaintdata.tracking_id,
-        previousDept,
-        newDept: dept,
-      });
-    } else {
-      // no previous department found: still notify the new one
-      console.error("[assignComplaint] previous department not found, sending assignment email only");
-      await sendAssignmentEmail({ ...dept, tracking_id: complaintdata.tracking_id });
-    }
+      const { data: previousDept } = previousDepartmentId != null
+        ? await supabaseAdmin
+            .from("users")
+            .select(DEPT_ACCOUNT_COLUMNS)
+            .eq("department_id", previousDepartmentId)
+            .eq("role_id", 3)
+            .eq("is_active", true)
+            .maybeSingle()
+        : { data: null };
+
+      if (previousDept) {
+        await sendReassignmentEmails({ trackingId, previousDept, newDept: dept });
+      } else {
+        // no previous department found: still notify the new one
+        console.error("[assignComplaint] previous department not found, sending assignment email only");
+        await sendAssignmentEmail({ ...dept, tracking_id: trackingId });
+      }
+    }, "assignComplaint emails");
   }
 
   // revalidatePath("/admin", "layout");
@@ -208,7 +215,9 @@ export async function rejectComplaint(formData: FormData): Promise<ActionState> 
 
   if (!complaintId) return { success: false, message: "Invalid request." };
   if (!reason) return { success: false, message: "A reason is required to reject." };
-  if (reason.length > 500) return { success: false, message: "Reason is too long (max 500 characters)." };
+  if (reason.length > MAX_REJECT_REASON) {
+    return { success: false, message: `Reason is too long (max ${MAX_REJECT_REASON} characters).` };
+  }
 
   const supabase = await createClient();
 
@@ -242,19 +251,19 @@ export async function getComplaintsAdmin(
   if (!me || me.role !== "admin") return { success: false, message: "Not allowed." };
 
   const cfg = ADMIN_LISTS[list];
-  const page = Math.max(1, Math.floor(opts.page ?? 1));
-  const departmentId =
-    opts.departmentId !== undefined && Number.isInteger(opts.departmentId) ? opts.departmentId : null;
+  if (!cfg) return { success: false, message: "Invalid request." };
+
+  const page = toPage(opts.page);
+  const departmentId = Number.isInteger(opts.departmentId) ? (opts.departmentId as number) : null;
 
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("get_complaints_admin", {
     p_status_ids: cfg.statusIds ? [...cfg.statusIds] : null,
     p_department_id: departmentId,
-    p_search: opts.search?.trim() || null,
+    p_search: cleanSearch(opts.search),
     p_sort: opts.sort === "oldest" ? "oldest" : "newest",
     p_date_field: cfg.dateField,
-    p_limit: PAGE_SIZE,
-    p_offset: (page - 1) * PAGE_SIZE,
+    ...pageParams(page),
   });
 
   if (error) {
@@ -269,7 +278,7 @@ export async function getComplaintsAdmin(
     total,
     statusTotal: status_total,
     page,
-    totalPages: Math.max(1, Math.ceil(total / PAGE_SIZE)),
+    totalPages: totalPagesOf(total),
   };
 }
 
@@ -279,7 +288,7 @@ export async function getComplaintDetails(
   const me = await getCurrentUser();
   if (!me || me.role !== "admin") return { success: false, message: "Not allowed." };
 
-  const id = trackingId.trim();
+  const id = trackingId?.trim() ?? "";
   if (!id) return { success: false, message: "Invalid request." };
 
   const supabase = await createClient();

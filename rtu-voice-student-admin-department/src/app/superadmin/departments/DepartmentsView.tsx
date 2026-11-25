@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { addDepartment, renameDepartment, setDepartmentActive } from "@/actions/superAdminActions";
-import { Pager, adminStyles as s } from "@/components/admin/bits";
+import { EmptyState, Pager, SearchBox, adminStyles as s } from "@/components/admin/bits";
 import m from "@/components/admin/modals.module.css";
 import { ConfirmDialog } from "@/components/admin/superadmin";
 import x from "@/components/admin/superadmin.module.css";
@@ -32,9 +32,13 @@ export function DepartmentsView({
   error: string | null;
 }) {
   const toast = useToast();
-  const { update, pending: loading, refresh } = useUrlFilters();
+  const { params, update, pending: loading, refresh } = useUrlFilters();
+  const statusParam = params.get("status");
+  const status = statusParam === "active" || statusParam === "inactive" ? statusParam : "all";
+  const [query, setQuery] = useDebouncedSearch(params.get("q") ?? "", (v) => update({ q: v, page: 1 }));
   const [editing, setEditing] = useState<Editing>(null);
   const [confirming, setConfirming] = useState<Confirming>(null);
+  const filtered = Boolean(query || status !== "all");
 
   // Returns the error to show inside the dialog, or null once it worked.
   const changeActive = async (dept: DepartmentAccountRow, isActive: boolean): Promise<string | null> => {
@@ -56,8 +60,8 @@ export function DepartmentsView({
       <div className={s.head}>
         <div className={s.listTitleRow}>
           <h1 className="page-title">Departments</h1>
-          <span className={`${s.countPill} ${s.pillTotal}`} aria-label={`${overallTotal} departments`}>
-            {overallTotal}
+          <span className={`${s.countPill} ${s.pillTotal}`} aria-label={`${total} of ${overallTotal} departments shown`}>
+            {total}
           </span>
         </div>
         <p className={s.subtitle}>The offices complaints can be assigned to. Deactivated departments stop receiving new complaints; their history stays.</p>
@@ -65,6 +69,17 @@ export function DepartmentsView({
 
       <section className={s.panel} aria-label="Departments" aria-busy={loading} style={{ opacity: loading ? 0.6 : 1 }}>
         <div className={s.toolbar}>
+          <SearchBox value={query} onChange={setQuery} label="Search by department or account" />
+          <select
+            aria-label="Filter by status"
+            className={`select ${s.filter}`}
+            value={status}
+            onChange={(e) => update({ status: e.target.value === "all" ? "" : e.target.value, page: 1 })}
+          >
+            <option value="all">All statuses</option>
+            <option value="active">Active</option>
+            <option value="inactive">Deactivated</option>
+          </select>
           <button type="button" className={`btn btn-primary ${x.toolbarAction}`} onClick={() => setEditing({ type: "add" })}>
             <Icon name="plus" size={16} strokeWidth={2.4} /> Add department
           </button>
@@ -131,6 +146,23 @@ export function DepartmentsView({
               ))}
             </tbody>
           </table>
+          {rows.length === 0 && !error ? (
+            <EmptyState
+              className={x.empty}
+              message={filtered ? "No departments match these filters." : "No departments yet."}
+              action={
+                filtered
+                  ? {
+                      label: "Clear filters",
+                      onClick: () => {
+                        setQuery("");
+                        update({ q: "", status: "", page: 1 });
+                      },
+                    }
+                  : undefined
+              }
+            />
+          ) : null}
         </div>
         <Pager page={page} pageSize={pageSize} total={total} onPage={(p) => update({ page: p })} />
       </section>

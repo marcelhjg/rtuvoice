@@ -1,8 +1,9 @@
-// src/features/admin/adminUi.ts  (new)
+// src/features/admin/adminUi.ts
 // Small shared helpers + types for the admin screens. No "use server" / "use client".
 import type { ComponentProps } from "react";
 import type { PriorityDot, StatusPill } from "@/components/admin/bits";
 import type { OngoingComplaint } from "@/features/admin/adminTypes";
+import { statusLabel } from "@/features/shared/sharedUtils";
 
 export type DepartmentOption = { id: number; name: string; is_active: boolean };
 export type SearchParamsInput = Promise<Record<string, string | string[] | undefined>>;
@@ -15,14 +16,8 @@ export const param = (v: string | string[] | undefined) => (Array.isArray(v) ? v
 export type StatusProp = ComponentProps<typeof StatusPill>["status"];
 export type PriorityProp = ComponentProps<typeof PriorityDot>["priority"];
 
-const STATUS_LABEL: Record<string, string> = {
-  pending: "Pending",
-  assigned: "Assigned",
-  in_progress: "In Progress",
-  resolved: "Resolved",
-  rejected: "Rejected",
-};
-export const statusLabel = (s: string) => STATUS_LABEL[s] ?? s;
+// statusLabel now lives in sharedUtils (superAdminActions had its own copy); re-exported so existing imports keep working.
+export { statusLabel };
 export const asStatus = (s: string) => statusLabel(s) as StatusProp;
 
 // ADJUST if your priority_levels names differ (PRIORITY_ID uses high / mid / low)
