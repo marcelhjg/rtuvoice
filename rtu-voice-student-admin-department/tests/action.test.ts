@@ -8,6 +8,12 @@
 import { vi, describe, it, expect, beforeEach } from "vitest";
 
 /* ---------------- mocks (hoisted) ---------------- */
+const pendingBackgroundTasks = vi.hoisted(() => [] as (() => Promise<void>)[]);
+vi.mock("@/features/shared/background", () => ({
+  runAfterResponse: (task: () => Promise<void>) => {
+    pendingBackgroundTasks.push(task);
+  },
+}));
 vi.mock("@/features/auth/guards", () => ({ getCurrentUser: vi.fn() }));
 vi.mock("@/lib/supabase/server", () => ({ createClient: vi.fn() }));
 vi.mock("@/lib/supabase/admin", () => ({ createAdminClient: vi.fn() }));
@@ -24,7 +30,10 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { analyzeComplaint } from "@/features/ai/analyzeComplaint";
 import { sendAssignmentEmail, sendReassignmentEmails } from "@/lib/email/notification";
 import { rejectComplaint, assignComplaint } from "@/actions/adminActions";
-import { updateComplaintStatus } from "@/actions/departmentActions";
+import {
+  getComplaintDetailsDepartment,
+  updateComplaintStatus,
+} from "@/actions/departmentActions";
 /* ---------------- helpers ---------------- */
 // Confirm these match getCurrentUser().role in your code.
 const ROLE = {
@@ -43,6 +52,11 @@ const fd = (o: Record<string, string>) => {
   return f;
 };
 
+const flushBackgroundTasks = async () => {
+  const tasks = pendingBackgroundTasks.splice(0);
+  await Promise.all(tasks.map((task) => task()));
+};
+
 /** Chainable Supabase query builder that resolves to `result`. */
 const chain = (result: { data: any; error: any }) => {
   const b: any = {};
@@ -54,6 +68,7 @@ const chain = (result: { data: any; error: any }) => {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  pendingBackgroundTasks.length = 0;
 });
 
 /* ---------------- role gating ---------------- */
@@ -87,6 +102,28 @@ describe("role gating: gate runs before any DB access", () => {
     );
     expect(res.success).toBe(false);
     expect(createClient).not.toHaveBeenCalled();
+  });
+
+  it("omits AI title and summary from department complaint details", async () => {
+    as(ROLE.department);
+    (createClient as any).mockResolvedValue({
+      rpc: vi.fn().mockResolvedValue({
+        data: {
+          tracking_id: "TRK-001",
+          ai_title: "Private AI title",
+          ai_summary: "Private AI summary",
+        },
+        error: null,
+      }),
+    });
+
+    const res = await getComplaintDetailsDepartment("TRK-001");
+
+    expect(res.success).toBe(true);
+    if (res.success) {
+      expect(res.trackResult).not.toHaveProperty("ai_title");
+      expect(res.trackResult).not.toHaveProperty("ai_summary");
+    }
   });
 
   // Add one block per exported action. Pattern:
@@ -136,9 +173,7 @@ describe("validation", () => {
     expect(res.message).toBe("Invalid action.");
   });
 
-  // Known gap: Number("") === 0, so an EMPTY department_id passes the
-  // Number.isInteger check. If you fix it, flip this expectation.
-  it.skip("assignComplaint should reject an empty department_id", async () => {
+  it("assignComplaint rejects an empty department_id", async () => {
     as(ROLE.admin);
     const res = await assignComplaint(
       fd({ complaint_id: "x", department_id: "", action: "assign" })
@@ -193,6 +228,7 @@ describe("assignComplaint flow", () => {
   }
 
   const baseComplaint = (over: Record<string, any> = {}) => ({
+    tracking_id: "TRK-001",
     title: "Broken aircon",
     description: "Room 101",
     is_public: true,
@@ -235,6 +271,7 @@ describe("assignComplaint flow", () => {
     (analyzeComplaint as any).mockResolvedValue(aiResult);
     const { rpc } = setup({});
     const res = await assignComplaint(form());
+    await flushBackgroundTasks();
     expect(res.success).toBe(true);
     expect(analyzeComplaint).toHaveBeenCalledTimes(1);
     expect(rpc).toHaveBeenCalledWith(
@@ -251,6 +288,7 @@ describe("assignComplaint flow", () => {
   it("already prioritised complaint: AI is NOT called again", async () => {
     const { rpc } = setup({ complaint: baseComplaint({ priority_id: 2, department_id: 1 }) });
     const res = await assignComplaint(form("reassign"));
+    await flushBackgroundTasks();
     expect(res.success).toBe(true);
     expect(analyzeComplaint).not.toHaveBeenCalled();
     expect(rpc).toHaveBeenCalledWith(
@@ -286,6 +324,7 @@ describe("assignComplaint flow", () => {
     (analyzeComplaint as any).mockResolvedValue(aiResult);
     setup({});
     await assignComplaint(form("assign"));
+    await flushBackgroundTasks();
     expect(sendAssignmentEmail).toHaveBeenCalledTimes(1);
     expect(sendAssignmentEmail).toHaveBeenCalledWith(
       expect.objectContaining({ rtu_email: DEPT.rtu_email, tracking_id: "TRK-001" })
@@ -297,6 +336,7 @@ describe("assignComplaint flow", () => {
     const prev = { rtu_email: "old@rtu.edu.ph", first_name: "Old", last_name: "Dept" };
     setup({ complaint: baseComplaint({ priority_id: 2, department_id: 1 }), previousDept: prev });
     await assignComplaint(form("reassign"));
+    await flushBackgroundTasks();
     expect(sendReassignmentEmails).toHaveBeenCalledTimes(1);
     expect(sendReassignmentEmails).toHaveBeenCalledWith({
       trackingId: "TRK-001",
@@ -310,6 +350,7 @@ describe("assignComplaint flow", () => {
     const spy = vi.spyOn(console, "error").mockImplementation(() => {});
     setup({ complaint: baseComplaint({ priority_id: 2, department_id: 1 }), previousDept: null });
     await assignComplaint(form("reassign"));
+    await flushBackgroundTasks();
     expect(sendAssignmentEmail).toHaveBeenCalledTimes(1);
     expect(sendReassignmentEmails).not.toHaveBeenCalled();
     spy.mockRestore();

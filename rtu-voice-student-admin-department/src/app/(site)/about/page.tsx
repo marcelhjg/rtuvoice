@@ -16,14 +16,14 @@ const STATS = [
 const PILLARS: { icon: IconName; title: string; text: string }[] = [
   {
     icon: "eye-off",
-    title: "Identity-shielded",
-    text: "Other students, the public, and the department never see your name. Authorized administrators keep an internal link for follow-up.",
+    title: "Pseudonymous",
+    text: "Administrators can link a complaint to your account for follow-up. Department staff do not receive that account link, name, or email, but details in your complaint or files may identify you.",
   },
   { icon: "search", title: "Trackable", text: "Every concern gets a tracking ID and email updates." },
   {
     icon: "globe",
     title: "Transparent",
-    text: "A public dashboard shows what is being resolved across campus, for logged-in students.",
+    text: "If an author opts in, logged-in students see the AI-written title and summary, category, status, and date. These are written to remove personal details, but may not remove every identifying detail.",
   },
 ];
 
@@ -33,7 +33,7 @@ const TEAM = [
   { initial: "D", name: "Dela Cruz, John Albert", role: "UI / UX Designer & Quality Assurance" },
 ];
 
-const STACK = ["Next.js", "Supabase", "OpenRouter AI", "Resend", "Vercel"];
+const STACK = ["Next.js", "Supabase", "OpenRouter", "Groq", "Resend", "Vercel"];
 
 export default function AboutPage() {
   return (
@@ -76,7 +76,8 @@ export default function AboutPage() {
               </p>
               <p className={`${styles.whyText} ${legalStyles.legalText}`}>
                 You submit once, an administrator routes it, the department posts updates, and you follow it with your tracking
-                ID, all while your identity stays shielded.
+                ID. Administrators can link a complaint to your account; department staff do not receive that link. Content
+                and files you submit can still identify you.
               </p>
             </div>
             <ul className={styles.stats}>
@@ -154,7 +155,7 @@ export default function AboutPage() {
           Have a concern or feedback about RTU Voice?
         </h2>
         <p className={styles.contactText}>
-          Reach the team at <a href="mailto:RTUVoice@gmail.com">RTUVoice@gmail.com</a>
+          Reach the team at <a href="mailto:2024-200380@rtu.edu.ph">2024-200380@rtu.edu.ph</a>
         </p>
         <Link href="/report" className={styles.contactBtn}>
           Report a concern

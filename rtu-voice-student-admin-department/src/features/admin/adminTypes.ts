@@ -105,6 +105,8 @@ export type AdminComplaintDetails = SlaFields & {
   tracking_id: string;
   title: string;
   description: string;
+  ai_title?: string | null;
+  ai_summary?: string | null;
   status_id: number;
   status_name: string;
   category_name: string;

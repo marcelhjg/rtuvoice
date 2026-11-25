@@ -91,6 +91,7 @@ export function ComplaintDetailsDialog({
   onClose,
   showUpdatesButton = true,
   forStaff = false,
+  showAiDetails = true,
   allowEvidenceActions = true,
   returnDetails,
 }: {
@@ -98,6 +99,7 @@ export function ComplaintDetailsDialog({
   onClose: () => void;
   showUpdatesButton?: boolean;
   forStaff?: boolean;
+  showAiDetails?: boolean;
   allowEvidenceActions?: boolean;
   returnDetails?: ReturnedDetails;
 }) {
@@ -115,6 +117,7 @@ export function ComplaintDetailsDialog({
           onViewUpdate={showUpdatesButton ? () => setShowUpdates(true) : undefined}
           compact
           forStaff={forStaff}
+          showAiDetails={showAiDetails}
           allowEvidenceActions={allowEvidenceActions}
           returnDetails={returnDetails}
         />

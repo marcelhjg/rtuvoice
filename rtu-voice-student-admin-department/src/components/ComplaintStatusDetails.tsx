@@ -65,6 +65,7 @@ export function ComplaintStatusDetails({
   onViewUpdate,
   compact = false,
   forStaff = false,
+  showAiDetails = true,
   allowEvidenceActions = true,
   returnDetails,
 }: {
@@ -72,6 +73,7 @@ export function ComplaintStatusDetails({
   onViewUpdate?: () => void;
   compact?: boolean;
   forStaff?: boolean; // staff see neutral names ("Evidence 1"); the student sees their own file names
+  showAiDetails?: boolean;
   allowEvidenceActions?: boolean;
   returnDetails?: ReturnedDetails;
 }) {
@@ -147,6 +149,22 @@ export function ComplaintStatusDetails({
         <h3 className={styles.detailHeading}>Description</h3>
         <p className={styles.description}>{c.description}</p>
       </div>
+      {showAiDetails && (c.ai_title != null || c.ai_summary != null) ? (
+        <div className={styles.detailBlock}>
+          {c.ai_title != null ? (
+            <>
+              <h3 className={styles.detailHeading}>AI-written title</h3>
+              <p className={styles.description}>{c.ai_title}</p>
+            </>
+          ) : null}
+          {c.ai_summary != null ? (
+            <>
+              <h3 className={styles.detailHeading}>AI-written summary</h3>
+              <p className={styles.description}>{c.ai_summary}</p>
+            </>
+          ) : null}
+        </div>
+      ) : null}
       <div className={styles.detailBlock}>
         <h3 className={styles.detailHeading}>Evidence</h3>
         {c.attachments.length ? (

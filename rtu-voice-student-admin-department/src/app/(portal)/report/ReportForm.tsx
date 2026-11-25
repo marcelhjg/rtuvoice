@@ -220,7 +220,7 @@ export default function ReportForm({ categories }: { categories: CategoryOption[
           <textarea
             id="report-description"
             className="textarea"
-            placeholder="Describe what happened, where, and when. Please don't include names or contact details."
+            placeholder="Describe what happened, where, and when."
             value={description}
             aria-invalid={!!errors.description || undefined}
             aria-describedby="report-description-hint"
@@ -231,7 +231,8 @@ export default function ReportForm({ categories }: { categories: CategoryOption[
           />
           <div className={styles.under}>
             <span id="report-description-hint" className="field-hint">
-              Do not put names or contact details in the description.
+              Please avoid personal details where possible. Adding contact details is your choice; administrators and the
+              assigned department can see your title, description, and files. A face, voice, or name in a file may identify you.
             </span>
             <span className={`field-hint ${description.length > DESCRIPTION_MAX ? styles.over : ""}`}>
               {description.length}/{DESCRIPTION_MAX}
@@ -253,7 +254,7 @@ export default function ReportForm({ categories }: { categories: CategoryOption[
             id="report-files"
             tabIndex={0}
             role="button"
-            aria-describedby="evidence-label evidence-privacy"
+            aria-describedby="evidence-label report-description-hint"
             className={`${styles.drop} ${dragging ? styles.dropActive : ""} ${errors.files ? styles.dropError : ""}`}
             onClick={() => fileInput.current?.click()}
             onKeyDown={(e) => {
@@ -277,10 +278,6 @@ export default function ReportForm({ categories }: { categories: CategoryOption[
               JPG/PNG/WEBP, MP3/M4A/WAV, PDF or MP4 • 5 MB total per submission
             </span>
           </div>
-          {/* Staff see files as "Evidence 1", "Evidence 2"…, but what is inside a file can still identify the student. */}
-          <span id="evidence-privacy" className="field-hint">
-            Staff can open your files. Leave out anything that shows who you are, like your face, name or ID. A voice message can identify you.
-          </span>
           <input
             ref={fileInput}
             type="file"
@@ -340,8 +337,9 @@ export default function ReportForm({ categories }: { categories: CategoryOption[
           <span>
             <span className={styles.optOutTitle}>Share a summary on the public dashboard</span>
             <span className={styles.optOutText}>
-              Other logged-in students will see an AI-written, depersonalized title and summary with its status. Your name is
-              never shown. Leave this unticked to keep your concern off the dashboard.
+              If you opt in, other logged-in students see an AI-written title and summary, category, status, and date—not
+              your name, original text, or priority. The title and summary are written to remove personal details, but may
+              not remove every identifying detail. Leave this unticked to keep your concern off the dashboard.
             </span>
           </span>
         </label>

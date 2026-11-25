@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { ChangePassword, UpdateProfile } from "@/actions/authActions";
@@ -200,6 +201,13 @@ export function ProfileForm() {
                 </div>
                 <span id="email-hint" className="field-hint">
                   Your email cannot be changed.
+                  {user.role === "student" ? (
+                    <>
+                      {" "}If it is incorrect, request a correction from the privacy contact at{" "}
+                      <a href="mailto:2024-200380@rtu.edu.ph">2024-200380@rtu.edu.ph</a>. See the{" "}
+                      <Link href="/privacy">Privacy Notice</Link>.
+                    </>
+                  ) : null}
                 </span>
               </div>
             </div>

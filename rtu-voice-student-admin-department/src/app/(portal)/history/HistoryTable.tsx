@@ -50,7 +50,11 @@ export function HistoryTable({
     <div className="container">
       <div className="page-head">
         <h1 className="page-title">History</h1>
-        <p className="page-subtitle">Every concern you&apos;ve submitted. Rejected submissions stay listed for 30 days, then are permanently deleted.</p>
+        <p className="page-subtitle">
+          History lists complaints that remain linked to your account. Rejected or spam complaints are permanently deleted
+          after 30 days. Resolved complaints are anonymized one year after resolution, removing their link to your account.
+          See the <Link href="/privacy">Privacy Notice</Link> for details.
+        </p>
       </div>
 
       {openError ? (

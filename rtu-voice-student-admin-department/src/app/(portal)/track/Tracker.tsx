@@ -129,7 +129,11 @@ export function Tracker() {
           <section className={`${styles.resultCard} ${styles.empty}`}>
             <Icon name="search" size={34} strokeWidth={1.6} />
             <h2>No concern found for {lookup.id}</h2>
-            <p>Check the ID on your receipt. You can only look up concerns submitted from your account.</p>
+            <p>
+              Check the ID on your receipt. This tracker can find only complaints submitted from your account. Archived
+              complaints are anonymized and cannot be looked up by tracking ID. See the{" "}
+              <Link href="/privacy">Privacy Notice</Link> for retention details.
+            </p>
             <Link href="/history" className="btn btn-outline" style={{ marginTop: 14, minHeight: 44, padding: "0 22px" }}>
               Open your History
             </Link>

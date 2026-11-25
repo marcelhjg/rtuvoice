@@ -278,7 +278,16 @@ export async function getComplaintDetailsDepartment(
   }
   if (!data) return { success: false, message: "Complaint not found." };
 
-  return { success: true, message: "", trackResult: data as DepartmentComplaintDetails };
+  const trackResult = {
+    ...(data as DepartmentComplaintDetails & {
+      ai_title?: string | null;
+      ai_summary?: string | null;
+    }),
+  };
+  delete trackResult.ai_title;
+  delete trackResult.ai_summary;
+
+  return { success: true, message: "", trackResult };
 }
 
 /* ---------------- needs attention ---------------- */

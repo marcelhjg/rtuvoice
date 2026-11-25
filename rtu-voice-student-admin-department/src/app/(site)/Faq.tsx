@@ -10,19 +10,23 @@ import styles from "./landing.module.css";
 const ITEMS = [
   {
     q: "Is it anonymous?",
-    a: "Not fully. Your identity is not shown to other students, on the public dashboard, or to the department handling your concern. However, RTU Voice keeps an internal link between your account and your concern so authorized administrators can follow up, investigate abuse, and respond to serious cases.",
+    a: "No. Complaints are pseudonymous, not anonymous: each is linked to your account, and administrators can use that link to follow up. Department staff do not receive your name, email, or account link, but details in your complaint or files may identify you.",
   },
   {
     q: "Who sees my concern?",
-    a: "Administrators review it and assign it to the right department. The department sees your concern and evidence, not your name. If you choose to share it, other logged-in students see only an AI-written, depersonalized title and summary with its status.",
+    a: "Administrators review your original title, description, and files, and assign the concern to a department. The assigned department can see those complaint details and files, but not your account link, name, or email. If you opt in to sharing, other logged-in students see an AI-written title and summary, category, status, and date—not your name, original text, or priority.",
   },
   {
-    q: "What if my concern is personal or urgent?",
-    a: "RTU Voice is not an emergency service. If someone is in danger, contact campus security or local emergency services right away. Personal matters such as harassment, bullying, and discrimination are best brought to the Guidance Office or OSA.",
+    q: "What concerns are not handled here?",
+    a: "Harassment, bullying, discrimination, and illegal activity are not handled here. Report them in person to Campus Security, the Guidance Office, or HR.",
+  },
+  {
+    q: "What does the AI process?",
+    a: "When an administrator assigns a complaint, an AI service reads its original title and description to return a priority visible to administrators and department staff. Administrators cannot change the priority. For complaints you choose to share, AI also writes a title and summary intended to remove personal details; it is not guaranteed to remove every identifying detail. The app uses OpenRouter when configured and may send the text directly to Groq as a fallback. See the Privacy Notice for provider data-handling details.",
   },
   {
     q: "How do I track it?",
-    a: "After you submit, you get a tracking ID (for example STU-A3F1B). Enter it on the Status Tracker page to see the progress timeline and any update from the department. Your History page lists every concern you have submitted.",
+    a: "After you submit, you get a tracking ID (for example STU-A3F1B). Enter it on the Status Tracker page to see the progress timeline and any update from the department. Your History page lists your complaints while they remain linked to your account. See the Privacy Notice for how long records are kept.",
   },
   {
     q: "Do I need an RTU email?",

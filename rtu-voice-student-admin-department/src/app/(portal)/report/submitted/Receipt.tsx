@@ -81,7 +81,9 @@ export function Receipt({ trackingId }: { trackingId: string | null }) {
         <div className={`alert alert-warning ${styles.save}`}>
           <Icon name="alert-triangle" size={22} />
           <p>
-            <strong>Save this ID.</strong> It&apos;s the only way to look up this concern later. You can also find it on your History page.
+            <strong>Save this ID.</strong> Use it in Status Tracker to look up this concern. History also lists complaints
+            while they remain linked to your account. After a resolved complaint is anonymized, it cannot be looked up by
+            tracking ID.
           </p>
         </div>
 

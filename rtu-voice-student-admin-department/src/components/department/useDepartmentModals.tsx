@@ -39,6 +39,7 @@ export function useDepartmentModals() {
         complaint={open.details as unknown as TrackedComplaint}
         onClose={close}
         showUpdatesButton={false}
+        showAiDetails={false}
         allowEvidenceActions   // getEvidenceUrl allows department; remove this prop if the dialog shouldn't offer file buttons
         forStaff
       />

@@ -3,7 +3,7 @@
 /* ---------- Hero ---------- */
 .hero {
   position: relative;
-  min-height: 580px;
+  min-height: 700px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -711,29 +711,32 @@
 
 @media (max-width: 767px) {
   .hero {
-    min-height: 34rem;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem var(--gutter) calc(4rem + env(safe-area-inset-bottom));
-    text-align: center;
+    min-height: max(40rem, calc(100svh - 3.5rem));
+    align-items: flex-end;
+    justify-content: flex-start;
+    padding: calc(4.75rem + env(safe-area-inset-top)) 1.25rem calc(4.5rem + env(safe-area-inset-bottom));
+    text-align: left;
   }
   .heroInner,
   .heroTitle,
   .heroText {
-    text-align: center;
+    text-align: left;
   }
   .heroTitle,
   .heroText {
-    margin-right: auto;
-    margin-left: auto;
+    margin-right: 0;
+    margin-left: 0;
+  }
+  .heroTitle {
+    font-size: clamp(1.625rem, 8vw, 2.25rem) !important;
   }
   .heroActions {
-    align-items: center;
+    align-items: stretch;
   }
   .heroBtnGhost {
-    border: 2px solid var(--white);
-    background: transparent;
-    backdrop-filter: none;
+    border: 1px solid rgba(255, 255, 255, 0.72);
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(8px);
   }
   .how,
   .raise,
@@ -1024,29 +1027,52 @@
 
 @media (max-width: 767px) {
   .hero {
-    min-height: 34rem;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem var(--gutter) calc(4rem + env(safe-area-inset-bottom));
-    text-align: center;
+    box-sizing: border-box;
+    min-height: max(36.25rem, calc(100svh - 3.5rem));
+    align-items: flex-end;
+    justify-content: flex-start;
+    padding: calc(4.75rem + env(safe-area-inset-top)) 0.625rem calc(4rem + env(safe-area-inset-bottom));
+    text-align: left;
   }
   .heroInner,
   .heroTitle,
   .heroText {
-    text-align: center;
+    text-align: left;
   }
   .heroTitle,
   .heroText {
-    margin-right: auto;
-    margin-left: auto;
+    margin-right: 0;
+    margin-left: 0;
+  }
+  .heroTitle {
+    max-width: 24rem;
+    margin-bottom: 1rem;
+    font-size: clamp(2rem, 9vw, 2.75rem) !important;
+    line-height: 1.06 !important;
   }
   .heroActions {
-    align-items: center;
+    align-items: stretch;
+    gap: 0.625rem;
+  }
+  .heroText {
+    max-width: 24rem;
+    margin-bottom: 1.25rem;
+    font-size: 0.9375rem !important;
+    line-height: 1.6 !important;
+  }
+  .heroBtn {
+    min-height: 3rem;
+    padding: 0.75rem 1rem;
+    font-size: 0.9375rem;
   }
   .heroBtnGhost {
-    border: 2px solid var(--white);
-    background: transparent;
-    backdrop-filter: none;
+    border: 1px solid rgba(255, 255, 255, 0.72);
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(8px);
+  }
+  .scrollCue {
+    bottom: max(0.75rem, env(safe-area-inset-bottom));
+    font-size: 0.875rem;
   }
   .how,
   .raise,

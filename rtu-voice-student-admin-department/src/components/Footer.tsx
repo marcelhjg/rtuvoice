@@ -17,7 +17,7 @@ export function Footer() {
         </nav>
         <div className={styles.contact}>
           <span className={styles.heading}>Contact</span>
-          <a href="mailto:RTUVoice@gmail.com">RTUVoice@gmail.com</a>
+          <a href="mailto:2024-200380@rtu.edu.ph">2024-200380@rtu.edu.ph</a>
           <span className={styles.built}>Built by Group 4Voices, BSIT</span>
         </div>
       </div>

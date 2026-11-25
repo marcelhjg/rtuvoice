@@ -27,9 +27,9 @@ const RAISE: { label: string; icon: IconName; accent: "yellow" | "navy" }[] = [
 ];
 
 const AUDIENCES = [
-  { title: "Other students and the public", text: "Never see who you are. The dashboard shows only a depersonalized summary." },
-  { title: "The department", text: "Sees your concern and evidence, not your name." },
-  { title: "Administrators", text: "Keep an internal link between your account and your concern, so they can follow up, investigate abuse, and respond to serious cases." },
+  { title: "Other logged-in students", text: "See only the AI-written title and summary, category, status, and date of a complaint you choose to share. These are written to remove personal details, but are not guaranteed to remove every identifying detail." },
+  { title: "The assigned department", text: "Sees the original concern and evidence, but not your account link, name, or RTU email. Details you include or show in files may identify you." },
+  { title: "Administrators", text: "Can link your complaint to your account to follow up. Complaints are pseudonymous, not anonymous." },
 ];
 
 const LANDING_PREVIEW: PublicConcern[] = [
@@ -56,7 +56,7 @@ export default function LandingPage() {
             Every voice is <span className={styles.yellow}>HEARD.</span>
           </h1>
           <p className={styles.heroText}>
-            RTU Voice is a student concern and feedback system for RTU Pasig Campus. Raise a concern, track its progress, and see how the university responds, with your identity shielded from staff and the public.
+            RTU Voice is a student concern and feedback system for RTU Pasig Campus. Raise a concern, track its progress, and see how the university responds. Your complaint is linked to your account for administrator follow-up, but department staff do not receive that account link.
           </p>
           <div className={styles.heroActions}>
             <Link href="/report" className={`${styles.heroBtn} ${styles.heroBtnYellow}`}>
@@ -145,10 +145,16 @@ export default function LandingPage() {
               See what&apos;s being resolved
             </h2>
             <p className={styles.resolvedText}>
-              Browse short, depersonalized summaries of concerns shared by other students, with their current status. Log in
-              to view. Your own concern appears here only if you choose to share it when you submit.
+              Logged-in students can browse shared concerns. If you opt in, your complaint appears with an AI-written title
+              and summary, category, status, and date—not your name, original text, or priority. The title and summary are
+              written to remove personal details, but may not remove every identifying detail.
             </p>
-            <p className={styles.resolvedNote}>Concern text is processed by an AI service to write these summaries.</p>
+            <p className={styles.resolvedNote}>
+              When an administrator assigns a complaint, AI reads its original title and description to return a priority.
+              For complaints shared on the dashboard, AI also writes the title and summary. The app uses OpenRouter when
+              configured and may send the text directly to Groq as a fallback. See the Privacy Notice for provider
+              data-handling details.
+            </p>
           </div>
           <ul className={styles.previewPanel} aria-label="Sample public dashboard entries">
             {previewConcerns().map((c) => (

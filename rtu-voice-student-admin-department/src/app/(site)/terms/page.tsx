@@ -12,8 +12,8 @@ export default function TermsPage() {
         title="Terms of Use"
         lead="The simple rules for using RTU Voice, so it stays useful and safe for everyone."
         chips={[
-          { icon: "clock", label: "Last Updated: October 2026" },
-          { icon: "clock", label: "Effective: December 13, 2026" },
+          { icon: "clock", label: "Last Updated: November 25, 2026" },
+          { icon: "clock", label: "Effective: November 26, 2026" },
           { icon: "users", label: "For RTU—Pasig students" },
         ]}
       />
@@ -41,8 +41,8 @@ export default function TermsPage() {
             Technology &amp; Online Systems, Food, Health &amp; Sanitation, Library &amp; Learning Resources, and Others.
           </p>
           <Callout tone="warning">
-            Personal matters are best handled elsewhere. Harassment, bullying, and discrimination are best brought to the
-            Guidance Office or OSA, not to this system.
+            Harassment, bullying, discrimination, and illegal activity are not handled here. Report them in person to
+            Campus Security, the Guidance Office, or HR.
           </Callout>
           <Callout tone="warning">
             RTU VOICE is not an emergency service. If someone is in danger, contact campus security or local emergency
@@ -52,16 +52,18 @@ export default function TermsPage() {
 
         <LegalSection n={4} title="Evidence files">
           <p>
-            You may attach JPG/PNG images, MP3/WAV voice messages, PDFs and MP4 videos. The total limit is{" "}
-            <strong>5 MB per submission.</strong> Do not upload files that show other people&apos;s private information.
+            You may attach JPG, PNG, WebP, MP3, M4A, WAV, PDF, or MP4 files, up to{" "}
+            <strong>5 MB total per complaint.</strong> Staff see neutral labels such as “Evidence 1”; students see their
+            own file names. A file can still identify you through a face, voice, or name on a document. Adding identifying
+            details is your choice.
           </p>
         </LegalSection>
 
         <LegalSection n={5} title="Be honest and respectful">
           <ul>
-            <li>Spam, false reports and abusive content will be rejected and permanently deleted after 30 days.</li>
+            <li>Rejected or spam complaints are permanently deleted after 30 days.</li>
             <li>Authorized administrators can see who submitted a concern through an internal link, so they can follow up and investigate abuse.</li>
-            <li>Serious misuse may be referred to the university&apos;s discipline process under the Student Handbook.</li>
+            <li>Whether serious misuse may be referred to a university discipline process is [TO CONFIRM].</li>
           </ul>
         </LegalSection>
 
@@ -78,17 +80,18 @@ export default function TermsPage() {
           </ul>
         </LegalSection>
 
-        <LegalSection n={7} title="Anonymity">
+        <LegalSection n={7} title="Identity and privacy">
           <p>
-            Concerns are anonymous to the public, other students, and departments, but not to authorized administrators. See
-            the <Link href="/privacy">Privacy Notice</Link> for details.
+            Concerns are pseudonymous, not anonymous: each complaint is linked to your account, and authorized
+            administrators can use that link to follow up. Department staff do not receive your name, email, account
+            details, or the account link, but they can see the complaint title, description, and files assigned to them.
+            Details you choose to include may identify you. See the <Link href="/privacy">Privacy Notice</Link> for details.
           </p>
         </LegalSection>
 
         <LegalSection n={8} title="Your content">
           <p>
-            You keep ownership of what you write. You give RTU VOICE and the university permission to use it to process your
-            concern and to produce anonymized statistics and reports.
+            Ownership and any permissions for using submitted content beyond handling your complaint are [TO CONFIRM].
           </p>
         </LegalSection>
 
@@ -111,39 +114,47 @@ export default function TermsPage() {
         <LegalSection n={11} title="Privacy and governing law">
           <p>
             Our <Link href="/privacy">Privacy Notice</Link> explains how we handle your personal data and forms part of these
-            terms. These terms follow the laws of the Republic of the Philippines, including the Data Privacy Act of 2012.
+            terms. Governing-law wording is [TO CONFIRM].
           </p>
         </LegalSection>
 
         <LegalSection n={12} title="How concerns are handled">
           <p>
             An administrator reviews your concern and either rejects it with a reason or assigns it to a department. The
-            department updates the status (In Progress, Resolved) and may post update messages for you. AI helps set priority
-            and write summaries, but staff make the final decisions, and we cannot guarantee the AI is always accurate.
-            Submitting a concern does not guarantee a specific outcome or response time.
+            department updates the status (In Progress, Resolved) and may post update messages for you. When an
+            administrator assigns a complaint, AI reads its original title and description and returns a priority visible to
+            administrators and department staff. Administrators cannot change that priority. Submitting a concern does not
+            guarantee a specific outcome or response time.
+          </p>
+          <p>
+            A submitted complaint cannot be withdrawn. If you need one reviewed, contact the admin office. Contact details
+            are [TO CONFIRM]. A complaint still being handled cannot be erased on request; see the Privacy Notice for the
+            deletion process and retention periods.
           </p>
         </LegalSection>
 
         <LegalSection n={13} title="Public dashboard">
           <p>
-            If you tick &ldquo;Share a summary on the public dashboard&rdquo; on the concern form, other logged-in students can see
-            an AI-written, depersonalized title and summary of your concern and its status. If you leave it unticked, nothing is
-            shown. Update messages from departments are never shown publicly.
+            Dashboard sharing is optional and the checkbox is unticked by default. If you opt in, other logged-in students
+            can see an AI-written title and summary intended to remove personal details, plus the category, status, and
+            date. This is not a guarantee that every identifying detail will be removed. The dashboard does not show your
+            name, original text, or priority; the general public cannot view it. If you do not opt in, your complaint is
+            not shown there. Department update messages are not shown on the dashboard.
           </p>
         </LegalSection>
 
         <LegalSection n={14} title="Emails">
           <p>
-            We email you OTP codes, status changes and new department updates. Emails are short and contain no links, so you
-            should always log in to RTU Voice yourself.
+            We use Resend to email you one-time codes, status changes, and department updates. Administrators are emailed
+            when a department returns a complaint. Email content and links may vary by message.
           </p>
         </LegalSection>
 
         <LegalSection n={15} title="Changes">
           <p>
-            We may update these terms. If you keep using RTU VOICE after a change, you accept the new terms. We will tell
-            you about important changes in the system. Questions:{" "}
-            <a href="mailto:RTUVoice@gmail.com">RTUVoice@gmail.com</a>.
+            We may update these terms and will tell you about important changes in the system. The effect of continued use
+            after a change is [TO CONFIRM]. Questions:{" "}
+            <a href="mailto:2024-200380@rtu.edu.ph">2024-200380@rtu.edu.ph</a>.
           </p>
         </LegalSection>
       </LegalBody>
